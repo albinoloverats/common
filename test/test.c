@@ -202,43 +202,77 @@ void tlv_tests(int i)
 	return;
 }
 
-static void fs_tests(char *root)
+static void fs_tests(char *root, dir_type_e type)
 {
 	if (!root)
 		root = getcwd(NULL, 0);
 	cli_eprintf("Running FS tests on %s\n", root);
 
-	LIST files = dir_get_tree(root, DIR_FILE);
-	cli_eprintf("  Found Files:\n");
-	ITER i = list_iterator(files);
-	while (list_has_next(i))
-		cli_eprintf("    %s\n", (const char *)list_get_next(i));
-	free(i);
+	if (type == DIR_NONE)
+	{
+		LIST files = dir_get_tree(root, DIR_FILE);
+		cli_eprintf("  Found files:\n");
+		ITER i = list_iterator(files);
+		while (list_has_next(i))
+			cli_eprintf("    %s\n", (const char *)list_get_next(i));
+		free(i);
 
-	LIST folders = dir_get_tree(root, DIR_FOLDER);
-	cli_eprintf("  Found Folders:\n");
-	i = list_iterator(folders);
-	while (list_has_next(i))
-		cli_eprintf("    %s\n", (const char *)list_get_next(i));
-	free(i);
+		LIST folders = dir_get_tree(root, DIR_FOLDER);
+		cli_eprintf("  Found folders:\n");
+		i = list_iterator(folders);
+		while (list_has_next(i))
+			cli_eprintf("    %s\n", (const char *)list_get_next(i));
+		free(i);
 
-	LIST both = dir_get_tree(root, DIR_FOLDER | DIR_FILE);
-	cli_eprintf("  Combined:\n");
-	size_t a = list_size(files);
-	size_t b = list_size(folders);
-	size_t c = list_size(both);
-	assert(a + b == c);
-	cli_eprintf("    %zd items\n", c);
+		LIST both = dir_get_tree(root, DIR_FOLDER | DIR_FILE);
+		cli_eprintf("  Combined:\n");
+		size_t a = list_size(files);
+		size_t b = list_size(folders);
+		size_t c = list_size(both);
+		assert(a + b == c);
+		cli_eprintf("    %zd items\n", c);
 
-	list_deinit(files, free);
-	list_deinit(folders, free);
-	list_deinit(both, free);
+		list_deinit(files, free);
+		list_deinit(folders, free);
+		list_deinit(both, free);
+	}
+	else
+	{
+		LIST files = dir_get_tree(root, type);
+		cli_eprintf("  Found entries:\n");
+		ITER i = list_iterator(files);
+		while (list_has_next(i))
+			cli_eprintf("    %s\n", (const char *)list_get_next(i));
+		free(i);
+		cli_eprintf("    %zd items\n", list_size(files));
+		list_deinit(files, free);
+	}
 
 	free(root);
 	return;
 }
 
 static int item_count = 10;
+
+static dir_type_e parse_type(const char *s)
+{
+	dir_type_e t = DIR_NONE;
+	if (!strcasecmp("folder", s) || !strcasecmp("dir", s))
+		t |= DIR_FOLDER;
+	if (!strcasecmp("file", s))
+		t |= DIR_FILE;
+	if (!strcasecmp("link", s))
+		t |= DIR_LINK;
+	if (!strcasecmp("block", s))
+		t |= DIR_BLOCK;
+	if (!strcasecmp("char", s))
+		t |= DIR_CHAR;
+	if (!strcasecmp("socket", s))
+		t |= DIR_SOCKET;
+	if (!strcasecmp("pipe", s))
+		t |= DIR_PIPE;
+	return t;
+}
 
 int main(int argc, char **argv)
 {
@@ -247,9 +281,10 @@ int main(int argc, char **argv)
 	config_init(about);
 
 	LIST args = list_init(config_arg_comp, false, false);
-	list_add(args, &((config_named_t){ 's', "list", "number", "Run ‘LIST’ tests, with the given number of items (default 10)",    CONFIG_ARG_OPT_NUMBER, { .number = item_count }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 't', "tlv",  "number", "Run ‘TLV’ tests, with the given number of items (default 10)",     CONFIG_ARG_OPT_NUMBER, { .number = item_count }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'f', "fs",   "path",   "Run ‘FS’ tests, on the given path (default is current directory)", CONFIG_ARG_OPT_STRING, { .string = NULL       }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 's', "list",  "number",     "Run ‘LIST’ tests, with the given number of items (default 10)",                              CONFIG_ARG_OPT_NUMBER,  { .number = item_count }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 't', "tlv",   "number",     "Run ‘TLV’ tests, with the given number of items (default 10)",                               CONFIG_ARG_OPT_NUMBER,  { .number = item_count }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'f', "fs",    "path",       "Run ‘FS’ tests, on the given path (default is current directory)",                           CONFIG_ARG_OPT_STRING,  { .string = NULL       }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'm', "types", "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)", CONFIG_ARG_LIST_STRING, { .list   = NULL       }, false, true,  false, false }));
 
 	LIST notes = list_default();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
@@ -263,7 +298,19 @@ int main(int argc, char **argv)
 	if (all || ((config_named_t *)list_get(args, 1))->seen)
 		tlv_tests(((config_named_t *)list_get(args, 1))->response_value.number);
 	if (all || ((config_named_t *)list_get(args, 2))->seen)
-		fs_tests(((config_named_t *)list_get(args, 2))->response_value.string);
+	{
+		dir_type_e types = DIR_NONE;
+		if (((config_named_t *)list_get(args, 3))->seen)
+		{
+			LIST l = ((config_named_t *)list_get(args, 3))->response_value.list;
+			ITER i = list_iterator(l);
+			while (list_has_next(i))
+				types = parse_type(list_get_next(i));
+			free(i);
+			list_deinit(l, free);
+		}
+		fs_tests(((config_named_t *)list_get(args, 2))->response_value.string, types);
+	}
 
 	list_deinit(args);
 	list_deinit(notes);
