@@ -202,67 +202,21 @@ void tlv_tests(int i)
 	return;
 }
 
-static void dir_recurse(LIST files, const char *dir, int t)
-{
-	struct dirent **eps = NULL;
-	int n = 0;
-	for (int j = 0; j < t; j++)
-		cli_eprintf("  ");
-	char *name = dir_get_name(dir);
-	cli_eprintf("  Scanning %s\n", name);
-	free(name);
-	if ((n = scandir(dir, &eps, NULL, alphasort)))
-	{
-		for (int i = 0; i < n; i++)
-		{
-			if (!strcmp(".", eps[i]->d_name) || !strcmp("..", eps[i]->d_name))
-				continue;
-			for (int j = 0; j < t; j++)
-				cli_eprintf("  ");
-			cli_eprintf("    Found %s\n", eps[i]->d_name);
-			uint64_t l = strlen(eps[i]->d_name);
-			char *full_path = NULL;
-			if (!asprintf(&full_path, "%s/%s", dir, eps[i]->d_name))
-				die(_("Out of memory @ %s:%d:%s [%" PRIu64 "]"), __FILE__, __LINE__, __func__, strlen(dir) + l + 2);
-
-			struct stat s;
-			stat(full_path, &s);
-			switch (s.st_mode & S_IFMT)
-			{
-				case S_IFDIR:
-					dir_recurse(files, full_path, t + 1);
-					break;
-				case S_IFREG:
-					list_add(files, strdup(full_path));
-					break;
-			}
-			free(full_path);
-		}
-	}
-	for (int i = 0; i < n; i++)
-		free(eps[i]);
-	free(eps);
-	return;
-}
-
 static void fs_tests(char *root)
 {
-	LIST files = list_string();
-
 	if (!root)
 		root = getcwd(NULL, 0);
 	cli_eprintf("Running FS tests on %s\n", root);
 
-	dir_recurse(files, root, 0);
-
+	cli_eprintf("  Found files:\n");
+	LIST files = dir_get_tree(root, S_IFREG);
 	ITER i = list_iterator(files);
 	while (list_has_next(i))
-		cli_eprintf("  %s\n", (const char *)list_get_next(i));
+		cli_eprintf("    %s\n", (const char *)list_get_next(i));
 	free(i);
+	list_deinit(files, free);
 
 	free(root);
-
-	list_deinit(files, free);
 	return;
 }
 

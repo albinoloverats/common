@@ -36,6 +36,7 @@
 #include <inttypes.h>
 
 #include "common.h"
+#include "list.h"
 
 #ifndef _WIN32
 	#define DIR_SEPARATOR "/"
@@ -113,6 +114,14 @@ extern char *dir_get_path(const char * const restrict p) __attribute__((nonnull(
  */
 extern void dir_mk_recursive(const char *p, mode_t m) __attribute__((nonnull(1)));
 
-
+/*!
+ * \brief         Get all entries in a directory tree
+ * \param[in]  p  Directory path to scan
+ * \param[in]  m  The type of files to find
+ *
+ * Return all found files (of a paticular type) in a given directory
+ * tree.
+ */
+extern LIST dir_get_tree(const char *p, mode_t m) __attribute__((nonnull(1)));
 
 #endif /* _DIR_H_ */

@@ -18,6 +18,7 @@
  *
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -27,7 +28,10 @@
 #include <unistd.h>
 
 #include "non-gnu.h"
+#include "common.h"
+#include "error.h"
 #include "dir.h"
+#include "list.h"
 
 extern char *dir_get_name_aux(const char * const path, const char ext)
 {
@@ -112,4 +116,40 @@ extern void dir_mk_recursive(const char *path, mode_t mode)
 		mkdir(opath, mode);
 	free(opath);
 	return;
+}
+
+static void get_tree(LIST l, const char *path, mode_t type)
+{
+	struct dirent **eps = NULL;
+	int n = 0;
+	if ((n = scandir(path, &eps, NULL, alphasort)))
+	{
+		for (int i = 0; i < n; i++)
+		{
+			if (!strcmp(".", eps[i]->d_name) || !strcmp("..", eps[i]->d_name))
+				continue;
+
+			char *full_path = NULL;
+			if (!asprintf(&full_path, "%s/%s", path, eps[i]->d_name))
+				die(_("Out of memory @ %s:%d:%s [%" PRIu64 "]"), __FILE__, __LINE__, __func__, strlen(path) + strlen(eps[i]->d_name) + 2);
+
+			if (DTTOIF(eps[i]->d_type) & type)
+				list_add(l, strdup(full_path));
+			if (S_ISDIR(DTTOIF(eps[i]->d_type))) // == DT_DIR
+				get_tree(l, full_path, type);
+
+			free(full_path);
+		}
+	}
+	for (int i = 0; i < n; i++)
+		free(eps[i]);
+	free(eps);
+	return;
+}
+
+extern LIST dir_get_tree(const char *path, mode_t type)
+{
+	LIST l = list_string();
+	get_tree(l, path, type);
+	return l;
 }
