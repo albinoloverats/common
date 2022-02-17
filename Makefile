@@ -2,7 +2,7 @@
 
 APP       = test-app
 
-SRC       = test/test.c src/error.c src/list.c src/tlv.c src/version.c src/config.c src/cli.c
+SRC       = test/test.c src/error.c src/list.c src/tlv.c src/dir.c src/version.c src/config.c src/cli.c
 MISC      = misc.h
 
 CFLAGS   += -O0 -ggdb -Wall -Wextra -std=gnu99 -pipe -Wrestrict -Wformat=2 -Wno-unused-result
