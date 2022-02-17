@@ -56,6 +56,19 @@
 #define dir_get_name_2(A, B)  dir_get_name_aux(A, B)
 #define dir_get_name(...) CONCAT(dir_get_name_, DIR_GET_NAME_ARGS_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
+typedef enum
+{
+	DIR_UNKNOWN = 0x0000,
+	DIR_FOLDER  = 0x0001,
+	DIR_FILE    = 0x0002,
+	DIR_LINK    = 0x0004,
+	DIR_BLOCK   = 0x0008,
+	DIR_CHAR    = 0x0010,
+	DIR_SOCKET  = 0x0020,
+	DIR_PIPE    = 0x0040
+}
+dir_type_e;
+
 /*!
  * \brief         Extract the name part of the /path/file:password
  * \param[in]  p  Path: /path/file.extension
@@ -122,6 +135,6 @@ extern void dir_mk_recursive(const char *p, mode_t m) __attribute__((nonnull(1))
  * Return all found files (of a paticular type) in a given directory
  * tree.
  */
-extern LIST dir_get_tree(const char *p, mode_t m) __attribute__((nonnull(1)));
+extern LIST dir_get_tree(const char *p, dir_type_e m) __attribute__((nonnull(1)));
 
 #endif /* _DIR_H_ */

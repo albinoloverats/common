@@ -208,13 +208,31 @@ static void fs_tests(char *root)
 		root = getcwd(NULL, 0);
 	cli_eprintf("Running FS tests on %s\n", root);
 
-	cli_eprintf("  Found files:\n");
-	LIST files = dir_get_tree(root, S_IFREG);
+	LIST files = dir_get_tree(root, DIR_FILE);
+	cli_eprintf("  Found Files:\n");
 	ITER i = list_iterator(files);
 	while (list_has_next(i))
 		cli_eprintf("    %s\n", (const char *)list_get_next(i));
 	free(i);
+
+	LIST folders = dir_get_tree(root, DIR_FOLDER);
+	cli_eprintf("  Found Folders:\n");
+	i = list_iterator(folders);
+	while (list_has_next(i))
+		cli_eprintf("    %s\n", (const char *)list_get_next(i));
+	free(i);
+
+	LIST both = dir_get_tree(root, DIR_FOLDER | DIR_FILE);
+	cli_eprintf("  Combined:\n");
+	size_t a = list_size(files);
+	size_t b = list_size(folders);
+	size_t c = list_size(both);
+	assert(a + b == c);
+	cli_eprintf("    %zd items\n", c);
+
 	list_deinit(files, free);
+	list_deinit(folders, free);
+	list_deinit(both, free);
 
 	free(root);
 	return;

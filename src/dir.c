@@ -118,7 +118,7 @@ extern void dir_mk_recursive(const char *path, mode_t mode)
 	return;
 }
 
-static void get_tree(LIST l, const char *path, mode_t type)
+static void get_tree(LIST l, const char *path, dir_type_e type)
 {
 	struct dirent **eps = NULL;
 	int n = 0;
@@ -133,9 +133,34 @@ static void get_tree(LIST l, const char *path, mode_t type)
 			if (!asprintf(&full_path, "%s/%s", path, eps[i]->d_name))
 				die(_("Out of memory @ %s:%d:%s [%" PRIu64 "]"), __FILE__, __LINE__, __func__, strlen(path) + strlen(eps[i]->d_name) + 2);
 
-			if (DTTOIF(eps[i]->d_type) & type)
+			bool add = false;
+			switch (eps[i]->d_type)
+			{
+				case DT_DIR:
+					add = type & DIR_FOLDER;
+					break;
+				case DT_CHR:
+					add = type & DIR_CHAR;
+					break;
+				case DT_BLK:
+					add = type & DIR_BLOCK;
+					break;
+				case DT_REG:
+					add = type & DIR_FILE;
+					break;
+				case DT_LNK:
+					add = type & DIR_LINK;
+					break;
+				case DT_SOCK:
+					add = type & DIR_SOCKET;
+					break;
+				case DT_FIFO:
+					add = type & DIR_PIPE;
+					break;
+			}
+			if (add)
 				list_add(l, strdup(full_path));
-			if (S_ISDIR(DTTOIF(eps[i]->d_type))) // == DT_DIR
+			if (eps[i]->d_type == DT_DIR)
 				get_tree(l, full_path, type);
 
 			free(full_path);
@@ -147,7 +172,7 @@ static void get_tree(LIST l, const char *path, mode_t type)
 	return;
 }
 
-extern LIST dir_get_tree(const char *path, mode_t type)
+extern LIST dir_get_tree(const char *path, dir_type_e type)
 {
 	LIST l = list_string();
 	get_tree(l, path, type);
