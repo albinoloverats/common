@@ -103,4 +103,16 @@ extern char *dir_get_pass(const char * const restrict p) __attribute__((nonnull(
  */
 extern char *dir_get_path(const char * const restrict p) __attribute__((nonnull(1)));
 
+
+/*!
+ * \brief         Create a new directory recursively
+ * \param[in]  p  Directory path to create
+ * \param[in]  m  New directories mode
+ *
+ * Creates a new directory, recursively, for the given path.
+ */
+extern void dir_mk_recursive(const char *p, mode_t m) __attribute__((nonnull(1)));
+
+
+
 #endif /* _DIR_H_ */

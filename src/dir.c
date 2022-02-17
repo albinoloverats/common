@@ -21,6 +21,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <fcntl.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "non-gnu.h"
 #include "dir.h"
 
@@ -81,4 +86,30 @@ extern char *dir_get_path(const char * const restrict path)
 		return p;
 	free(p);
 	return strdup(DIR_SEPARATOR);
+}
+
+/*
+ * Taken from http://nion.modprobe.de/tmp/mkdir.c
+ */
+extern void dir_mk_recursive(const char *path, mode_t mode)
+{
+#ifdef _WIN32
+	(void)mode;
+#endif
+	char *opath = strdup(path);
+	size_t len = strlen(opath);
+	if (opath[len - 1] == '/')
+		opath[len - 1] = '\0';
+	for (char *p = opath; *p; p++)
+		if (*p == '/')
+		{
+			*p = '\0';
+			if (access(opath, F_OK))
+				mkdir(opath, mode);
+			*p = '/';
+		}
+	if (access(opath, F_OK)) /* if path is not terminated with / */
+		mkdir(opath, mode);
+	free(opath);
+	return;
 }
