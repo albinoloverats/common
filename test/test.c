@@ -281,10 +281,10 @@ int main(int argc, char **argv)
 	config_init(about);
 
 	LIST args = list_init(config_arg_comp, false, false);
-	list_add(args, &((config_named_t){ 's', "list",  "number",     "Run ‘LIST’ tests, with the given number of items (default 10)",                              CONFIG_ARG_OPT_NUMBER,  { .number = item_count }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 't', "tlv",   "number",     "Run ‘TLV’ tests, with the given number of items (default 10)",                               CONFIG_ARG_OPT_NUMBER,  { .number = item_count }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'f', "fs",    "path",       "Run ‘FS’ tests, on the given path (default is current directory)",                           CONFIG_ARG_OPT_STRING,  { .string = NULL       }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'm', "types", "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)", CONFIG_ARG_LIST_STRING, { .list   = NULL       }, false, true,  false, false }));
+	list_add(args, &((config_named_t){ 's', "list",  "integer",    "Run ‘LIST’ tests, with the given number of items (default 10)",                                 CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
+	list_add(args, &((config_named_t){ 't', "tlv",   "integer",    "Run ‘TLV’ tests, with the given number of items (default 10)",                                  CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'f', "fs",    "path",       "Run ‘FS’ tests, on the given path (default is current directory)",                              CONFIG_ARG_OPT_STRING,  { .string  = NULL      }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'm', "types", "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)", CONFIG_ARG_LIST_STRING, { .list    = NULL      }, false, true,  false, false }));
 
 	LIST notes = list_default();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
@@ -294,9 +294,9 @@ int main(int argc, char **argv)
 	errno = EXIT_SUCCESS;
 
 	if (all || ((config_named_t *)list_get(args, 0))->seen)
-		list_tests(((config_named_t *)list_get(args, 0))->response_value.number);
+		list_tests(((config_named_t *)list_get(args, 0))->response_value.integer);
 	if (all || ((config_named_t *)list_get(args, 1))->seen)
-		tlv_tests(((config_named_t *)list_get(args, 1))->response_value.number);
+		tlv_tests(((config_named_t *)list_get(args, 1))->response_value.integer);
 	if (all || ((config_named_t *)list_get(args, 2))->seen)
 	{
 		dir_type_e types = DIR_NONE;
