@@ -835,9 +835,9 @@ static bool parse_config_boolean(const char *c, const char *l, bool d)
 	char *v = parse_config_tail(c, l);
 	if (v)
 	{
-		if (!strcasecmp(CONF_TRUE, v) || !strcasecmp(CONF_ON, v) || !strcasecmp(CONF_ENABLED, v))
+		if (!strcasecmp(CONF_TRUE, v) || !strcasecmp(CONF_ON, v) || !strcasecmp(CONF_ENABLED, v) || !strcasecmp(CONF_YES, v))
 			r = true;
-		else if (!strcasecmp(CONF_FALSE, v) || !strcasecmp(CONF_OFF, v) || !strcasecmp(CONF_DISABLED, v))
+		else if (!strcasecmp(CONF_FALSE, v) || !strcasecmp(CONF_OFF, v) || !strcasecmp(CONF_DISABLED, v) || !strcasecmp(CONF_NO, v))
 			r = false;
 		free(v);
 	}

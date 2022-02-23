@@ -281,10 +281,14 @@ int main(int argc, char **argv)
 	config_init(about);
 
 	LIST args = list_init(config_arg_comp, false, false);
-	list_add(args, &((config_named_t){ 's', "list",  "integer",    "Run ‘LIST’ tests, with the given number of items (default 10)",                                 CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
-	list_add(args, &((config_named_t){ 't', "tlv",   "integer",    "Run ‘TLV’ tests, with the given number of items (default 10)",                                  CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'f', "fs",    "path",       "Run ‘FS’ tests, on the given path (default is current directory)",                              CONFIG_ARG_OPT_STRING,  { .string  = NULL      }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'm', "types", "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)", CONFIG_ARG_LIST_STRING, { .list    = NULL      }, false, true,  false, false }));
+	list_add(args, &((config_named_t){ 's', "list",    "integer",    "Run ‘LIST’ tests, with the given number of items (default 10)",                                     CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
+	list_add(args, &((config_named_t){ 't', "tlv",     "integer",    "Run ‘TLV’ tests, with the given number of items (default 10)",                                      CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'f', "fs",      "path",       "Run ‘FS’ tests, on the given path (default is current directory)",                                  CONFIG_ARG_OPT_STRING,  { .string  = NULL      }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'm', "types",   "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)",     CONFIG_ARG_LIST_STRING, { .list    = NULL      }, false, true,  false, false }));
+
+	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed (true/on/enabled/yes/false/off/disabled/no - config files only)", CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'i', "integer", "integer",    "See how decimal values are parsed",                                                                 CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'd', "decimal", "decimal",    "See how decimal values are parsed",                                                                 CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
 
 	LIST notes = list_default();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
@@ -310,6 +314,18 @@ int main(int argc, char **argv)
 			list_deinit(l, free);
 		}
 		fs_tests(((config_named_t *)list_get(args, 2))->response_value.string, types);
+	}
+
+	if (all || ((config_named_t *)list_get(args, 4))->seen)
+		cli_eprintf("  Boolean : %s\n", ((config_named_t *)list_get(args, 4))->response_value.boolean ? "true" : "false");
+	if (all || ((config_named_t *)list_get(args, 5))->seen)
+		cli_eprintf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 5))->response_value.integer);
+	if (all || ((config_named_t *)list_get(args, 6))->seen)
+	{
+		char buf[0xFF] = { 0x00 };
+		strfromf128(buf, sizeof buf, "%.9f", ((config_named_t *)list_get(args, 6))->response_value.decimal);
+		cli_eprintf("  Decimal : %s\n", buf);
+		//cli_eprintf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 6))->response_value.decimal);
 	}
 
 	list_deinit(args);

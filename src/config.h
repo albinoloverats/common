@@ -33,9 +33,11 @@
 #define CONF_TRUE     "true"
 #define CONF_ON       "on"
 #define CONF_ENABLED  "enabled"
+#define CONF_YES      "yes"
 #define CONF_FALSE    "false"
 #define CONF_OFF      "off"
 #define CONF_DISABLED "disabled"
+#define CONF_NO       "no"
 
 
 #define CONFIG_ARG_REQUIRED 0x80000000 // 1000
