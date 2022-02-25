@@ -34,19 +34,17 @@ item_t;
 
 typedef struct
 {
-	item_t *head;
-	item_t *next;
-	item_t *tail;
-	size_t  size;
-	int (*compare)(const void *, const void *);
-	bool duplicates:1;
-	bool sorted:1;
+	item_t *head;                               /*!< The first item in the list */
+	item_t *tail;                               /*!< The last item in the list - allows easy appending of items */
+	size_t  size;                               /*!< The number of items in the list - gives constant lookup, so no need to count each time */
+	int (*compare)(const void *, const void *); /*!< How to compare items in the list */
+	bool duplicates:1;                          /*!< Whether to allow duplicate items in the list */
+	bool sorted:1;                              /*!< Whether the items should be sorted */
 }
 list_t;
 
 typedef struct
 {
-	list_t *list; // this might not be necessary
 	item_t *next;
 }
 iterator_t;
@@ -311,7 +309,6 @@ extern ITER list_iterator(LIST ptr)
 	if (!list_ptr)
 		return NULL;
 	iterator_t *iter = malloc(sizeof (iterator_t));
-	iter->list = list_ptr;
 	iter->next = list_ptr->head;
 	return iter;
 }
