@@ -78,11 +78,16 @@ extern bool tlv_append(TLV ptr, tlv_t tlv)
 		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof tlv );
 	t->tag    = tlv.tag;
 	t->length = tlv.length;
-	t->value  = malloc(t->length);
-	if (!t->value)
+	if (!(t->value  = malloc(t->length)))
 		die(_("Out of memory @ %s:%d:%s [%du]"), __FILE__, __LINE__, __func__, t->length);
 	memcpy(t->value, tlv.value, t->length);
-	return list_append(tlv_ptr->tags, t);
+	bool r = list_append(tlv_ptr->tags, t);
+	if (!r)
+	{
+		free(t->value);
+		free(t);
+	}
+	return r;
 }
 
 extern const tlv_t *tlv_remove(TLV ptr, tlv_t tlv)
@@ -138,7 +143,8 @@ extern byte_t *tlv_export_aux(TLV ptr, bool nbo)
 	size_t size = tlv_length(tlv_ptr);
 	if (tlv_ptr->export)
 		free(tlv_ptr->export);
-	tlv_ptr->export = malloc(size);
+	if (!(tlv_ptr->export = malloc(size)))
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, size);
 	size_t off = 0;
 	ITER iter = list_iterator(tlv_ptr->tags);
 	while (list_has_next(iter))

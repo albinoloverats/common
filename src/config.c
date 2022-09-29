@@ -105,7 +105,10 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 		char *rc = NULL;
 #ifndef _WIN32
 		if (about.config[0] == '/' || (about.config[0] == '.' && about.config[1] == '/'))
-			rc = strdup(about.config);
+		{
+			if (!(rc = strdup(about.config)))
+				die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(about.config) + 1);
+		}
 		else if (!asprintf(&rc, "%s/%s", getenv("HOME") ? : ".", about.config))
 			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(getenv("HOME")) + strlen(about.config) + 2);
 #else
@@ -354,7 +357,8 @@ end_line:
 							arg->seen = true;
 							if (arg->response_value.string)
 								free(arg->response_value.string);
-							arg->response_value.string = strdup(optarg);
+							if (!(arg->response_value.string = strdup(optarg)))
+								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(optarg) + 1);
 							break;
 
 						case CONFIG_ARG_OPT_BOOLEAN:
@@ -374,14 +378,26 @@ end_line:
 							if (strchr(optarg, ','))
 							{
 								char *s = strdup(optarg);
-								list_append(arg->response_value.list, strdup(strtok(s, ",")));
+								if (!s)
+									die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(optarg) + 1);
+								char *u = strdup(strtok(s, ","));
+								if (!list_append(arg->response_value.list, u))
+									free(u);
 								char *t = NULL;
 								while ((t = strtok(NULL, ",")))
-									list_append(arg->response_value.list, strdup(t));
+								{
+									char *v = strdup(t);
+									if (!list_append(arg->response_value.list, v))
+										free(v);
+								}
 								free(s);
 							}
 							else
-								list_append(arg->response_value.list, strdup(optarg));
+							{
+								char *x = strdup(optarg);
+								if (!list_append(arg->response_value.list, x))
+									free(x);
+							}
 							break;
 
 						default:
@@ -580,6 +596,8 @@ static void print_option(int indent, char sopt, char *lopt, char *type, bool req
 
 #ifdef _WIN32
 	char *tmp = calloc(l + 1, 1);
+	if (!tmp)
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, l + 1);
 	for (int i = 0, j = 0; i < l; i++, j++)
 		if (!strncmp(desc + i, "‘", strlen("‘")) || !strncmp(desc + i, "’", strlen("‘")))
 		{
@@ -899,6 +917,8 @@ static char *parse_config_tail(const char *c, const char *l)
 		;//y[i] = '\0';
 	char *tail = strndup(y, i + 1);
 	free(y);
+	if (!tail)
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, i + 1);
 	return tail;
 }
 
@@ -978,7 +998,8 @@ static pair_u *parse_pair(const char *c, const char *l)
 	else
 		for (; i < strlen(y) && !isspace(y[i]); i++)
 			;
-	pair->string.s1 = strndup(y + j, i - j);
+	if (!(pair->string.s1 = strndup(y + j, i - j)))
+		die("Out of memory @ %s:%d:%s [%zu]", __FILE__, __LINE__, __func__, i - j);
 	/* skip past all whitespace */
 	for (; i < strlen(y) && isspace((unsigned char)y[i]); i++)
 		;
@@ -988,7 +1009,8 @@ static pair_u *parse_pair(const char *c, const char *l)
 		;//y[i] = '\0';
 	if (z[j] == '"')
 		j++;
-	pair->string.s2 = strndup(z + j, i + (j ? -j : 1));
+	if (!(pair->string.s2 = strndup(z + j, i + (j ? -j : 1))))
+		die("Out of memory @ %s:%d:%s [%zu]", __FILE__, __LINE__, __func__, i + (j ? -j : 1));
 	/* all done */
 	free(x);
 	return pair;
