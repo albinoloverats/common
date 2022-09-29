@@ -5,7 +5,7 @@ APP       = test-app
 SRC       = test/test.c src/error.c src/list.c src/tlv.c src/dir.c src/version.c src/config.c src/cli.c
 MISC      = src/misc.h
 
-CFLAGS   += -O0 -ggdb -Wall -Wextra -std=gnu99 -pipe -Wrestrict -Wformat=2 -Wno-unused-result
+CFLAGS   += -O0 -ggdb -Wall -Wextra -Werror -std=gnu99 -pipe -Wrestrict -Wformat=2 -Wno-unused-result
 CPPFLAGS += -Isrc -D__DEBUG__ -DMALLOC_CHECK_=1 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DGIT_COMMIT=\"$(shell git log | head -n1 | cut -f2 -d' ')\" -DBUILD_OS=\"$(shell grep PRETTY_NAME /etc/os-release | cut -d= -f2)\"
 
 LIBS      = -lpthread -lcurl
@@ -14,6 +14,12 @@ all:
 	 @echo "#define ALL_CFLAGS   \"$(strip $(subst \",\',"${CFLAGS}  "))\""  > ${MISC}
 	 @echo "#define ALL_CPPFLAGS \"$(strip $(subst \",\',"${CPPFLAGS}"))\"" >> ${MISC}
 	 @${CC} ${CFLAGS} ${CPPFLAGS} ${SRC} ${LIBS} -o ${APP}
+	-@echo -e "built ‘`echo -e ${SRC} | sed 's/ /’\n      ‘/g'`’ → ‘${APP}’"
+
+extra:
+	 @echo "#define ALL_CFLAGS   \"$(strip $(subst \",\',"${CFLAGS}  "))\""  > ${MISC}
+	 @echo "#define ALL_CPPFLAGS \"$(strip $(subst \",\',"${CPPFLAGS}"))\"" >> ${MISC}
+	 @${CC} -fanalyzer -fanalyzer-verbosity=4 ${CFLAGS} ${CPPFLAGS} ${SRC} ${LIBS} -o ${APP}
 	-@echo -e "built ‘`echo -e ${SRC} | sed 's/ /’\n      ‘/g'`’ → ‘${APP}’"
 
 clean:

@@ -55,9 +55,9 @@
 
 
 
-static void show_version(void) __attribute__((noreturn));
-static void show_help(LIST args, LIST about, LIST extra) __attribute__((noreturn));
-static void show_licence(void) __attribute__((noreturn));
+static void show_version(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
+static void show_help(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
+static void show_licence(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 
 static bool    parse_config_boolean(const char *, const char *, bool);
 static int64_t parse_config_integer(const char *, const char *, int64_t);
@@ -303,9 +303,9 @@ end_line:
 				case 'h':
 					show_help(args, notes, extra);
 				case 'v':
-					show_version();
+					show_version(args, notes, extra);
 				case 'l':
-					show_licence();
+					show_licence(args, notes, extra);
 			}
 		}
 		else if (c == '?' && warn)
@@ -456,11 +456,14 @@ inline static void format_section(char *s)
 	return;
 }
 
-static void show_version(void)
+static void show_version(LIST args, LIST notes, LIST extra)
 {
 	version_print(about.name, about.version, about.url);
 	while (version_is_checking)
 		sleep(1);
+	list_deinit(args);
+	list_deinit(notes);
+	list_deinit(extra);
 	exit(EXIT_SUCCESS);
 }
 
@@ -750,14 +753,20 @@ static void show_help(LIST args, LIST notes, LIST extra)
 	}
 	while (version_is_checking)
 		sleep(1);
+	list_deinit(args);
+	list_deinit(notes);
+	list_deinit(extra);
 	exit(EXIT_SUCCESS);
 }
 
-static void show_licence(void)
+static void show_licence(LIST args, LIST notes, LIST extra)
 {
 	cli_eprintf(_(TEXT_LICENCE));
 	while (version_is_checking)
 		sleep(1);
+	list_deinit(args);
+	list_deinit(notes);
+	list_deinit(extra);
 	exit(EXIT_SUCCESS);
 }
 

@@ -49,8 +49,11 @@ static void list_tests(int i)
 	for (int j = 0; j < i; j++)
 	{
 		int *k = malloc(sizeof( int ));
+		if (!k)
+			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( int ));
 		*k = (int)lrand48();
-		list_append(l, k);
+		if (!list_append(l, k))
+			free(k);
 	}
 	assert(list_size(l) == (size_t)i);
 	ITER t = list_iterator(l);
@@ -68,8 +71,11 @@ static void list_tests(int i)
 	for (int j = 0; j < i; j++)
 	{
 		int *k = malloc(sizeof( int ));
+		if (!k)
+			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( int ));
 		*k = (int)lrand48();
-		list_append(l, k);
+		if (!list_append(l, k))
+			free(k);
 	}
 	int prev = INT_MIN;
 	for (int j = 0; j < i; j++)
@@ -105,8 +111,11 @@ static void list_tests(int i)
 	for (int j = 0; j < i * 2; j++)
 	{
 		int *k = malloc(sizeof( int ));
+		if (!k)
+			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( int ));
 		*k = (int)lrand48();
-		list_append(l, k);
+		if (!list_append(l, k))
+			free(k);
 	}
 	assert(list_size(l) == (size_t)i * 2);
 	for (int j = 0; j < i; j++)
@@ -147,13 +156,15 @@ void tlv_tests(int i)
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
 		v.value  = calloc(v.length, 1);
+		if (!v.value)
+			die(_("Out of memory @ %s:%d:%s [%u]"), __FILE__, __LINE__, __func__, v.length);
 		for (int k = 0; k < v.length - 1; k++)
 			((char *)v.value)[k] = (lrand48() % 26) + 'A';
 		tlv_append(t, v);
 		free(v.value);
 	}
-	assert(tlv_count(t) == (size_t)i);
-	for (int j = 0; j < tlv_count(t); j++)
+	assert(tlv_size(t) == (size_t)i);
+	for (int j = 0; j < tlv_size(t); j++)
 	{
 		const tlv_t *v = tlv_get(t, j + 1);
 		cli_printf("    Tag  [%2d] (%2d) = %s\n", v->tag, v->length, (char *)v->value);
@@ -169,12 +180,14 @@ void tlv_tests(int i)
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
 		v.value  = calloc(v.length, 1);
+		if (!v.value)
+			die(_("Out of memory @ %s:%d:%s [%u]"), __FILE__, __LINE__, __func__, v.length);
 		for (int k = 0; k < v.length - 1; k++)
 			((char *)v.value)[k] = (lrand48() % 26) + 'A';
 		tlv_append(t, v);
 		free(v.value);
 	}
-	assert(tlv_count(t) == (size_t)i * 2);
+	assert(tlv_size(t) == (size_t)i * 2);
 	for (int j = 0; j < i; j++)
 	{
 		int r = 0;
@@ -187,7 +200,7 @@ void tlv_tests(int i)
 		free(v->value);
 		free((void *)v);
 	}
-	assert(tlv_count(t) == (size_t)i);
+	assert(tlv_size(t) == (size_t)i);
 	ITER r = tlv_iterator(t);
 	assert(r != NULL);
 	while (tlv_has_next(r))
