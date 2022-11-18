@@ -19,6 +19,7 @@
 #include "list.h"
 #include "tlv.h"
 #include "dir.h"
+#include "map.h"
 
 static config_about_t about =
 {
@@ -287,6 +288,54 @@ static dir_type_e parse_type(const char *s)
 	return t;
 }
 
+static void map_tests(int i)
+{
+	if (i < 1)
+	{
+		errno = EINVAL;
+		cli_eprintf("Cannot run map tests with %d items!\n", i);
+		return;
+	}
+	cli_eprintf("Running map tests with %d items\n", i);
+
+	cli_eprintf("  Simple map\n");
+	MAP m = map_default();
+	assert(m != NULL);
+	for (int j = 0; j < i; j++)
+	{
+		char *k = calloc(4, sizeof( char ));
+		if (!k)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 4);
+		for (int z = 0; z < 3; z++)
+			k[z] = (lrand48() % 26) + 'a';
+		char *v = calloc(16, sizeof( char ));
+		if (!v)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		for (int z = 0; z < 15; z++)
+			v[z] = (lrand48() % 26) + 'a';
+		if (!map_add(m, k, v))
+		{
+			free(k);
+			free(v);
+		}
+	}
+	assert(map_size(m) == (size_t)i);
+	// TODO somehow inline the iterator into the map code
+	LIST keys = map_keys(m);
+	ITER t = list_iterator(keys);
+	assert(t != NULL);
+	while (list_has_next(t))
+	{
+		const char *k = list_get_next(t);
+		const char *v = map_get(m, k);
+		cli_printf("    Entry [%s] = %s\n", k, v);
+	}
+	free(t);
+	map_deinit(m, true);
+
+	// TODO sorted map
+}
+
 int main(int argc, char **argv)
 {
 	srand48(time(NULL));
@@ -295,9 +344,10 @@ int main(int argc, char **argv)
 
 	LIST args = list_init(config_arg_comp, false, false);
 	list_add(args, &((config_named_t){ 's', "list",    "integer",    "Run ‘LIST’ tests, with the given number of items (default 10)",                                     CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
-	list_add(args, &((config_named_t){ 't', "tlv",     "integer",    "Run ‘TLV’ tests, with the given number of items (default 10)",                                      CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'm', "map",     "integer",    "Run ‘MAP’ tests, with the given number of items (default 10)",                                      CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'v', "tlv",     "integer",    "Run ‘TLV’ tests, with the given number of items (default 10)",                                      CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'f', "fs",      "path",       "Run ‘FS’ tests, on the given path (default is current directory)",                                  CONFIG_ARG_OPT_STRING,  { .string  = NULL      }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'm', "types",   "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)",     CONFIG_ARG_LIST_STRING, { .list    = NULL      }, false, true,  false, false }));
+	list_add(args, &((config_named_t){ 't', "types",   "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)",     CONFIG_ARG_LIST_STRING, { .list    = NULL      }, false, true,  false, false }));
 
 	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed (true/on/enabled/yes/false/off/disabled/no - config files only)", CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'i', "integer", "integer",    "See how decimal values are parsed",                                                                 CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
@@ -313,32 +363,34 @@ int main(int argc, char **argv)
 	if (all || ((config_named_t *)list_get(args, 0))->seen)
 		list_tests(((config_named_t *)list_get(args, 0))->response_value.integer);
 	if (all || ((config_named_t *)list_get(args, 1))->seen)
-		tlv_tests(((config_named_t *)list_get(args, 1))->response_value.integer);
+		map_tests(((config_named_t *)list_get(args, 1))->response_value.integer);
 	if (all || ((config_named_t *)list_get(args, 2))->seen)
+		tlv_tests(((config_named_t *)list_get(args, 2))->response_value.integer);
+	if (all || ((config_named_t *)list_get(args, 3))->seen)
 	{
 		dir_type_e types = DIR_NONE;
-		if (((config_named_t *)list_get(args, 3))->seen)
+		if (((config_named_t *)list_get(args, 4))->seen)
 		{
-			LIST l = ((config_named_t *)list_get(args, 3))->response_value.list;
+			LIST l = ((config_named_t *)list_get(args, 4))->response_value.list;
 			ITER i = list_iterator(l);
 			while (list_has_next(i))
 				types = parse_type(list_get_next(i));
 			free(i);
 			list_deinit(l, free);
 		}
-		fs_tests(((config_named_t *)list_get(args, 2))->response_value.string, types);
+		fs_tests(((config_named_t *)list_get(args, 3))->response_value.string, types);
 	}
 
-	if (all || ((config_named_t *)list_get(args, 4))->seen)
-		cli_eprintf("  Boolean : %s\n", ((config_named_t *)list_get(args, 4))->response_value.boolean ? "true" : "false");
 	if (all || ((config_named_t *)list_get(args, 5))->seen)
-		cli_eprintf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 5))->response_value.integer);
+		cli_eprintf("  Boolean : %s\n", ((config_named_t *)list_get(args, 5))->response_value.boolean ? "true" : "false");
 	if (all || ((config_named_t *)list_get(args, 6))->seen)
+		cli_eprintf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response_value.integer);
+	if (all || ((config_named_t *)list_get(args, 7))->seen)
 	{
 		char buf[0xFF] = { 0x00 };
-		strfromf128(buf, sizeof buf, "%.9f", ((config_named_t *)list_get(args, 6))->response_value.decimal);
+		strfromf128(buf, sizeof buf, "%.9f", ((config_named_t *)list_get(args, 7))->response_value.decimal);
 		cli_eprintf("  Decimal : %s\n", buf);
-		//cli_eprintf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 6))->response_value.decimal);
+		//cli_eprintf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response_value.decimal);
 	}
 
 	list_deinit(args);

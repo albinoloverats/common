@@ -2,7 +2,7 @@
 
 APP       = test-app
 
-SRC       = test/test.c src/error.c src/list.c src/tlv.c src/dir.c src/version.c src/config.c src/cli.c
+SRC       = test/test.c src/error.c src/list.c src/tlv.c src/map.c src/dir.c src/version.c src/config.c src/cli.c
 MISC      = src/misc.h
 
 CFLAGS   += -O0 -ggdb -Wall -Wextra -Werror -std=gnu99 -pipe -Wrestrict -Wformat=2 -Wno-unused-result
@@ -17,9 +17,10 @@ all:
 	-@echo -e "built ‘`echo -e ${SRC} | sed 's/ /’\n      ‘/g'`’ → ‘${APP}’"
 
 extra:
+	# -fanalyzer-verbosity=4
 	 @echo "#define ALL_CFLAGS   \"$(strip $(subst \",\',"${CFLAGS}  "))\""  > ${MISC}
 	 @echo "#define ALL_CPPFLAGS \"$(strip $(subst \",\',"${CPPFLAGS}"))\"" >> ${MISC}
-	 @${CC} -fanalyzer -fanalyzer-verbosity=4 ${CFLAGS} ${CPPFLAGS} ${SRC} ${LIBS} -o ${APP}
+	 @${CC} -fanalyzer ${CFLAGS} ${CPPFLAGS} ${SRC} ${LIBS} -o ${APP}
 	-@echo -e "built ‘`echo -e ${SRC} | sed 's/ /’\n      ‘/g'`’ → ‘${APP}’"
 
 clean:
