@@ -548,7 +548,7 @@ extern void config_show_usage(LIST args, LIST extra)
 	exit(EXIT_SUCCESS);
 }
 
-static void print_option(int indent, char sopt, char *lopt, char *type, bool req, char *desc)
+static void print_option(int indent, char sopt, char *lopt, char *type, char *def, bool req, char *desc)
 {
 	size_t z = indent - 8;
 	if (lopt)
@@ -608,12 +608,17 @@ static void print_option(int indent, char sopt, char *lopt, char *type, bool req
 			tmp[j] = desc[i];
 	desc = tmp;
 #endif
+	char *x_desc = NULL;
+	if (def)
+		asprintf(&x_desc, "%s" ANSI_COLOUR_WHITE " (default:" ANSI_COLOUR_GREEN " %s" ANSI_COLOUR_WHITE ")", desc, def);
+	else
+		x_desc = desc;
 
 	cli_eprintf(ANSI_COLOUR_BLUE);
 	if (l < width)
-		cli_eprintf("%s", desc);
+		cli_eprintf("%s", x_desc);
 	else if (width <= indent)
-		cli_eprintf("\n  %s\n", desc);
+		cli_eprintf("\n  %s\n", x_desc);
 	else
 	{
 		int s = 0;
@@ -625,7 +630,7 @@ static void print_option(int indent, char sopt, char *lopt, char *type, bool req
 				e = l;
 			else
 				for (too_long = true; e > s; e--)
-					if (isspace(desc[e]))
+					if (isspace(x_desc[e]))
 					{
 						too_long = false;
 						break;
@@ -633,13 +638,13 @@ static void print_option(int indent, char sopt, char *lopt, char *type, bool req
 			if (too_long)
 			{
 				for (int e2 = s; e2 < s + max_width; e2++)
-					if (isspace(desc[e2]) || desc[e2] == 0x00)
+					if (isspace(x_desc[e2]) || x_desc[e2] == 0x00)
 						e = e2;
 				cli_eprintf("\n  ");
 			}
 			else if (s)
 				cli_eprintf("\n%*s", indent, " ");
-			cli_eprintf("%.*s", e - s, desc + s);
+			cli_eprintf("%.*s", e - s, x_desc + s);
 			s = e + 1;
 		}
 		while (s < l);
@@ -647,6 +652,8 @@ static void print_option(int indent, char sopt, char *lopt, char *type, bool req
 #ifdef _WIN32
 	free(tmp);
 #endif
+	if (def)
+		free(x_desc);
 	cli_eprintf(ANSI_COLOUR_RESET "\n");
 	return;
 }
@@ -705,6 +712,56 @@ static void print_notes(const char *line)
 	return;
 }
 
+static char *parse_default(config_arg_e type, config_arg_u value)
+{
+	char *d = NULL;
+	switch (type)
+	{
+		case CONFIG_ARG_OPT_BOOLEAN:
+			(void)0; // for Slackware's older GCC
+			__attribute__((fallthrough)); /* allow fall-through */
+		case CONFIG_ARG_REQ_BOOLEAN:
+			{
+				bool v = (bool)value.boolean;
+				d = strdup(v ? "true" : "false");
+			}
+			break;
+		case CONFIG_ARG_OPT_INTEGER:
+			(void)0; // for Slackware's older GCC
+			__attribute__((fallthrough)); /* allow fall-through */
+		case CONFIG_ARG_REQ_INTEGER:
+			{
+				int64_t v = (int64_t)value.integer;
+				asprintf(&d, "%" PRIi64, v);
+			}
+			break;
+		case CONFIG_ARG_OPT_DECIMAL:
+			(void)0; // for Slackware's older GCC
+			__attribute__((fallthrough)); /* allow fall-through */
+		case CONFIG_ARG_REQ_DECIMAL:
+			{
+				_Float128 v = (_Float128)value.decimal;
+				char buf[0xFF] = { 0x00 };
+				strfromf128(buf, sizeof buf, "%.9f", v);
+				asprintf(&d, "%s", buf);
+			}
+			break;
+		case CONFIG_ARG_OPT_STRING:
+			(void)0; // for Slackware's older GCC
+			__attribute__((fallthrough)); /* allow fall-through */
+		case CONFIG_ARG_REQ_STRING:
+			{
+				char *v = (char *)value.string;
+				if (v)
+					d = strdup(v);
+			}
+			break;
+		default:
+			break;
+	}
+	return d;
+}
+
 static void show_help(LIST args, LIST notes, LIST extra)
 {
 	version_print(about.name, about.version, about.url);
@@ -733,9 +790,9 @@ static void show_help(LIST args, LIST notes, LIST extra)
 
 	cli_eprintf("\n");
 	format_section(_("Options"));
-	print_option(indent, 'h', "help",    NULL, false, "Display this message");
-	print_option(indent, 'l', "licence", NULL, false, "Display GNU GPL v3 licence header");
-	print_option(indent, 'v', "version", NULL, false, "Display application version");
+	print_option(indent, 'h', "help",    NULL, NULL, false, "Display this message");
+	print_option(indent, 'l', "licence", NULL, NULL, false, "Display GNU GPL v3 licence header");
+	print_option(indent, 'v', "version", NULL, NULL, false, "Display application version");
 	if (args)
 	{
 		ITER iter = list_iterator(args);
@@ -743,7 +800,12 @@ static void show_help(LIST args, LIST notes, LIST extra)
 		{
 			const config_named_t *arg = list_get_next(iter);
 			if (!arg->hidden && !arg->advanced)
-				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, arg->response_type & CONFIG_ARG_REQUIRED, arg->description);
+			{
+				char *def = parse_default(arg->response_type, arg->response_value);
+				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, def, arg->response_type & CONFIG_ARG_REQUIRED, arg->description);
+				if (def)
+					free(def);
+			}
 		}
 		free(iter);
 	}
@@ -756,7 +818,12 @@ static void show_help(LIST args, LIST notes, LIST extra)
 		{
 			const config_named_t *arg = list_get_next(iter);
 			if (!arg->hidden && arg->advanced)
-				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, arg->response_type & CONFIG_ARG_REQUIRED, arg->description);
+			{
+				char *def = parse_default(arg->response_type, arg->response_value);
+				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, def, arg->response_type & CONFIG_ARG_REQUIRED, arg->description);
+				if (def)
+					free(def);
+			}
 		}
 		free(iter);
 	}
@@ -862,9 +929,17 @@ static bool parse_config_boolean(const char *c, const char *l, bool d)
 	char *v = parse_config_tail(c, l);
 	if (v)
 	{
-		if (!strcasecmp(CONF_TRUE, v) || !strcasecmp(CONF_ON, v) || !strcasecmp(CONF_ENABLED, v) || !strcasecmp(CONF_YES, v))
+		if (!strcasecmp(CONF_TRUE, v)
+		 || !strcasecmp(CONF_ON, v)
+		 || !strcasecmp(CONF_ENABLED, v)
+		 || !strcasecmp(CONF_YES, v)
+		 || !strcmp(CONF_ONE, v))
 			r = true;
-		else if (!strcasecmp(CONF_FALSE, v) || !strcasecmp(CONF_OFF, v) || !strcasecmp(CONF_DISABLED, v) || !strcasecmp(CONF_NO, v))
+		else if (!strcasecmp(CONF_FALSE, v) ||
+			 !strcasecmp(CONF_OFF, v) ||
+			 !strcasecmp(CONF_DISABLED, v) ||
+			 !strcasecmp(CONF_NO, v) ||
+			 !strcmp(CONF_ZERO, v))
 			r = false;
 		free(v);
 	}

@@ -21,6 +21,8 @@
 #include "dir.h"
 #include "map.h"
 
+#define CURRENT_DIRECTORY "current directory"
+
 static config_about_t about =
 {
 	"test",
@@ -271,7 +273,6 @@ static void fs_tests(char *root, dir_type_e type)
 	return;
 }
 
-static int item_count = 10;
 
 static dir_type_e parse_type(const char *s)
 {
@@ -456,16 +457,19 @@ int main(int argc, char **argv)
 
 	config_init(about);
 
-	LIST args = list_init(config_arg_comp, false, false);
-	list_add(args, &((config_named_t){ 's', "list",    "integer",    "Run ‘LIST’ tests, with the given number of items (default 10)",                                     CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'm', "map",     "integer",    "Run ‘MAP’ tests, with the given number of items (default 10)",                                      CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'v', "tlv",     "integer",    "Run ‘TLV’ tests, with the given number of items (default 10)",                                      CONFIG_ARG_OPT_INTEGER, { .integer = item_count}, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'f', "fs",      "path",       "Run ‘FS’ tests, on the given path (default is current directory)",                                  CONFIG_ARG_OPT_STRING,  { .string  = NULL      }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 't', "types",   "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)",     CONFIG_ARG_LIST_STRING, { .list    = NULL      }, false, true,  false, false }));
+	int item_count = 10;
+	char *cur_dir = strdup(CURRENT_DIRECTORY);
 
-	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed (true/on/enabled/yes/false/off/disabled/no - config files only)", CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'i', "integer", "integer",    "See how decimal values are parsed",                                                                 CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'd', "decimal", "decimal",    "See how decimal values are parsed",                                                                 CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f      }, false, false, false, false }));
+	LIST args = list_init(config_arg_comp, false, false);
+	list_add(args, &((config_named_t){ 's', "list",    "integer",    "Run ‘LIST’ tests, with the given number of items",                                              CONFIG_ARG_OPT_INTEGER, { .integer = item_count }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'm', "map",     "integer",    "Run ‘MAP’ tests, with the given number of items",                                               CONFIG_ARG_OPT_INTEGER, { .integer = item_count }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'v', "tlv",     "integer",    "Run ‘TLV’ tests, with the given number of items",                                               CONFIG_ARG_OPT_INTEGER, { .integer = item_count }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'f', "fs",      "path",       "Run ‘FS’ tests, on the given path",                                                             CONFIG_ARG_OPT_STRING,  { .string  = cur_dir    }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 't', "types",   "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)", CONFIG_ARG_LIST_STRING, { .list    = NULL       }, false, true,  false, false }));
+
+	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed",                                                             CONFIG_ARG_REQ_BOOLEAN, { .boolean = false      }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'i', "integer", "integer",    "See how integer values are parsed",                                                             CONFIG_ARG_REQ_INTEGER, { .integer = 0          }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'd', "decimal", "decimal",    "See how decimal values are parsed",                                                             CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f       }, false, false, false, false }));
 
 	LIST notes = list_default();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
@@ -492,7 +496,8 @@ int main(int argc, char **argv)
 			free(i);
 			list_deinit(l, free);
 		}
-		fs_tests(((config_named_t *)list_get(args, 3))->response_value.string, types);
+		char *d = ((config_named_t *)list_get(args, 3))->response_value.string;
+		fs_tests(strcmp(CURRENT_DIRECTORY, d) ? d : NULL, types);
 	}
 
 	if (all || ((config_named_t *)list_get(args, 5))->seen)
@@ -506,6 +511,9 @@ int main(int argc, char **argv)
 		cli_eprintf("  Decimal : %s\n", buf);
 		//cli_eprintf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response_value.decimal);
 	}
+
+	if (cur_dir)
+		free(cur_dir);
 
 	list_deinit(args);
 	list_deinit(notes);

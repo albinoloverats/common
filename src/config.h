@@ -34,10 +34,13 @@
 #define CONF_ON       "on"
 #define CONF_ENABLED  "enabled"
 #define CONF_YES      "yes"
+#define CONF_ONE      "1"
+
 #define CONF_FALSE    "false"
 #define CONF_OFF      "off"
 #define CONF_DISABLED "disabled"
 #define CONF_NO       "no"
+#define CONF_ZERO     "0"
 
 
 #define CONFIG_ARG_REQUIRED 0x80000000 // 1000
@@ -46,7 +49,7 @@
 
 typedef enum
 {
-	CONFIG_ARG_BOOLEAN,
+	CONFIG_ARG_BOOLEAN = 1,
 	CONFIG_ARG_INTEGER,
 	CONFIG_ARG_DECIMAL,
 	CONFIG_ARG_STRING,
