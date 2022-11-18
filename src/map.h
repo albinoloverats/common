@@ -45,30 +45,20 @@ typedef void * MAP; /*!< The user visible MAP type */
  * Create a new map instance; all further operations are then performed
  * against this handle. Returns NULL on error.
  */
-#define map_default() map_init(NULL, false)
+#define map_default() map_init(NULL, true, false)
 
-extern MAP map_init(int c(const void *, const void *), bool s);
-
-#define MAP_DEINIT_ARGS_COUNT(...) MAP_DEINIT_ARGS_COUNT2(__VA_ARGS__, 2, 1) /*!< Function overloading argument count (part 1) */
-#define MAP_DEINIT_ARGS_COUNT2(_1, _2, _, ...) _                              /*!< Function overloading argument count (part 2) */
-
-#define map_deinit_1(A)     map_deinit_aux(A, true)  /*<! Call map_deinit_aux with false for second parameter */
-#define map_deinit_2(A, B)  map_deinit_aux(A, B)     /*<! Call map_deinit_aux with both user supplied parameters */
-#define map_deinit(...) CONCAT(map_deinit_, MAP_DEINIT_ARGS_COUNT(__VA_ARGS__))(__VA_ARGS__) /*!< Decide how to call map_deinit */
+extern MAP map_init(int c(const void *, const void *), bool f, bool s);
 
 /*!
  * \brief         Destroy a map
  * \param[in]  h  A pointer to a map to destroy
- * \param[in]  f  Whether to call free on keys and values
  *
  * Destroy a previously created map when it is no longer needed. Free
  * the memory and sets h to NULL so all subsequent calls to MAP
  * functions will not result in undefined behaviour. If called with f as
  * false then keys and values items will not be freed.
- *
- * Default is true; to free keys and values.
  */
-extern void map_deinit_aux(MAP h, bool f) __attribute__((nonnull(1)));
+extern void map_deinit(MAP h) __attribute__((nonnull(1)));
 
 extern size_t map_size(MAP h);
 

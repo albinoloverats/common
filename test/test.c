@@ -29,9 +29,14 @@ static config_about_t about =
 	"./test.conf"
 };
 
-static int list_test_comp(const void *a, const void *b)
+static int compare_integer(const void *a, const void *b)
 {
 	return *((const int *)a) - *((const int *)b);
+}
+
+static int compare_string(const void *a, const void *b)
+{
+	return strcmp(a, b);
 }
 
 static void list_tests(int i)
@@ -68,7 +73,7 @@ static void list_tests(int i)
 	list_deinit(l, free);
 
 	cli_eprintf("  Sorted list\n");
-	l = list_init(list_test_comp, true, true);
+	l = list_init(compare_integer, true, true);
 	for (int j = 0; j < i; j++)
 	{
 		int *k = malloc(sizeof( int ));
@@ -89,7 +94,7 @@ static void list_tests(int i)
 	list_deinit(l, free);
 
 	cli_eprintf("  Unique list (will attempt to insert the same value %d times)\n", i);
-	l = list_init(list_test_comp, false, false);
+	l = list_init(compare_integer, false, false);
 	for (int j = 0; j < i; j++)
 	{
 		int k = i;
@@ -299,25 +304,23 @@ static void map_tests(int i)
 	cli_eprintf("Running map tests with %d items\n", i);
 
 	cli_eprintf("  Simple map\n");
-	MAP m = map_default();
+	MAP m = map_init(compare_string, true, false);
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
 	{
-		char *k = calloc(4, sizeof( char ));
+		char *k = calloc(2, sizeof( char ));
 		if (!k)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 4);
-		for (int z = 0; z < 3; z++)
-			k[z] = (lrand48() % 26) + 'a';
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
 		char *v = calloc(16, sizeof( char ));
 		if (!v)
 			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
 		for (int z = 0; z < 15; z++)
 			v[z] = (lrand48() % 26) + 'a';
-		if (!map_add(m, k, v))
+		do
 		{
-			free(k);
-			free(v);
+			k[0] = 'a' + (lrand48() % 26);
 		}
+		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i);
 	// TODO somehow inline the iterator into the map code
@@ -331,9 +334,120 @@ static void map_tests(int i)
 		cli_printf("    Entry [%s] = %s\n", k, v);
 	}
 	free(t);
-	map_deinit(m, true);
+	map_deinit(m);
 
-	// TODO sorted map
+	cli_eprintf("  Sorted map\n");
+	m = map_init(compare_string, true, true);
+	assert(m != NULL);
+	for (int j = 0; j < i; j++)
+	{
+		char *k = calloc(2, sizeof( char ));
+		if (!k)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
+		k[0] = 'a' + j;
+		char *v = calloc(16, sizeof( char ));
+		if (!v)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		for (int z = 0; z < 15; z++)
+			v[z] = (lrand48() % 26) + 'a';
+		do
+		{
+			k[0] = 'a' + (lrand48() % 26);
+		}
+		while (!map_add(m, k, v));
+	}
+	assert(map_size(m) == (size_t)i);
+	keys = map_keys(m);
+	t = list_iterator(keys);
+	assert(t != NULL);
+	while (list_has_next(t))
+	{
+		const char *k = list_get_next(t);
+		const char *v = map_get(m, k);
+		cli_printf("    Entry [%s] = %s\n", k, v);
+	}
+	free(t);
+	map_deinit(m);
+
+	cli_eprintf("  Unique map (will attempt to insert the same key %d times)\n", i);
+	m = map_init(compare_string, true, true);
+	assert(m != NULL);
+	char *k = calloc(2, sizeof( char ));
+	if (!k)
+		die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
+	k[0] = 'a' + (lrand48() % 26);
+	for (int j = 0; j < i; j++)
+	{
+		char *v = calloc(16, sizeof( char ));
+		if (!v)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		for (int z = 0; z < 15; z++)
+			v[z] = (lrand48() % 26) + 'a';
+		if (!map_add(m, k, v))
+			free(v);
+	}
+	assert(map_size(m) == 1);
+	keys = map_keys(m);
+	t = list_iterator(keys);
+	assert(t != NULL);
+	while (list_has_next(t))
+	{
+		const char *k = list_get_next(t);
+		const char *v = map_get(m, k);
+		cli_printf("    Entry [%s] = %s\n", k, v);
+	}
+	free(t);
+	map_deinit(m);
+
+	cli_eprintf("  Remove from map (creating initial list of %d)\n", i * 2);
+	m = map_init(compare_string, true, false);
+	assert(m != NULL);
+	for (int j = 0; j < i * 2; j++)
+	{
+		char *k = calloc(2, sizeof( char ));
+		if (!k)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
+		char *v = calloc(16, sizeof( char ));
+		if (!v)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		for (int z = 0; z < 15; z++)
+			v[z] = (lrand48() % 26) + 'a';
+		do
+		{
+			k[0] = 'a' + (lrand48() % 26);
+		}
+		while (!map_add(m, k, v));
+	}
+	assert(map_size(m) == (size_t)i * 2);
+	keys = map_keys(m);
+	t = list_iterator(keys);
+	assert(t != NULL);
+	for (int j = 0; j < i; j++)
+	{
+		char k[2] = { 0x0 };
+		do
+		{
+			k[0] = 'a' + (lrand48() % 26);
+		}
+		while (!map_contains(m, k));
+		char *v = (char *)map_remove(m, k);
+		free(v);
+	}
+	free(t);
+	assert(map_size(m) == (size_t)i);
+	keys = map_keys(m);
+	t = list_iterator(keys);
+	assert(t != NULL);
+	while (list_has_next(t))
+	{
+		const char *k = list_get_next(t);
+		const char *v = map_get(m, k);
+		cli_printf("    Entry [%s] = %s\n", k, v);
+	}
+	free(t);
+	map_deinit(m);
+
+	return;
 }
 
 int main(int argc, char **argv)

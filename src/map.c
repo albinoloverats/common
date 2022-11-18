@@ -46,7 +46,7 @@ entry_t;
 static int map_compare(const void *a, const void *b);
 static void map_free(void *map);
 
-extern MAP map_init(int c(const void *, const void *), bool s)
+extern MAP map_init(int c(const void *, const void *), bool f, bool s)
 {
 	map_private_t *m = calloc(sizeof( map_private_t ), sizeof( byte_t ));
 	if (!m)
@@ -54,15 +54,15 @@ extern MAP map_init(int c(const void *, const void *), bool s)
 	m->entries = list_init(map_compare, false, s);
 	m->keys = list_init(c, false, s);
 	m->compare = c;
+	m->free = f;
 	return m;
 }
 
-extern void map_deinit(MAP ptr, bool f)
+extern void map_deinit(MAP ptr)
 {
 	map_private_t *map = (map_private_t *)ptr;
 	if (!map)
 		return;
-	map->free = f;
 	list_deinit(map->keys);
 	list_deinit(map->entries, map_free);
 	free(map);
@@ -81,11 +81,17 @@ extern bool map_add(MAP ptr, const void *k, const void *v)
 	map_private_t *map = (map_private_t *)ptr;
 	if (!map)
 		return false;
+	if (!list_append(map->keys, k))
+		return false;
 	entry_t *e = calloc(sizeof( entry_t ), sizeof( byte_t ));
 	e->parent = map;
 	e->key = k;
 	e->value = v;
-	return list_append(map->entries, e) && list_append(map->keys, k);
+	if (list_append(map->entries, e))
+		return true;
+	list_remove_item(map->keys, k);
+	free(e);
+	return false;
 }
 
 extern const void *map_get(MAP ptr, const void *k)
@@ -114,13 +120,22 @@ extern const void *map_remove(MAP ptr, const void *k)
 		return NULL;
 	entry_t e = { map, k, NULL };
 	list_remove_item(map->keys, k);
-	return list_remove_item(map->entries, &e);
+	const entry_t *r = list_remove_item(map->entries, &e);
+	if (map->free)
+		free((void *)r->key);
+	const void *x = r->value;
+	free((void *)r);
+	return x;
 }
 
 extern LIST map_keys(MAP ptr)
 {
 	return ((map_private_t *)ptr)->keys;
 }
+
+/*
+ * TODO implement an iterator
+ */
 
 static int map_compare(const void *a, const void *b)
 {
