@@ -88,6 +88,13 @@ typedef union
 }
 config_arg_u;
 
+typedef struct
+{
+	config_arg_e type;
+	config_arg_u value;
+}
+config_arg_t;
+
 /*!
  * \brief  A named command line parameter.
  *
@@ -99,8 +106,7 @@ typedef struct
 	char *long_option;           /*!< The command line long option */
 	char *option_type;           /*!< What the expected parameter should be */
 	char *description;           /*!< A description of the argument */
-	config_arg_e response_type;  /*!< The expected response type */
-	config_arg_u response_value; /*!< The response value */
+	config_arg_t response;       /*!< The expected repsonse type and value */
 	bool required:1;             /*!< Whether this option is required */
 	bool advanced:1;             /*!< Whether this option is considered advanced */
 	bool hidden:1;               /*!< Whether this option should be hidden */
@@ -117,8 +123,7 @@ config_named_t;
 typedef struct
 {
 	char *description;           /*!< A description of the argument */
-	config_arg_e response_type;  /*!< The expected response type */
-	config_arg_u response_value; /*!< The response value */
+	config_arg_t response;       /*!< The expected repsonse type and value */
 	bool required:1;             /*!< Whether this option is required */
 	bool seen:1;                 /*!< Whether this argument was detected */
 }

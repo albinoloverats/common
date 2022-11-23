@@ -137,14 +137,14 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 				{
 					config_named_t *arg = (config_named_t *)list_get_next(iter);
 					if (arg->long_option && !strncmp(arg->long_option, line, strlen(arg->long_option)) && isspace((unsigned char)line[strlen(arg->long_option)]))
-						switch (arg->response_type)
+						switch (arg->response.type)
 						{
 							case CONFIG_ARG_OPT_BOOLEAN:
 								(void)0; // for Slackware's older GCC
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_BOOLEAN:
 								arg->seen = true;
-								arg->response_value.boolean = parse_config_boolean(arg->long_option, line, arg->response_value.boolean);
+								arg->response.value.boolean = parse_config_boolean(arg->long_option, line, arg->response.value.boolean);
 								break;
 
 							case CONFIG_ARG_OPT_INTEGER:
@@ -152,7 +152,7 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_INTEGER:
 								arg->seen = true;
-								arg->response_value.integer = parse_config_integer(arg->long_option, line, arg->response_value.integer);
+								arg->response.value.integer = parse_config_integer(arg->long_option, line, arg->response.value.integer);
 								break;
 
 							case CONFIG_ARG_OPT_DECIMAL:
@@ -160,7 +160,7 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_DECIMAL:
 								arg->seen = true;
-								arg->response_value.decimal = parse_config_decimal(arg->long_option, line, arg->response_value.decimal);
+								arg->response.value.decimal = parse_config_decimal(arg->long_option, line, arg->response.value.decimal);
 								break;
 
 							case CONFIG_ARG_OPT_STRING:
@@ -168,15 +168,15 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_STRING:
 								arg->seen = true;
-								arg->response_value.string = parse_config_string(arg->long_option, line, arg->response_value.string);
+								arg->response.value.string = parse_config_string(arg->long_option, line, arg->response.value.string);
 								break;
 
 							case CONFIG_ARG_PAIR_BOOLEAN:
 								{
 									arg->seen = true;
 									pair_boolean_t *pair = parse_pair_boolean(arg->long_option, line);
-									arg->response_value.pair.boolean.b1 = pair->b1;
-									arg->response_value.pair.boolean.b2 = pair->b2;
+									arg->response.value.pair.boolean.b1 = pair->b1;
+									arg->response.value.pair.boolean.b2 = pair->b2;
 									free(pair);
 								}
 								break;
@@ -185,8 +185,8 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								{
 									arg->seen = true;
 									pair_integer_t *pair = parse_pair_integer(arg->long_option, line);
-									arg->response_value.pair.integer.i1 = pair->i1;
-									arg->response_value.pair.integer.i2 = pair->i2;
+									arg->response.value.pair.integer.i1 = pair->i1;
+									arg->response.value.pair.integer.i2 = pair->i2;
 									free(pair);
 								}
 								break;
@@ -195,8 +195,8 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								{
 									arg->seen = true;
 									pair_decimal_t *pair = parse_pair_decimal(arg->long_option, line);
-									arg->response_value.pair.decimal.d1 = pair->d1;
-									arg->response_value.pair.decimal.d2 = pair->d2;
+									arg->response.value.pair.decimal.d1 = pair->d1;
+									arg->response.value.pair.decimal.d2 = pair->d2;
 									free(pair);
 								}
 								break;
@@ -205,24 +205,34 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								{
 									arg->seen = true;
 									pair_string_t *pair = parse_pair_string(arg->long_option, line);
-									arg->response_value.pair.string.s1 = pair->s1;
-									arg->response_value.pair.string.s2 = pair->s2;
+									arg->response.value.pair.string.s1 = pair->s1;
+									arg->response.value.pair.string.s2 = pair->s2;
 									free(pair);
 								}
 								break;
 
 							case CONFIG_ARG_LIST_STRING:
+								if (!arg->seen && arg->response.value.list)
+								{
+									free(arg->response.value.list);
+									arg->response.value.list = NULL;
+								}
 								arg->seen = true;
-								if (!arg->response_value.list)
-									arg->response_value.list = list_default();
-								list_append(arg->response_value.list, parse_config_string(arg->long_option, line, NULL));
+								if (!arg->response.value.list)
+									arg->response.value.list = list_default();
+								list_append(arg->response.value.list, parse_config_string(arg->long_option, line, NULL));
 								break;
 
 							case CONFIG_ARG_LIST_PAIR_STRING:
+								if (!arg->seen && arg->response.value.list)
+								{
+									free(arg->response.value.list);
+									arg->response.value.list = NULL;
+								}
 								arg->seen = true;
-								if (!arg->response_value.list)
-									arg->response_value.list = list_default();
-								list_append(arg->response_value.list, parse_pair_string(arg->long_option, line));
+								if (!arg->response.value.list)
+									arg->response.value.list = list_default();
+								list_append(arg->response.value.list, parse_pair_string(arg->long_option, line));
 								break;
 						}
 				}
@@ -277,7 +287,7 @@ end_line:
 			strcat(short_options, S);
 		}
 		long_options[i + 3].name = arg->long_option;
-		if (arg->response_type & CONFIG_ARG_REQUIRED)
+		if (arg->response.type & CONFIG_ARG_REQUIRED)
 			long_options[i + 3].has_arg = required_argument;
 		else
 			long_options[i + 3].has_arg = optional_argument;
@@ -286,14 +296,13 @@ end_line:
 	}
 
 	/*
-	 * parse command line options
+	 * check for help/version/licence
 	 */
 	while (argc && argv)
 	{
 		int c = getopt_long(argc, argv, short_options, long_options, &((int){0}));
 		if (c == -1)
 			break;
-		bool unknown = true;
 		if (c == 'h' || c == 'v' || c == 'l')
 		{
 			free(short_options);
@@ -308,6 +317,20 @@ end_line:
 					show_licence(args, notes, extra);
 			}
 		}
+	}
+	optind = 1;
+
+	/*
+	 * parse command line options
+	 */
+	while (argc && argv)
+	{
+		int c = getopt_long(argc, argv, short_options, long_options, &((int){0}));
+		if (c == -1)
+			break;
+		bool unknown = true;
+		if (c == 'h' || c == 'v' || c == 'l')
+			continue;
 		else if (c == '?' && warn)
 		{
 			free(short_options);
@@ -323,7 +346,7 @@ end_line:
 				if (c == arg->short_option)
 				{
 					unknown = false;
-					switch (arg->response_type)
+					switch (arg->response.type)
 					{
 						case CONFIG_ARG_OPT_INTEGER:
 							arg->seen = true;
@@ -332,7 +355,7 @@ end_line:
 							__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
 						case CONFIG_ARG_REQ_INTEGER:
 							arg->seen = true;
-							arg->response_value.integer = strtoull(optarg, NULL, 0);
+							arg->response.value.integer = strtoull(optarg, NULL, 0);
 							break;
 
 						case CONFIG_ARG_OPT_DECIMAL:
@@ -342,7 +365,7 @@ end_line:
 							__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
 						case CONFIG_ARG_REQ_DECIMAL:
 							arg->seen = true;
-							arg->response_value.decimal = strtof128(optarg, NULL);
+							arg->response.value.decimal = strtof128(optarg, NULL);
 							break;
 
 						case CONFIG_ARG_OPT_STRING:
@@ -352,9 +375,9 @@ end_line:
 							__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
 						case CONFIG_ARG_REQ_STRING:
 							arg->seen = true;
-							if (arg->response_value.string)
-								free(arg->response_value.string);
-							if (!(arg->response_value.string = strdup(optarg)))
+							if (arg->response.value.string)
+								free(arg->response.value.string);
+							if (!(arg->response.value.string = strdup(optarg)))
 								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(optarg) + 1);
 							break;
 
@@ -364,30 +387,35 @@ end_line:
 						case CONFIG_ARG_REQ_BOOLEAN:
 							arg->seen = true;
 							if (optarg)
-								arg->response_value.boolean = parse_boolean(optarg, arg->response_value.boolean);
+								arg->response.value.boolean = parse_boolean(optarg, arg->response.value.boolean);
 							else
-								arg->response_value.boolean = !arg->response_value.boolean;
+								arg->response.value.boolean = !arg->response.value.boolean;
 							break;
 
 						/* TODO extend handling of lists and pairs and list of pairs... */
 
 						case CONFIG_ARG_LIST_STRING:
+							if (!arg->seen && arg->response.value.list)
+							{
+								free(arg->response.value.list);
+								arg->response.value.list = NULL;
+							}
 							arg->seen = true;
-							if (!arg->response_value.list)
-								arg->response_value.list = list_default();
+							if (!arg->response.value.list)
+								arg->response.value.list = list_default();
 							if (strchr(optarg, ','))
 							{
 								char *s = strdup(optarg);
 								if (!s)
 									die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(optarg) + 1);
 								char *u = strdup(strtok(s, ","));
-								if (!list_append(arg->response_value.list, u))
+								if (!list_append(arg->response.value.list, u))
 									free(u);
 								char *t = NULL;
 								while ((t = strtok(NULL, ",")))
 								{
 									char *v = strdup(t);
-									if (!list_append(arg->response_value.list, v))
+									if (!list_append(arg->response.value.list, v))
 										free(v);
 								}
 								free(s);
@@ -395,13 +423,13 @@ end_line:
 							else
 							{
 								char *x = strdup(optarg);
-								if (!list_append(arg->response_value.list, x))
+								if (!list_append(arg->response.value.list, x))
 									free(x);
 							}
 							break;
 
 						default:
-							arg->response_value.boolean = !arg->response_value.boolean;
+							arg->response.value.boolean = !arg->response.value.boolean;
 							break;
 					}
 				}
@@ -431,23 +459,23 @@ end_line:
 			config_unnamed_t *x = (config_unnamed_t *)list_get_next(iter);
 			x->seen = true;
 			r++;
-			switch (x->response_type)
+			switch (x->response.type)
 			{
 				case CONFIG_ARG_STRING:
-					if (!(x->response_value.string = strdup(argv[optind])))
+					if (!(x->response.value.string = strdup(argv[optind])))
 						die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(argv[optind]));
 					break;
 				case CONFIG_ARG_INTEGER:
-					x->response_value.integer = strtoull(argv[optind], NULL, 0);
+					x->response.value.integer = strtoull(argv[optind], NULL, 0);
 					break;
 				case CONFIG_ARG_DECIMAL:
-					x->response_value.decimal = strtof128(argv[optind], NULL);
+					x->response.value.decimal = strtof128(argv[optind], NULL);
 					break;
 				case CONFIG_ARG_BOOLEAN:
 					(void)0; // for Slackware's older GCC
 					__attribute__((fallthrough)); /* allow fall-through; argument was seen */
 				default:
-					x->response_value.boolean = true;
+					x->response.value.boolean = true;
 					break;
 			}
 		}
@@ -746,17 +774,12 @@ static char *parse_default(config_arg_e type, config_arg_u value)
 				asprintf(&d, "%s", buf);
 			}
 			break;
-		case CONFIG_ARG_OPT_STRING:
-			(void)0; // for Slackware's older GCC
-			__attribute__((fallthrough)); /* allow fall-through */
-		case CONFIG_ARG_REQ_STRING:
+		default: // all other defaults to be displayed should be string
 			{
 				char *v = (char *)value.string;
 				if (v)
 					d = strdup(v);
 			}
-			break;
-		default:
 			break;
 	}
 	return d;
@@ -801,8 +824,8 @@ static void show_help(LIST args, LIST notes, LIST extra)
 			const config_named_t *arg = list_get_next(iter);
 			if (!arg->hidden && !arg->advanced)
 			{
-				char *def = parse_default(arg->response_type, arg->response_value);
-				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, def, arg->response_type & CONFIG_ARG_REQUIRED, arg->description);
+				char *def = parse_default(arg->response.type, arg->response.value);
+				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, def, arg->response.type & CONFIG_ARG_REQUIRED, arg->description);
 				if (def)
 					free(def);
 			}
@@ -819,8 +842,8 @@ static void show_help(LIST args, LIST notes, LIST extra)
 			const config_named_t *arg = list_get_next(iter);
 			if (!arg->hidden && arg->advanced)
 			{
-				char *def = parse_default(arg->response_type, arg->response_value);
-				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, def, arg->response_type & CONFIG_ARG_REQUIRED, arg->description);
+				char *def = parse_default(arg->response.type, arg->response.value);
+				print_option(indent, arg->short_option, arg->long_option, arg->option_type ? : NULL, def, arg->response.type & CONFIG_ARG_REQUIRED, arg->description);
 				if (def)
 					free(def);
 			}

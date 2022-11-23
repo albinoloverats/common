@@ -22,6 +22,7 @@
 #include "map.h"
 
 #define CURRENT_DIRECTORY "current directory"
+#define ALL_TYPES "all"
 
 static config_about_t about =
 {
@@ -459,20 +460,22 @@ int main(int argc, char **argv)
 
 	int item_count = 10;
 	char *cur_dir = strdup(CURRENT_DIRECTORY);
+	char *all_types = strdup(ALL_TYPES);
 
 	LIST args = list_init(config_arg_comp, false, false);
-	list_add(args, &((config_named_t){ 's', "list",    "integer",    "Run ‘LIST’ tests, with the given number of items",                                              CONFIG_ARG_OPT_INTEGER, { .integer = item_count }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'm', "map",     "integer",    "Run ‘MAP’ tests, with the given number of items",                                               CONFIG_ARG_OPT_INTEGER, { .integer = item_count }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'v', "tlv",     "integer",    "Run ‘TLV’ tests, with the given number of items",                                               CONFIG_ARG_OPT_INTEGER, { .integer = item_count }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'f', "fs",      "path",       "Run ‘FS’ tests, on the given path",                                                             CONFIG_ARG_OPT_STRING,  { .string  = cur_dir    }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 't', "types",   "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)", CONFIG_ARG_LIST_STRING, { .list    = NULL       }, false, true,  false, false }));
+	list_add(args, &((config_named_t){ 's', "list",    "integer",    "Run ‘LIST’ tests, with the given number of items",    { CONFIG_ARG_OPT_INTEGER, { .integer = item_count } }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'm', "map",     "integer",    "Run ‘MAP’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER, { .integer = item_count } }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'v', "tlv",     "integer",    "Run ‘TLV’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER, { .integer = item_count } }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'f', "fs",      "path",       "Run ‘FS’ tests, on the given path",                   { CONFIG_ARG_OPT_STRING,  { .string  = cur_dir    } }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 't', "types",   "file types", "Which file types to search for the the FS tree test", { CONFIG_ARG_LIST_STRING, { .string  = all_types  } }, false, true,  false, false }));
 
-	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed",                                                             CONFIG_ARG_OPT_BOOLEAN, { .boolean = false      }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'i', "integer", "integer",    "See how integer values are parsed",                                                             CONFIG_ARG_REQ_INTEGER, { .integer = 0          }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'd', "decimal", "decimal",    "See how decimal values are parsed",                                                             CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f       }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed",                   { CONFIG_ARG_OPT_BOOLEAN, { .boolean = false      } }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'i', "integer", "integer",    "See how integer values are parsed",                   { CONFIG_ARG_REQ_INTEGER, { .integer = 0          } }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'd', "decimal", "decimal",    "See how decimal values are parsed",                   { CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f       } }, false, false, false, false }));
 
 	LIST notes = list_default();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
+	list_add(notes, "File types: [ folder / file / link / block / char / socket / pipe ]");
 	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 1 ]");
 
 	bool all = !config_parse(argc, argv, args, NULL, notes);
@@ -480,39 +483,41 @@ int main(int argc, char **argv)
 	errno = EXIT_SUCCESS;
 
 	if (all || ((config_named_t *)list_get(args, 0))->seen)
-		list_tests(((config_named_t *)list_get(args, 0))->response_value.integer);
+		list_tests(((config_named_t *)list_get(args, 0))->response.value.integer);
 	if (all || ((config_named_t *)list_get(args, 1))->seen)
-		map_tests(((config_named_t *)list_get(args, 1))->response_value.integer);
+		map_tests(((config_named_t *)list_get(args, 1))->response.value.integer);
 	if (all || ((config_named_t *)list_get(args, 2))->seen)
-		tlv_tests(((config_named_t *)list_get(args, 2))->response_value.integer);
+		tlv_tests(((config_named_t *)list_get(args, 2))->response.value.integer);
 	if (all || ((config_named_t *)list_get(args, 3))->seen)
 	{
 		dir_type_e types = DIR_NONE;
 		if (((config_named_t *)list_get(args, 4))->seen)
 		{
-			LIST l = ((config_named_t *)list_get(args, 4))->response_value.list;
+			LIST l = ((config_named_t *)list_get(args, 4))->response.value.list;
 			ITER i = list_iterator(l);
 			while (list_has_next(i))
 				types = parse_type(list_get_next(i));
 			free(i);
 			list_deinit(l, free);
 		}
-		char *d = ((config_named_t *)list_get(args, 3))->response_value.string;
+		char *d = ((config_named_t *)list_get(args, 3))->response.value.string;
 		fs_tests(strcmp(CURRENT_DIRECTORY, d) ? d : NULL, types);
 	}
 
 	if (all || ((config_named_t *)list_get(args, 5))->seen)
-		cli_eprintf("  Boolean : %s\n", ((config_named_t *)list_get(args, 5))->response_value.boolean ? "true" : "false");
+		cli_eprintf("  Boolean : %s\n", ((config_named_t *)list_get(args, 5))->response.value.boolean ? "true" : "false");
 	if (all || ((config_named_t *)list_get(args, 6))->seen)
-		cli_eprintf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response_value.integer);
+		cli_eprintf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response.value.integer);
 	if (all || ((config_named_t *)list_get(args, 7))->seen)
 	{
 		char buf[0xFF] = { 0x00 };
-		strfromf128(buf, sizeof buf, "%.9f", ((config_named_t *)list_get(args, 7))->response_value.decimal);
+		strfromf128(buf, sizeof buf, "%.9f", ((config_named_t *)list_get(args, 7))->response.value.decimal);
 		cli_eprintf("  Decimal : %s\n", buf);
-		//cli_eprintf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response_value.decimal);
+		//cli_eprintf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response.value.decimal);
 	}
 
+	if (all_types)
+		free(all_types);
 	if (cur_dir)
 		free(cur_dir);
 
