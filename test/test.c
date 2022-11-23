@@ -467,12 +467,13 @@ int main(int argc, char **argv)
 	list_add(args, &((config_named_t){ 'f', "fs",      "path",       "Run ‘FS’ tests, on the given path",                                                             CONFIG_ARG_OPT_STRING,  { .string  = cur_dir    }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 't', "types",   "file types", "Which file types to search for the the FS tree test (folder,file,link,block,char,socket,pipe)", CONFIG_ARG_LIST_STRING, { .list    = NULL       }, false, true,  false, false }));
 
-	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed",                                                             CONFIG_ARG_REQ_BOOLEAN, { .boolean = false      }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'b', "boolean", "boolean",    "See how boolean values are parsed",                                                             CONFIG_ARG_OPT_BOOLEAN, { .boolean = false      }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'i', "integer", "integer",    "See how integer values are parsed",                                                             CONFIG_ARG_REQ_INTEGER, { .integer = 0          }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'd', "decimal", "decimal",    "See how decimal values are parsed",                                                             CONFIG_ARG_REQ_DECIMAL, { .decimal = 0.0f       }, false, false, false, false }));
 
 	LIST notes = list_default();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
+	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 1 ]");
 
 	bool all = !config_parse(argc, argv, args, NULL, notes);
 

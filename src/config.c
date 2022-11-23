@@ -59,6 +59,8 @@ static void show_version(LIST args, LIST notes, LIST extra) __attribute__((noret
 static void show_help(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 static void show_licence(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 
+static bool parse_boolean(char *, bool);
+
 static bool    parse_config_boolean(const char *, const char *, bool);
 static int64_t parse_config_integer(const char *, const char *, int64_t);
 static _Float128 parse_config_decimal(const char *, const char *, _Float128);
@@ -274,13 +276,8 @@ end_line:
 			S[0] = arg->short_option;
 			strcat(short_options, S);
 		}
-		if (arg->response_type != CONFIG_ARG_REQ_BOOLEAN && arg->response_type != CONFIG_ARG_OPT_BOOLEAN)
-			strcat(short_options, ":");
 		long_options[i + 3].name = arg->long_option;
-
-		if (arg->response_type == CONFIG_ARG_REQ_BOOLEAN || arg->response_type == CONFIG_ARG_OPT_BOOLEAN)
-			long_options[i + 3].has_arg = no_argument;
-		else if (arg->response_type & CONFIG_ARG_REQUIRED)
+		if (arg->response_type & CONFIG_ARG_REQUIRED)
 			long_options[i + 3].has_arg = required_argument;
 		else
 			long_options[i + 3].has_arg = optional_argument;
@@ -366,7 +363,10 @@ end_line:
 							__attribute__((fallthrough)); /* allow fall-through; argument was seen */
 						case CONFIG_ARG_REQ_BOOLEAN:
 							arg->seen = true;
-							arg->response_value.boolean = !arg->response_value.boolean;
+							if (optarg)
+								arg->response_value.boolean = parse_boolean(optarg, arg->response_value.boolean);
+							else
+								arg->response_value.boolean = !arg->response_value.boolean;
 							break;
 
 						/* TODO extend handling of lists and pairs and list of pairs... */
@@ -923,24 +923,30 @@ extern void update_config(const char * const restrict o, const char * const rest
 	return;
 }
 
+static bool parse_boolean(char *v, bool b)
+{
+	if (!strcasecmp(CONF_TRUE, v)
+	 || !strcasecmp(CONF_ON, v)
+	 || !strcasecmp(CONF_ENABLED, v)
+	 || !strcasecmp(CONF_YES, v)
+	 || !strcmp(CONF_ONE, v))
+		b = true;
+	else if (!strcasecmp(CONF_FALSE, v) ||
+		 !strcasecmp(CONF_OFF, v) ||
+		 !strcasecmp(CONF_DISABLED, v) ||
+		 !strcasecmp(CONF_NO, v) ||
+		 !strcmp(CONF_ZERO, v))
+		b = false;
+	return b;
+}
+
 static bool parse_config_boolean(const char *c, const char *l, bool d)
 {
 	bool r = d;
 	char *v = parse_config_tail(c, l);
 	if (v)
 	{
-		if (!strcasecmp(CONF_TRUE, v)
-		 || !strcasecmp(CONF_ON, v)
-		 || !strcasecmp(CONF_ENABLED, v)
-		 || !strcasecmp(CONF_YES, v)
-		 || !strcmp(CONF_ONE, v))
-			r = true;
-		else if (!strcasecmp(CONF_FALSE, v) ||
-			 !strcasecmp(CONF_OFF, v) ||
-			 !strcasecmp(CONF_DISABLED, v) ||
-			 !strcasecmp(CONF_NO, v) ||
-			 !strcmp(CONF_ZERO, v))
-			r = false;
+		r = parse_boolean(v, r);
 		free(v);
 	}
 	return r;
