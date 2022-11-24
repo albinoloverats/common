@@ -116,8 +116,7 @@ extern const void *map_get(MAP ptr, const void *k)
 		return NULL;
 	if (!list_contains(map->keys, k))
 		return NULL;
-	entry_t e = { map, k, NULL };
-	const entry_t *r = list_contains(map->entries, &e);
+	const entry_t *r = list_contains(map->entries, &((entry_t){ map, k, NULL }));
 	return r->value;
 }
 
@@ -133,9 +132,8 @@ extern const void *map_remove(MAP ptr, const void *k)
 		return NULL;
 	if (!list_contains(map->keys, k))
 		return NULL;
-	entry_t e = { map, k, NULL };
 	list_remove_item(map->keys, k);
-	const entry_t *r = list_remove_item(map->entries, &e);
+	const entry_t *r = list_remove_item(map->entries, &((entry_t){ map, k, NULL }));
 	if (map->free)
 		free((void *)r->key);
 	const void *x = r->value;

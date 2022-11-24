@@ -749,36 +749,28 @@ static char *parse_default(config_arg_e type, config_arg_u value)
 			(void)0; // for Slackware's older GCC
 			__attribute__((fallthrough)); /* allow fall-through */
 		case CONFIG_ARG_REQ_BOOLEAN:
-			{
-				bool v = (bool)value.boolean;
-				d = strdup(v ? "true" : "false");
-			}
+			d = strdup(value.boolean ? "true" : "false");
 			break;
 		case CONFIG_ARG_OPT_INTEGER:
 			(void)0; // for Slackware's older GCC
 			__attribute__((fallthrough)); /* allow fall-through */
 		case CONFIG_ARG_REQ_INTEGER:
-			{
-				int64_t v = (int64_t)value.integer;
-				asprintf(&d, "%" PRIi64, v);
-			}
+			asprintf(&d, "%" PRIi64, (int64_t)value.integer);
 			break;
 		case CONFIG_ARG_OPT_DECIMAL:
 			(void)0; // for Slackware's older GCC
 			__attribute__((fallthrough)); /* allow fall-through */
 		case CONFIG_ARG_REQ_DECIMAL:
 			{
-				_Float128 v = (_Float128)value.decimal;
 				char buf[0xFF] = { 0x00 };
-				strfromf128(buf, sizeof buf, "%.9f", v);
+				strfromf128(buf, sizeof buf, "%.9f", (_Float128)value.decimal);
 				asprintf(&d, "%s", buf);
 			}
 			break;
 		default: // all other defaults to be displayed should be string
 			{
-				char *v = (char *)value.string;
-				if (v)
-					d = strdup(v);
+				if (value.string)
+					d = strdup((char *)value.string);
 			}
 			break;
 	}
