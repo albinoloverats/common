@@ -31,13 +31,14 @@ typedef struct
 	LIST entries;
 	LIST keys; // keeping a list of keys might help in the future (I don't know yet)
 	int (*compare)(const void *, const void *); /*!< How to compare entries (keys) in the map */
-	bool free;
+	bool free:1;
+	bool overwrite:1;
 }
 map_private_t;
 
 typedef struct
 {
-	map_private_t *parent;
+	map_private_t *parent; // reference to parent gives compare function in entry compare
 	const void *key;
 	const void *value;
 }
@@ -46,7 +47,7 @@ entry_t;
 static int map_compare(const void *a, const void *b);
 static void map_free(void *map);
 
-extern MAP map_init(int c(const void *, const void *), bool f, bool s)
+extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o)
 {
 	map_private_t *m = calloc(sizeof( map_private_t ), sizeof( byte_t ));
 	if (!m)
@@ -55,6 +56,7 @@ extern MAP map_init(int c(const void *, const void *), bool f, bool s)
 	m->keys = list_init(c, false, s);
 	m->compare = c;
 	m->free = f;
+	m->overwrite = o;
 	return m;
 }
 
@@ -81,11 +83,24 @@ extern bool map_add(MAP ptr, const void *k, const void *v)
 	map_private_t *map = (map_private_t *)ptr;
 	if (!map)
 		return false;
+	bool exists = list_contains(map->keys, k);
+	if (exists && !map->overwrite)
+		return false; // already exists and not overwritting
 	if (!list_append(map->keys, k))
 		return false;
-	entry_t *e = calloc(sizeof( entry_t ), sizeof( byte_t ));
-	e->parent = map;
-	e->key = k;
+	entry_t *e;
+	if (exists && map->overwrite)
+	{
+		e = (entry_t *)list_remove_item(map->entries, &e);
+		if (map->free)
+			free((void *)e->value);
+	}
+	else
+	{
+		e = calloc(sizeof( entry_t ), sizeof( byte_t ));
+		e->parent = map;
+		e->key = k;
+	}
 	e->value = v;
 	if (list_append(map->entries, e))
 		return true;

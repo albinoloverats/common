@@ -45,9 +45,9 @@ typedef void * MAP; /*!< The user visible MAP type */
  * Create a new map instance; all further operations are then performed
  * against this handle. Returns NULL on error.
  */
-#define map_default() map_init(NULL, true, false)
+#define map_default() map_init(NULL, true, false, false)
 
-extern MAP map_init(int c(const void *, const void *), bool f, bool s);
+extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o);
 
 /*!
  * \brief         Destroy a map
@@ -60,8 +60,28 @@ extern MAP map_init(int c(const void *, const void *), bool f, bool s);
  */
 extern void map_deinit(MAP h) __attribute__((nonnull(1)));
 
+/*!
+ * \brief         Get the number of entries in the map
+ * \param[in]  h  A pointer to the map
+ * \return        The number of entries in the map
+ *
+ * Get the number of entries in the map.
+ */
 extern size_t map_size(MAP h);
 
+/*!
+ * \brief         Add an entry to the map
+ * \param[in]  h  A pointer to the map
+ * \param[in]  k  The key of the entry to add
+ * \param[in]  v  The value of the entry to add
+ * \reutrn        Whether the entry was added
+ *
+ * Add a new entry to the map. If the map is sorted then the entry will
+ * be inserted based on the results of the compare function, otherwise
+ * it will be appended. If the key already exists, whether it is
+ * overwritten depends on how the map was initialised. Returns true if
+ * the key/value are added/replaced, false otherwise.
+ */
 extern bool map_add(MAP h, const void *k, const void *v);
 
 extern const void *map_get(MAP h, const void *k);

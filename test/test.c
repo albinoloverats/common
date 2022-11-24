@@ -306,7 +306,7 @@ static void map_tests(int i)
 	cli_eprintf("Running map tests with %d items\n", i);
 
 	cli_eprintf("  Simple map\n");
-	MAP m = map_init(compare_string, true, false);
+	MAP m = map_init(compare_string, true, false, false);
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
 	{
@@ -339,7 +339,7 @@ static void map_tests(int i)
 	map_deinit(m);
 
 	cli_eprintf("  Sorted map\n");
-	m = map_init(compare_string, true, true);
+	m = map_init(compare_string, true, true, false);
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
 	{
@@ -372,7 +372,7 @@ static void map_tests(int i)
 	map_deinit(m);
 
 	cli_eprintf("  Unique map (will attempt to insert the same key %d times)\n", i);
-	m = map_init(compare_string, true, true);
+	m = map_init(compare_string, true, true, false);
 	assert(m != NULL);
 	char *k = calloc(2, sizeof( char ));
 	if (!k)
@@ -401,8 +401,38 @@ static void map_tests(int i)
 	free(t);
 	map_deinit(m);
 
+	cli_eprintf("  Overwritten unique map (will attempt to insert the same key %d times)\n", i);
+	m = map_init(compare_string, true, false, true);
+	assert(m != NULL);
+	k = calloc(2, sizeof( char ));
+	if (!k)
+		die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
+	k[0] = 'a' + (lrand48() % 26);
+	for (int j = 0; j < i; j++)
+	{
+		char *v = calloc(16, sizeof( char ));
+		if (!v)
+			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		for (int z = 0; z < 15; z++)
+			v[z] = (lrand48() % 26) + 'a';
+		if (!map_add(m, k, v))
+			free(v);
+	}
+	assert(map_size(m) == 1);
+	keys = map_keys(m);
+	t = list_iterator(keys);
+	assert(t != NULL);
+	while (list_has_next(t))
+	{
+		const char *k = list_get_next(t);
+		const char *v = map_get(m, k);
+		cli_printf("    Entry [%s] = %s\n", k, v);
+	}
+	free(t);
+	map_deinit(m);
+
 	cli_eprintf("  Remove from map (creating initial list of %d)\n", i * 2);
-	m = map_init(compare_string, true, false);
+	m = map_init(compare_string, true, false, false);
 	assert(m != NULL);
 	for (int j = 0; j < i * 2; j++)
 	{
