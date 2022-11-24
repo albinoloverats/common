@@ -39,7 +39,7 @@ map_private_t;
 
 typedef struct
 {
-	pair_object_t pair;
+	pair_object_t pair; // TODO could this be pair_u and allow differing keys/values?
 	map_private_t *parent; // reference to parent gives compare function in entry compare
 }
 entry_t;
@@ -73,8 +73,6 @@ extern void map_deinit(MAP ptr)
 
 extern size_t map_size(MAP ptr)
 {
-	if (!ptr)
-		return -1;
 	return list_size(((map_private_t *)ptr)->entries);
 }
 

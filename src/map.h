@@ -68,7 +68,7 @@ extern void map_deinit(MAP h) __attribute__((nonnull(1)));
  *
  * Get the number of entries in the map.
  */
-extern size_t map_size(MAP h);
+extern size_t map_size(MAP h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Add an entry to the map
@@ -83,7 +83,7 @@ extern size_t map_size(MAP h);
  * overwritten depends on how the map was initialised. Returns true if
  * the key/value are added/replaced, false otherwise.
  */
-extern bool map_add(MAP h, const void *k, const void *v);
+extern bool map_add(MAP h, const void *k, const void *v) __attribute__((nonnull(1, 2, 3)));
 
 /*!
  * \brief         Get a value from the map
@@ -93,7 +93,7 @@ extern bool map_add(MAP h, const void *k, const void *v);
  *
  * Retrieve the value for the given key from within the map.
  */
-extern const void *map_get(MAP h, const void *k);
+extern const void *map_get(MAP h, const void *k) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Check if the map contains the key
@@ -106,7 +106,7 @@ extern const void *map_get(MAP h, const void *k);
  * during initialisation then that is used instead of just comparing the
  * pointer.
  */
-extern bool map_contains(MAP h, const void *k);
+extern bool map_contains(MAP h, const void *k) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Remove a key/value from the map
@@ -120,13 +120,37 @@ extern bool map_contains(MAP h, const void *k);
  * during initialisation then that is used instead of just comparing the
  * pointer.
  */
-extern const void *map_remove(MAP h, const void *k);
+extern const void *map_remove(MAP h, const void *k) __attribute__((nonnull(1, 2)));
 
-extern ITER map_iterator(MAP h);
+/*!
+ * \brief         Set the map up for iterating
+ * \param[in]  h  A pointer to the map
+ * \return        An iterator for the map
+ *
+ * Set the map up to be iterated over. The iterator should be freed
+ * after use.
+ */
+extern ITER map_iterator(MAP h) __attribute__((nonnull(1)));
 
-extern const pair_object_t *map_get_next(ITER h);
+/*!
+ * \brief         Get the next entryin the map
+ * \param[in]  h  A pointer to the iterator
+ * \return        The next entry in the map
+ *
+ * Allow iterating through the map, this returns pair of pointers for
+ * the next key/value entry.
+ */
+extern const pair_object_t *map_get_next(ITER h) __attribute__((nonnull(1)));
 
-extern bool map_has_next(ITER h);
+/*!
+ * \brief         Indicates if there is another item in the map
+ * \param[in]  h  A pointer to the iterator
+ * \return        Returns true if there is another entry
+ *
+ * Allow iterating through the map, this returns whether there is
+ * another entry.
+ */
+extern bool map_has_next(ITER h) __attribute__((nonnull(1)));
 
 
 #endif /* _COMMON_MAP_H_ */

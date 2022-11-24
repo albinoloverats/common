@@ -36,7 +36,7 @@ static int compare_integer(const void *a, const void *b)
 {
 	return *((const int *)a) - *((const int *)b);
 }
-
+// TODO could these be part of the list? Allow various defaults?
 static int compare_string(const void *a, const void *b)
 {
 	return strcmp(a, b);
