@@ -325,15 +325,12 @@ static void map_tests(int i)
 		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i);
-	// TODO somehow inline the iterator into the map code
-	LIST keys = map_keys(m);
-	ITER t = list_iterator(keys);
+	ITER t = map_iterator(m);
 	assert(t != NULL);
-	while (list_has_next(t))
+	while (map_has_next(t))
 	{
-		const char *k = list_get_next(t);
-		const char *v = map_get(m, k);
-		cli_printf("    Entry [%s] = %s\n", k, v);
+		const pair_object_t *p = map_get_next(t);
+		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
 	map_deinit(m);
@@ -359,14 +356,12 @@ static void map_tests(int i)
 		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i);
-	keys = map_keys(m);
-	t = list_iterator(keys);
+	t = map_iterator(m);
 	assert(t != NULL);
 	while (list_has_next(t))
 	{
-		const char *k = list_get_next(t);
-		const char *v = map_get(m, k);
-		cli_printf("    Entry [%s] = %s\n", k, v);
+		const pair_object_t *p = map_get_next(t);
+		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
 	map_deinit(m);
@@ -389,14 +384,12 @@ static void map_tests(int i)
 			free(v);
 	}
 	assert(map_size(m) == 1);
-	keys = map_keys(m);
-	t = list_iterator(keys);
+	t = map_iterator(m);
 	assert(t != NULL);
 	while (list_has_next(t))
 	{
-		const char *k = list_get_next(t);
-		const char *v = map_get(m, k);
-		cli_printf("    Entry [%s] = %s\n", k, v);
+		const pair_object_t *p = map_get_next(t);
+		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
 	map_deinit(m);
@@ -419,14 +412,12 @@ static void map_tests(int i)
 			free(v);
 	}
 	assert(map_size(m) == 1);
-	keys = map_keys(m);
-	t = list_iterator(keys);
+	t = map_iterator(m);
 	assert(t != NULL);
 	while (list_has_next(t))
 	{
-		const char *k = list_get_next(t);
-		const char *v = map_get(m, k);
-		cli_printf("    Entry [%s] = %s\n", k, v);
+		const pair_object_t *p = map_get_next(t);
+		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
 	map_deinit(m);
@@ -451,9 +442,6 @@ static void map_tests(int i)
 		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i * 2);
-	keys = map_keys(m);
-	t = list_iterator(keys);
-	assert(t != NULL);
 	for (int j = 0; j < i; j++)
 	{
 		char k[2] = { 0x0 };
@@ -465,16 +453,13 @@ static void map_tests(int i)
 		char *v = (char *)map_remove(m, k);
 		free(v);
 	}
-	free(t);
 	assert(map_size(m) == (size_t)i);
-	keys = map_keys(m);
-	t = list_iterator(keys);
+	t = map_iterator(m);
 	assert(t != NULL);
 	while (list_has_next(t))
 	{
-		const char *k = list_get_next(t);
-		const char *v = map_get(m, k);
-		cli_printf("    Entry [%s] = %s\n", k, v);
+		const pair_object_t *p = map_get_next(t);
+		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
 	map_deinit(m);

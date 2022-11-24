@@ -25,6 +25,7 @@
 #include "common.h"
 #include "error.h"
 #include "map.h"
+#include "pair.h"
 
 typedef struct
 {
@@ -38,9 +39,8 @@ map_private_t;
 
 typedef struct
 {
+	pair_object_t pair;
 	map_private_t *parent; // reference to parent gives compare function in entry compare
-	const void *key;
-	const void *value;
 }
 entry_t;
 
@@ -93,15 +93,15 @@ extern bool map_add(MAP ptr, const void *k, const void *v)
 	{
 		e = (entry_t *)list_remove_item(map->entries, &e);
 		if (map->free)
-			free((void *)e->value);
+			free((void *)e->pair.p2);
 	}
 	else
 	{
 		e = calloc(sizeof( entry_t ), sizeof( byte_t ));
 		e->parent = map;
-		e->key = k;
+		e->pair.p1 = (void *)k;
 	}
-	e->value = v;
+	e->pair.p2 = (void *)v;
 	if (list_append(map->entries, e))
 		return true;
 	list_remove_item(map->keys, k);
@@ -116,8 +116,8 @@ extern const void *map_get(MAP ptr, const void *k)
 		return NULL;
 	if (!list_contains(map->keys, k))
 		return NULL;
-	const entry_t *r = list_contains(map->entries, &((entry_t){ map, k, NULL }));
-	return r->value;
+	const entry_t *r = list_contains(map->entries, &((entry_t){ { (void *)k, NULL }, map }));
+	return r->pair.p2;
 }
 
 extern bool map_contains(MAP ptr, const void *k)
@@ -133,38 +133,47 @@ extern const void *map_remove(MAP ptr, const void *k)
 	if (!list_contains(map->keys, k))
 		return NULL;
 	list_remove_item(map->keys, k);
-	const entry_t *r = list_remove_item(map->entries, &((entry_t){ map, k, NULL }));
+	const entry_t *r = list_remove_item(map->entries, &((entry_t){ { (void *)k, NULL }, map }));
 	if (map->free)
-		free((void *)r->key);
-	const void *x = r->value;
+		free((void *)r->pair.p1);
+	const void *x = r->pair.p2;
 	free((void *)r);
 	return x;
 }
 
-extern LIST map_keys(MAP ptr)
+extern ITER map_iterator(MAP ptr)
 {
-	return ((map_private_t *)ptr)->keys;
+	map_private_t *map_ptr = (map_private_t *)ptr;
+	if (!map_ptr)
+		return NULL;
+	return list_iterator(map_ptr->entries);
 }
 
-/*
- * TODO implement an iterator
- */
+extern const pair_object_t *map_get_next(ITER ptr)
+{
+	return list_get_next(ptr);
+}
+
+extern bool map_has_next(ITER ptr)
+{
+	return list_has_next(ptr);
+}
 
 static int map_compare(const void *a, const void *b)
 {
 	const entry_t *x = a;
 	const entry_t *y = b;
 	if (x->parent->compare)
-		return x->parent->compare(x->key, y->key);
-	return x->key - y->key;
+		return x->parent->compare(x->pair.p1, y->pair.p1);
+	return x->pair.p1 - y->pair.p1;
 }
 
 static void map_free(void *m)
 {
 	entry_t *e = (entry_t *)m;
 	if (e->parent->free) {
-		free((void *)e->key);
-		free((void *)e->value);
+		free((void *)e->pair.p1);
+		free((void *)e->pair.p2);
 	}
 	free(e);
 	return;

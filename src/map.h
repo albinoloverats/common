@@ -35,6 +35,7 @@
 
 #include "common.h"
 #include "list.h"
+#include "pair.h"
 
 typedef void * MAP; /*!< The user visible MAP type */
 
@@ -84,12 +85,48 @@ extern size_t map_size(MAP h);
  */
 extern bool map_add(MAP h, const void *k, const void *v);
 
+/*!
+ * \brief         Get a value from the map
+ * \param[in]  h  A pointer to the map
+ * \param[in]  k  The key of the value to get
+ * \return        The value for the given key
+ *
+ * Retrieve the value for the given key from within the map.
+ */
 extern const void *map_get(MAP h, const void *k);
 
+/*!
+ * \brief         Check if the map contains the key
+ * \param[in]  h  A pointer to the map
+ * \param[in]  k  The key to check for
+ * \return        True if the map contains a value for the given key,
+ *                false otherwise
+ *
+ * Check whether the map contains the key. If a comparator was set
+ * during initialisation then that is used instead of just comparing the
+ * pointer.
+ */
 extern bool map_contains(MAP h, const void *k);
 
+/*!
+ * \brief         Remove a key/value from the map
+ * \param[in]  h  A pointer to the map
+ * \param[in]  k  The key of the entry to remove
+ * \return        The value that was removed, or NULL
+ *
+ * Remove the given key/value from the map. The value is returned to
+ * allow the user to free it if necessary. If the ey was not found in
+ * the map then the function returns NULL. If a comparator was set
+ * during initialisation then that is used instead of just comparing the
+ * pointer.
+ */
 extern const void *map_remove(MAP h, const void *k);
 
-extern LIST map_keys(MAP h);
+extern ITER map_iterator(MAP h);
+
+extern const pair_object_t *map_get_next(ITER h);
+
+extern bool map_has_next(ITER h);
+
 
 #endif /* _COMMON_MAP_H_ */
