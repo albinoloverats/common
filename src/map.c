@@ -176,3 +176,12 @@ static void map_free(void *m)
 	free(e);
 	return;
 }
+
+extern void map_add_comparator(MAP ptr, int c(const void *, const void *))
+{
+	map_private_t *map_ptr = (map_private_t *)ptr;
+	if (!map_ptr)
+		return;
+	map_ptr->compare = c;
+	return;
+}

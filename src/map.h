@@ -152,5 +152,13 @@ extern const pair_object_t *map_get_next(ITER h) __attribute__((nonnull(1)));
  */
 extern bool map_has_next(ITER h) __attribute__((nonnull(1)));
 
+/*!
+ * \brief         Add comparator to the map
+ * \param[in]  h  A pointer to the map
+ * \param[in]  c  The comparator to add
+ *
+ * Add a comparator to the map so that items can be compared.
+ */
+extern void list_add_comparator(MAP h, int c(const void *, const void *)) __attribute__((nonnull(1, 2)));
 
 #endif /* _COMMON_MAP_H_ */
