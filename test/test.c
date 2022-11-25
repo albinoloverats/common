@@ -511,7 +511,7 @@ int main(int argc, char **argv)
 			LIST l = ((config_named_t *)list_get(args, 4))->response.value.list;
 			ITER i = list_iterator(l);
 			while (list_has_next(i))
-				types = parse_type(list_get_next(i));
+				types |= parse_type(list_get_next(i));
 			free(i);
 			list_deinit(l, free);
 		}
