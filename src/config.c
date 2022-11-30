@@ -86,11 +86,38 @@ extern void config_init(config_about_t a)
 	return;
 }
 
-extern int config_arg_comp(const void *a, const void *b)
+extern int config_named_compare(const void *a, const void *b)
 {
 	const config_named_t *x = a;
 	const config_named_t *y = b;
 	return x->short_option - y->short_option;
+}
+
+extern int config_unnamed_compare(const void *a, const void *b)
+{
+	const config_unnamed_t *x = a;
+	const config_unnamed_t *y = b;
+	return strcmp(x->description, y->description);
+}
+
+extern void config_named_free(void *f)
+{
+	config_named_t *x = (config_named_t *)f;
+	if (x->response.type & CONFIG_ARG_LIST)
+		list_deinit(x->response.value.list, free);
+	else if (x->response.type & CONFIG_ARG_STRING)
+		free(x->response.value.string);
+	free(x);
+	return;
+}
+
+extern void config_unnamed_free(void *f)
+{
+	config_unnamed_t *x = (config_unnamed_t *)f;
+	if (x->response.type & CONFIG_ARG_STRING)
+		free(x->response.value.string);
+	free(x);
+	return;
 }
 
 extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST notes, bool warn)
@@ -286,27 +313,11 @@ end_line:
 	if (list_contains(largs, "-l") || list_contains(largs, "--licence"))
 		show_licence(args, notes, extra);
 
-	/* figure out the first/last named argument */
-	size_t first = 0, last = list_size(largs);
-	for (size_t i = first; i < last; i++)
-		if (((const char *)list_get(largs, i))[0] != '-')
-			first++;
-		else
-			break;
-
-	for (size_t i = last - 1; i >= first && i < last; i--)
-		if (((const char *)list_get(largs, i))[0] != '-')
-			last--;
-		else
-			break;
-
-	for (size_t i = first; i < last; i++)
+	for (size_t i = 0, j = 0; i < list_size(largs); i++)
 	{
 		bool unknown = true;
 		const char *curr = list_get(largs, i);
 		const char *next = list_get(largs, i + 1);
-
-		/* TODO any values before the first or after the last argument are extra */
 
 		ITER iter = list_iterator(args);
 		while (list_has_next(iter))
@@ -450,8 +461,43 @@ end_line:
 		}
 		free(iter);
 
-		if (unknown && warn)
-			config_show_usage(args, extra);
+		if (unknown)
+		{
+			if (extra)
+			{
+				if (j >= list_size(extra))
+				{
+					config_unnamed_t *new = calloc(sizeof( config_unnamed_t ), 1);
+					new->response.type = CONFIG_ARG_STRING;
+					list_append(extra, new);
+				}
+				config_unnamed_t *x = (config_unnamed_t *)list_get(extra, j);
+				switch (x->response.type)
+				{
+					case CONFIG_ARG_STRING:
+						if (!(x->response.value.string = strdup(curr)))
+							die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(curr));
+						break;
+					case CONFIG_ARG_INTEGER:
+						x->response.value.integer = strtoull(curr, NULL, 0);
+						break;
+					case CONFIG_ARG_DECIMAL:
+						x->response.value.decimal = strtof128(curr, NULL);
+						break;
+					case CONFIG_ARG_BOOLEAN:
+						(void)0; // for Slackware's older GCC
+						__attribute__((fallthrough)); /* allow fall-through; argument was seen */
+					default:
+						x->response.value.boolean = true;
+						break;
+
+				}
+				x->seen = true;
+				j++;
+			}
+			else if (warn)
+				config_show_usage(args, extra);
+		}
 	}
 	list_deinit(largs, free);
 
@@ -464,50 +510,15 @@ end_line:
 			r++;
 	}
 	free(iter);
-	if (extra)
+	iter = list_iterator(extra);
+	while (list_has_next(iter))
 	{
-		/*
-		 * TODO count from 0 to first, last to ... and add them to extra and append any more
-		 */
-
-		ITER iter = list_iterator(extra);
-		for (int i = 0; list_has_next(iter) && optind < argc; i++, optind++)
-		{
-			config_unnamed_t *x = (config_unnamed_t *)list_get_next(iter);
-			x->seen = true;
+		config_unnamed_t *arg = (config_unnamed_t *)list_get_next(iter);
+		if (arg->seen)
 			r++;
-			switch (x->response.type)
-			{
-				case CONFIG_ARG_STRING:
-					if (!(x->response.value.string = strdup(argv[optind])))
-						die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(argv[optind]));
-					break;
-				case CONFIG_ARG_INTEGER:
-					x->response.value.integer = strtoull(argv[optind], NULL, 0);
-					break;
-				case CONFIG_ARG_DECIMAL:
-					x->response.value.decimal = strtof128(argv[optind], NULL);
-					break;
-				case CONFIG_ARG_BOOLEAN:
-					(void)0; // for Slackware's older GCC
-					__attribute__((fallthrough)); /* allow fall-through; argument was seen */
-				default:
-					x->response.value.boolean = true;
-					break;
-			}
-		}
-		free(iter);
-		iter = list_iterator(extra);
-		while (list_has_next(iter))
-		{
-			const config_unnamed_t *x = (config_unnamed_t *)list_get_next(iter);
-			if (x->required && !x->seen && warn)
-			{
-				cli_eprintf("Missing required argument \"%s\"\n", x->description);
-				config_show_usage(args, extra);
-			}
-		}
 	}
+	free(iter);
+
 	return r;
 }
 

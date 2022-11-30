@@ -189,6 +189,12 @@ extern void update_config(const char * const restrict o, const char * const rest
  * Compare two config_named_t using the short_option. Used to ensure that
  * only one of each argument is in the LIST.
  */
-extern int config_arg_comp(const void *a, const void *b);
+extern int config_named_compare(const void *a, const void *b);
+
+extern int config_unnamed_compare(const void *a, const void *b);
+
+extern void config_named_free(void *f);
+
+extern void config_unnamed_free(void *f);
 
 #endif /* ! _COMMON_CONFIG_H_ */

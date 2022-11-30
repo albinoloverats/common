@@ -50,9 +50,9 @@ static void list_tests(int i)
 		cli_eprintf("Cannot run list tests with %d items!\n", i);
 		return;
 	}
-	cli_eprintf("Running list tests with %d items\n", i);
+	cli_printf("Running list tests with %d items\n", i);
 
-	cli_eprintf("  Simple list\n");
+	cli_printf("  Simple list\n");
 	LIST l = list_default();
 	assert(l != NULL);
 	for (int j = 0; j < i; j++)
@@ -75,7 +75,7 @@ static void list_tests(int i)
 	free(t);
 	list_deinit(l, free);
 
-	cli_eprintf("  Sorted list\n");
+	cli_printf("  Sorted list\n");
 	l = list_init(compare_integer, true, true);
 	for (int j = 0; j < i; j++)
 	{
@@ -96,7 +96,7 @@ static void list_tests(int i)
 	}
 	list_deinit(l, free);
 
-	cli_eprintf("  Unique list (will attempt to insert the same value %d times)\n", i);
+	cli_printf("  Unique list (will attempt to insert the same value %d times)\n", i);
 	l = list_init(compare_integer, false, false);
 	for (int j = 0; j < i; j++)
 	{
@@ -114,7 +114,7 @@ static void list_tests(int i)
 	free(t);
 	list_deinit(l);
 
-	cli_eprintf("  Remove from list (creating initial list of %d)\n", i * 2);
+	cli_printf("  Remove from list (creating initial list of %d)\n", i * 2);
 	l = list_default();
 	assert(l != NULL);
 	for (int j = 0; j < i * 2; j++)
@@ -154,9 +154,9 @@ void tlv_tests(int i)
 		cli_eprintf("Cannot run TLV tests with %d items!\n", i);
 		return;
 	}
-	cli_eprintf("Running TLV tests with %d items\n", i);
+	cli_printf("Running TLV tests with %d items\n", i);
 
-	cli_eprintf("  Simple TLV\n");
+	cli_printf("  Simple TLV\n");
 	TLV t = tlv_init();
 	assert(t != NULL);
 	for (int j = 0; j < i; j++)
@@ -180,7 +180,7 @@ void tlv_tests(int i)
 	}
 	tlv_deinit(t);
 
-	cli_eprintf("  Remove TLV list (creating initial list of %d)\n", i * 2);
+	cli_printf("  Remove TLV list (creating initial list of %d)\n", i * 2);
 	t = tlv_init();
 	assert(t != NULL);
 	for (int j = 0; j < i * 2; j++)
@@ -228,31 +228,31 @@ static void fs_tests(char *root, dir_type_e type)
 {
 	if (!root)
 		root = getcwd(NULL, 0);
-	cli_eprintf("Running FS tests on %s\n", root);
+	cli_printf("Running FS tests on %s\n", root);
 
 	if (type == DIR_NONE)
 	{
 		LIST files = dir_get_tree(root, DIR_FILE);
-		cli_eprintf("  Found files:\n");
+		cli_printf("  Found files:\n");
 		ITER i = list_iterator(files);
 		while (list_has_next(i))
-			cli_eprintf("    %s\n", (const char *)list_get_next(i));
+			cli_printf("    %s\n", (const char *)list_get_next(i));
 		free(i);
 
 		LIST folders = dir_get_tree(root, DIR_FOLDER);
-		cli_eprintf("  Found folders:\n");
+		cli_printf("  Found folders:\n");
 		i = list_iterator(folders);
 		while (list_has_next(i))
-			cli_eprintf("    %s\n", (const char *)list_get_next(i));
+			cli_printf("    %s\n", (const char *)list_get_next(i));
 		free(i);
 
 		LIST both = dir_get_tree(root, DIR_FOLDER | DIR_FILE);
-		cli_eprintf("  Combined:\n");
+		cli_printf("  Combined:\n");
 		size_t a = list_size(files);
 		size_t b = list_size(folders);
 		size_t c = list_size(both);
 		assert(a + b == c);
-		cli_eprintf("    %zd items\n", c);
+		cli_printf("    %zd items\n", c);
 
 		list_deinit(files, free);
 		list_deinit(folders, free);
@@ -261,12 +261,12 @@ static void fs_tests(char *root, dir_type_e type)
 	else
 	{
 		LIST files = dir_get_tree(root, type);
-		cli_eprintf("  Found entries:\n");
+		cli_printf("  Found entries:\n");
 		ITER i = list_iterator(files);
 		while (list_has_next(i))
-			cli_eprintf("    %s\n", (const char *)list_get_next(i));
+			cli_printf("    %s\n", (const char *)list_get_next(i));
 		free(i);
-		cli_eprintf("    %zd items\n", list_size(files));
+		cli_printf("    %zd items\n", list_size(files));
 		list_deinit(files, free);
 	}
 
@@ -303,9 +303,9 @@ static void map_tests(int i)
 		cli_eprintf("Cannot run map tests with %d items!\n", i);
 		return;
 	}
-	cli_eprintf("Running map tests with %d items\n", i);
+	cli_printf("Running map tests with %d items\n", i);
 
-	cli_eprintf("  Simple map\n");
+	cli_printf("  Simple map\n");
 	MAP m = map_init(compare_string, true, false, false);
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
@@ -335,7 +335,7 @@ static void map_tests(int i)
 	free(t);
 	map_deinit(m);
 
-	cli_eprintf("  Sorted map\n");
+	cli_printf("  Sorted map\n");
 	m = map_init(compare_string, true, true, false);
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
@@ -366,7 +366,7 @@ static void map_tests(int i)
 	free(t);
 	map_deinit(m);
 
-	cli_eprintf("  Unique map (will attempt to insert the same key %d times)\n", i);
+	cli_printf("  Unique map (will attempt to insert the same key %d times)\n", i);
 	m = map_init(compare_string, true, true, false);
 	assert(m != NULL);
 	char *k = calloc(2, sizeof( char ));
@@ -394,7 +394,7 @@ static void map_tests(int i)
 	free(t);
 	map_deinit(m);
 
-	cli_eprintf("  Overwritten unique map (will attempt to insert the same key %d times)\n", i);
+	cli_printf("  Overwritten unique map (will attempt to insert the same key %d times)\n", i);
 	m = map_init(compare_string, true, false, true);
 	assert(m != NULL);
 	k = calloc(2, sizeof( char ));
@@ -422,7 +422,7 @@ static void map_tests(int i)
 	free(t);
 	map_deinit(m);
 
-	cli_eprintf("  Remove from map (creating initial list of %d)\n", i * 2);
+	cli_printf("  Remove from map (creating initial list of %d)\n", i * 2);
 	m = map_init(compare_string, true, false, false);
 	assert(m != NULL);
 	for (int j = 0; j < i * 2; j++)
@@ -477,7 +477,7 @@ int main(int argc, char **argv)
 	char *cur_dir = strdup(CURRENT_DIRECTORY);
 	char *all_types = strdup(ALL_TYPES);
 
-	LIST args = list_init(config_arg_comp, false, false);
+	LIST args = list_init(config_named_compare, false, false);
 	list_add(args, &((config_named_t){ 's', "list",     "integer",          "Run ‘LIST’ tests, with the given number of items",    { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'm', "map",      "integer",          "Run ‘MAP’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'v', "tlv",      "integer",          "Run ‘TLV’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
@@ -495,13 +495,9 @@ int main(int argc, char **argv)
 	list_add(notes, "File types: [ folder / file / link / block / char / socket / pipe ]");
 	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 1 ]");
 
-	bool all = !config_parse(argc, argv, args, NULL, notes);
+	LIST xtra = list_default();
 
-	// if these were seen then they have already been freed
-	if (!((config_named_t *)list_get(args, 4))->seen)
-		free(all_types);
-	if (!((config_named_t *)list_get(args, 3))->seen)
-		free(cur_dir);
+	bool all = !config_parse(argc, argv, args, xtra, notes);
 
 	errno = EXIT_SUCCESS;
 
@@ -528,15 +524,15 @@ int main(int argc, char **argv)
 	}
 
 	if (all || ((config_named_t *)list_get(args, 5))->seen)
-		cli_eprintf("  Boolean : %s\n", ((config_named_t *)list_get(args, 5))->response.value.boolean ? "true" : "false");
+		cli_printf("  Boolean : %s\n", ((config_named_t *)list_get(args, 5))->response.value.boolean ? "true" : "false");
 	if (all || ((config_named_t *)list_get(args, 6))->seen)
-		cli_eprintf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response.value.integer);
+		cli_printf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response.value.integer);
 	if (all || ((config_named_t *)list_get(args, 7))->seen)
 	{
 		char buf[0xFF] = { 0x00 };
 		strfromf128(buf, sizeof buf, "%.9f", ((config_named_t *)list_get(args, 7))->response.value.decimal);
-		cli_eprintf("  Decimal : %s\n", buf);
-		//cli_eprintf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response.value.decimal);
+		cli_printf("  Decimal : %s\n", buf);
+		//cli_printf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response.value.decimal);
 	}
 
 	if (((config_named_t *)list_get(args, 8))->seen)
@@ -546,13 +542,52 @@ int main(int argc, char **argv)
 		while (list_has_next(i))
 		{
 			const int64_t *v = list_get_next(i);
-			cli_eprintf("  Integer : %" PRIi64 "\n", *v);
+			cli_printf("  Integer : %" PRIi64 "\n", *v);
 		}
 		free(i);
 		list_deinit(l, free);
 	}
 
+	ITER i = list_iterator(xtra);
+	while (list_has_next(i))
+	{
+		const config_unnamed_t *u = list_get_next(i);
+		switch (u->response.type)
+		{
+			case CONFIG_ARG_BOOLEAN:
+				cli_printf("  Found boolean : %s\n", u->response.value.boolean ? "true" : "false");
+				break;
 
+			case CONFIG_ARG_INTEGER:
+				cli_printf("  Found integer : %" PRIi64 "\n", u->response.value.integer);
+				break;
+
+			case CONFIG_ARG_DECIMAL:
+				{
+					char buf[0xFF] = { 0x00 };
+					strfromf128(buf, sizeof buf, "%.9f", u->response.value.decimal);
+					cli_printf("  Found decimal : %s\n", buf);
+				}
+				break;
+
+			case CONFIG_ARG_STRING:
+				cli_printf("  Found string : %s\n", u->response.value.string);
+				break;
+
+			default:
+				cli_printf("  Found something : ?");
+				break;
+		}
+	}
+	free(i);
+
+	// if these were seen then they have already been freed
+	if (!((config_named_t *)list_get(args, 4))->seen)
+		free(all_types);
+	if (!((config_named_t *)list_get(args, 3))->seen)
+		free(cur_dir);
+
+	list_deinit(xtra, config_unnamed_free);
 	list_deinit(args);
 	list_deinit(notes);
 
