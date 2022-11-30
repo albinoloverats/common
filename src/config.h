@@ -69,8 +69,9 @@ typedef enum
 	CONFIG_ARG_PAIR_DECIMAL     = (CONFIG_ARG_REQ_DECIMAL | CONFIG_ARG_PAIR),
 	CONFIG_ARG_PAIR_STRING      = (CONFIG_ARG_REQ_STRING  | CONFIG_ARG_PAIR),
 
-//	CONFIG_ARG_LIST_BOOLEAN     = (CONFIG_ARG_REQ_BOOLEAN | CONFIG_ARG_LIST), // list options are currently required
-//	CONFIG_ARG_LIST_INTEGER     = (CONFIG_ARG_REQ_INTEGER | CONFIG_ARG_LIST),
+	CONFIG_ARG_LIST_BOOLEAN     = (CONFIG_ARG_REQ_BOOLEAN | CONFIG_ARG_LIST), // list options are currently required
+	CONFIG_ARG_LIST_INTEGER     = (CONFIG_ARG_REQ_INTEGER | CONFIG_ARG_LIST),
+	CONFIG_ARG_LIST_DECIMAL     = (CONFIG_ARG_REQ_DECIMAL | CONFIG_ARG_LIST),
 	CONFIG_ARG_LIST_STRING      = (CONFIG_ARG_REQ_STRING  | CONFIG_ARG_LIST),
 
 	CONFIG_ARG_LIST_PAIR_STRING = (CONFIG_ARG_LIST_STRING | CONFIG_ARG_PAIR_STRING)
@@ -189,37 +190,5 @@ extern void update_config(const char * const restrict o, const char * const rest
  * only one of each argument is in the LIST.
  */
 extern int config_arg_comp(const void *a, const void *b);
-
-#if 0
-/*!
- * \brief         Show list of command line options
- *
- * Show list of command line options, and ways to invoke the application.
- * Usually when --help is given as a command line argument.
- */
-extern void show_help(void) __attribute__((noreturn));
-
-/*!
-  * \brief        Show brief GPL licence text
-  *
-  * Display a brief overview of the GNU GPL v3 licence, such as when the
-  * command line argument is --licence.
-  */
-extern void show_licence(void) __attribute__((noreturn));
-
-/*!
- * \brief         Show simple usage instructions
- *
- * Display simple application usage instruction.
- */
-extern void show_usage(void) __attribute__((noreturn));
-
-/*!
- * \brief         Show application version
- *
- * Display the version of the application.
- */
-extern void show_version(void) __attribute__((noreturn));
-#endif
 
 #endif /* ! _COMMON_CONFIG_H_ */

@@ -54,12 +54,13 @@
 #endif
 
 
+inline static bool is_argument(char s, const char *l, const char *a);
 
 static void show_version(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 static void show_help(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 static void show_licence(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 
-static bool parse_boolean(char *, bool);
+static bool parse_boolean(const char *, bool);
 
 static bool    parse_config_boolean(const char *, const char *, bool);
 static int64_t parse_config_integer(const char *, const char *, int64_t);
@@ -232,8 +233,12 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								arg->seen = true;
 								if (!arg->response.value.list)
 									arg->response.value.list = list_default();
+								// would this not be a map?
 								list_append(arg->response.value.list, parse_pair_string(arg->long_option, line));
 								break;
+
+							default:
+								// ignore anything else for now
 						}
 				}
 				free(iter);
@@ -248,199 +253,207 @@ end_line:
 		free(rc);
 	}
 
-	/*
-	 * build and populate the getopt structure
-	 */
-	char *short_options;
-	int optlen = 4 + (args ? list_size(args) : 0);
-	if (!(short_options = calloc(optlen * 2, sizeof (char))))
-		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, optlen * 2 * sizeof (char));
-	struct option *long_options;
-	if (!(long_options = calloc(optlen + 1, sizeof (struct option))))
-		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, (optlen + 1) * sizeof (struct option));
-
-	strcat(short_options, "h");
-	long_options[0].name    = "help";
-	long_options[0].has_arg = no_argument;
-	long_options[0].flag    = NULL;
-	long_options[0].val     = 'h';
-
-	strcat(short_options, "v");
-	long_options[1].name    = "version";
-	long_options[1].has_arg = no_argument;
-	long_options[1].flag    = NULL;
-	long_options[1].val     = 'v';
-
-	strcat(short_options, "l");
-	long_options[2].name    = "licence";
-	long_options[2].has_arg = no_argument;
-	long_options[2].flag    = NULL;
-	long_options[2].val     = 'l';
-
-	for (size_t i = 0; args && i < list_size(args); i++)
+	LIST largs = list_init((void *)strcmp, true, false);
+	for (int i = 1; i < argc; i++) // from 1, skip invokation name
 	{
-		const config_named_t *arg = list_get(args, i);
-		if (isalnum(arg->short_option))
+		char *x = argv[i];
+		if (x[0] == '-' && x[1] == '-')
 		{
-			char S[] = "X";
-			S[0] = arg->short_option;
-			strcat(short_options, S);
+			// long option, check for '='
+			char *o = strchr(x, '=');
+			if (o)
+			{
+				list_append(largs, strndup(x, o - x));
+				list_append(largs, strdup(o + 1));
+			}
+			else
+				list_append(largs, strdup(argv[i]));
 		}
-		long_options[i + 3].name = arg->long_option;
-		if (arg->response.type & CONFIG_ARG_REQUIRED)
-			long_options[i + 3].has_arg = required_argument;
+		else if (x[0] == '-' && strlen(x) > 2)
+		{
+			// short option, check for anything after '-x...'
+			list_append(largs, strndup(x, 2));
+			list_append(largs, strdup(x + 2));
+		}
 		else
-			long_options[i + 3].has_arg = optional_argument;
-		long_options[i + 3].flag = NULL;
-		long_options[i + 3].val  = arg->short_option;
+			list_append(largs, strdup(argv[i]));
 	}
+	/* handle help et al first */
+	if (list_contains(largs, "-h") || list_contains(largs, "--help"))
+		show_help(args, notes, extra);
+	if (list_contains(largs, "-v") || list_contains(largs, "--version"))
+		show_version(args, notes, extra);
+	if (list_contains(largs, "-l") || list_contains(largs, "--licence"))
+		show_licence(args, notes, extra);
 
-	/*
-	 * check for help/version/licence
-	 */
-	while (argc && argv)
-	{
-		int c = getopt_long(argc, argv, short_options, long_options, &((int){0}));
-		if (c == -1)
+	/* figure out the first/last named argument */
+	size_t first = 0, last = list_size(largs);
+	for (size_t i = first; i < last; i++)
+		if (((const char *)list_get(largs, i))[0] != '-')
+			first++;
+		else
 			break;
-		if (c == 'h' || c == 'v' || c == 'l')
-		{
-			free(short_options);
-			free(long_options);
-			switch (c)
-			{
-				case 'h':
-					show_help(args, notes, extra);
-				case 'v':
-					show_version(args, notes, extra);
-				case 'l':
-					show_licence(args, notes, extra);
-			}
-		}
-	}
-	optind = 1;
 
-	/*
-	 * parse command line options
-	 */
-	while (argc && argv)
-	{
-		int c = getopt_long(argc, argv, short_options, long_options, &((int){0}));
-		if (c == -1)
+	for (size_t i = last - 1; i >= first && i < last; i--)
+		if (((const char *)list_get(largs, i))[0] != '-')
+			last--;
+		else
 			break;
+
+	for (size_t i = first; i < last; i++)
+	{
 		bool unknown = true;
-		if (c == 'h' || c == 'v' || c == 'l')
-			continue;
-		else if (c == '?' && warn)
+		const char *curr = list_get(largs, i);
+		const char *next = list_get(largs, i + 1);
+
+		/* TODO any values before the first or after the last argument are extra */
+
+		ITER iter = list_iterator(args);
+		while (list_has_next(iter))
 		{
-			free(short_options);
-			free(long_options);
-			config_show_usage(args, extra);
-		}
-		else if (args)
-		{
-			ITER iter = list_iterator(args);
-			while (list_has_next(iter))
+			config_named_t *arg = (config_named_t *)list_get_next(iter);
+			if (is_argument(arg->short_option, arg->long_option, curr))
 			{
-				config_named_t *arg = (config_named_t *)list_get_next(iter);
-				if (c == arg->short_option)
+				unknown = false;
+				if (arg->response.type & CONFIG_ARG_REQUIRED || next[0] != '-')
+					i++;
+				else
+					next = NULL;
+				switch (arg->response.type)
 				{
-					unknown = false;
-					switch (arg->response.type)
-					{
-						case CONFIG_ARG_OPT_INTEGER:
-							arg->seen = true;
-							if (!optarg)
-								break;
-							__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
-						case CONFIG_ARG_REQ_INTEGER:
-							arg->seen = true;
-							arg->response.value.integer = strtoull(optarg, NULL, 0);
+					case CONFIG_ARG_OPT_INTEGER:
+						arg->seen = true;
+						if (!next)
 							break;
+						__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
+					case CONFIG_ARG_REQ_INTEGER:
+						arg->seen = true;
+						arg->response.value.integer = strtoull(next, NULL, 0);
+						break;
 
-						case CONFIG_ARG_OPT_DECIMAL:
-							arg->seen = true;
-							if (!optarg)
-								break;
-							__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
-						case CONFIG_ARG_REQ_DECIMAL:
-							arg->seen = true;
-							arg->response.value.decimal = strtof128(optarg, NULL);
+					case CONFIG_ARG_OPT_DECIMAL:
+						arg->seen = true;
+						if (!next)
 							break;
+						__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
+					case CONFIG_ARG_REQ_DECIMAL:
+						arg->seen = true;
+						arg->response.value.decimal = strtof128(next, NULL);
+						break;
 
-						case CONFIG_ARG_OPT_STRING:
-							arg->seen = true;
-							if (!optarg)
-								break;
-							__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
-						case CONFIG_ARG_REQ_STRING:
-							arg->seen = true;
-							if (arg->response.value.string)
-								free(arg->response.value.string);
-							if (!(arg->response.value.string = strdup(optarg)))
-								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(optarg) + 1);
+					case CONFIG_ARG_OPT_STRING:
+						arg->seen = true;
+						if (!next)
 							break;
+						__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
+					case CONFIG_ARG_REQ_STRING:
+						arg->seen = true;
+						if (arg->response.value.string)
+							free(arg->response.value.string);
+						if (!(arg->response.value.string = strdup(next)))
+							die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
+						break;
 
-						case CONFIG_ARG_OPT_BOOLEAN:
-							(void)0; // for Slackware's older GCC
-							__attribute__((fallthrough)); /* allow fall-through; argument was seen */
-						case CONFIG_ARG_REQ_BOOLEAN:
-							arg->seen = true;
-							if (optarg)
-								arg->response.value.boolean = parse_boolean(optarg, arg->response.value.boolean);
-							else
-								arg->response.value.boolean = !arg->response.value.boolean;
-							break;
-
-						/* TODO extend handling of lists and pairs and list of pairs... */
-
-						case CONFIG_ARG_LIST_STRING:
-							if (!arg->seen && arg->response.value.list)
-							{
-								free(arg->response.value.list);
-								arg->response.value.list = NULL;
-							}
-							arg->seen = true;
-							if (!arg->response.value.list)
-								arg->response.value.list = list_default();
-							if (strchr(optarg, ','))
-							{
-								char *s = strdup(optarg);
-								if (!s)
-									die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(optarg) + 1);
-								char *u = strdup(strtok(s, ","));
-								if (!list_append(arg->response.value.list, u))
-									free(u);
-								char *t = NULL;
-								while ((t = strtok(NULL, ",")))
-								{
-									char *v = strdup(t);
-									if (!list_append(arg->response.value.list, v))
-										free(v);
-								}
-								free(s);
-							}
-							else
-							{
-								char *x = strdup(optarg);
-								if (!list_append(arg->response.value.list, x))
-									free(x);
-							}
-							break;
-
-						default:
+					case CONFIG_ARG_OPT_BOOLEAN:
+						(void)0; // for Slackware's older GCC
+						__attribute__((fallthrough)); /* allow fall-through; argument was seen */
+					case CONFIG_ARG_REQ_BOOLEAN:
+						arg->seen = true;
+						if (next)
+							arg->response.value.boolean = parse_boolean(next, arg->response.value.boolean);
+						else
 							arg->response.value.boolean = !arg->response.value.boolean;
-							break;
-					}
+						break;
+
+					/* TODO extend handling of lists and pairs and list of pairs... */
+
+					case CONFIG_ARG_LIST_INTEGER:
+						if (!arg->seen && arg->response.value.list)
+						{
+							free(arg->response.value.list);
+							arg->response.value.list = NULL;
+						}
+						arg->seen = true;
+						if (!arg->response.value.list)
+							arg->response.value.list = list_default();
+						if (strchr(next, ','))
+						{
+							char *s = strdup(next);
+							if (!s)
+								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
+							char *u = strdup(strtok(s, ","));
+							int64_t *r = calloc(sizeof( int64_t ), 1);
+							*r = strtoull(u, NULL, 0);
+							free(u);
+							if (!list_append(arg->response.value.list, r))
+								free(r);
+							char *t = NULL;
+							while ((t = strtok(NULL, ",")))
+							{
+								char *v = strdup(t);
+								r = calloc(sizeof( int64_t ), 1);
+								*r = strtoull(v, NULL, 0);
+								free(v);
+								if (!list_append(arg->response.value.list, r))
+									free(r);
+							}
+							free(s);
+						}
+						else
+						{
+							char *x = strdup(next);
+							if (!list_append(arg->response.value.list, x))
+								free(x);
+						}
+						break;
+
+					case CONFIG_ARG_LIST_STRING:
+						if (!arg->seen && arg->response.value.list)
+						{
+							free(arg->response.value.list);
+							arg->response.value.list = NULL;
+						}
+						arg->seen = true;
+						if (!arg->response.value.list)
+							arg->response.value.list = list_default();
+						if (strchr(next, ','))
+						{
+							char *s = strdup(next);
+							if (!s)
+								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
+							char *u = strdup(strtok(s, ","));
+							if (!list_append(arg->response.value.list, u))
+								free(u);
+							char *t = NULL;
+							while ((t = strtok(NULL, ",")))
+							{
+								char *v = strdup(t);
+								if (!list_append(arg->response.value.list, v))
+									free(v);
+							}
+							free(s);
+						}
+						else
+						{
+							char *x = strdup(next);
+							if (!list_append(arg->response.value.list, x))
+								free(x);
+						}
+						break;
+
+					default:
+						arg->response.value.boolean = !arg->response.value.boolean;
+						break;
 				}
+				break;
 			}
-			free(iter);
 		}
+		free(iter);
+
 		if (unknown && warn)
 			config_show_usage(args, extra);
 	}
-	free(short_options);
-	free(long_options);
+	list_deinit(largs, free);
 
 	int r = 0;
 	ITER iter = list_iterator(args);
@@ -453,6 +466,10 @@ end_line:
 	free(iter);
 	if (extra)
 	{
+		/*
+		 * TODO count from 0 to first, last to ... and add them to extra and append any more
+		 */
+
 		ITER iter = list_iterator(extra);
 		for (int i = 0; list_has_next(iter) && optind < argc; i++, optind++)
 		{
@@ -492,6 +509,15 @@ end_line:
 		}
 	}
 	return r;
+}
+
+inline static bool is_argument(char s, const char *l, const char *a)
+{
+	if (strlen(a) == 2 && a[0] == '-' && a[1] == s)
+		return true;
+	if (strlen(a) > 2 && a[0] == '-' && a[1] == '-')
+		return !strcmp(l, a + 2);
+	return false;
 }
 
 inline static void format_section(char *s)
@@ -938,7 +964,7 @@ extern void update_config(const char * const restrict o, const char * const rest
 	return;
 }
 
-static bool parse_boolean(char *v, bool b)
+static bool parse_boolean(const char *v, bool b)
 {
 	if (!strcasecmp(CONF_TRUE, v)
 	 || !strcasecmp(CONF_ON, v)
