@@ -489,6 +489,7 @@ int main(int argc, char **argv)
 	list_add(args, &((config_named_t){ 'd', "decimal",  "decimal",          "See how decimal values are parsed",                   { CONFIG_ARG_REQ_DECIMAL,  { .decimal = 0.0f       } }, false, false, false, false }));
 
 	list_add(args, &((config_named_t){ 'I', "integers", "list of integers", "See how lists of integer values are parsed",          { CONFIG_ARG_LIST_INTEGER, { .list    = NULL       } }, false, true,  false, false }));
+	list_add(args, &((config_named_t){ 'D', "decimals", "list of decimals", "See how lists of decimal values are parsed",          { CONFIG_ARG_LIST_DECIMAL, { .list    = NULL       } }, false, true,  false, false }));
 
 	LIST notes = list_string();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
@@ -544,6 +545,21 @@ int main(int argc, char **argv)
 		{
 			const int64_t *v = list_get_next(i);
 			cli_printf("  Integer : %" PRIi64 "\n", *v);
+		}
+		free(i);
+		list_deinit(l, free);
+	}
+
+	if (((config_named_t *)list_get(args, 9))->seen)
+	{
+		LIST l = ((config_named_t *)list_get(args, 9))->response.value.list;
+		ITER i = list_iterator(l);
+		while (list_has_next(i))
+		{
+			const _Float128 *v = list_get_next(i);
+			char buf[0xFF] = { 0x00 };
+			strfromf128(buf, sizeof buf, "%.9f", *v);
+			cli_printf("  Decimal : %s\n", buf);
 		}
 		free(i);
 		list_deinit(l, free);

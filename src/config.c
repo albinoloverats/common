@@ -401,10 +401,8 @@ end_line:
 							char *t = NULL;
 							while ((t = strtok(NULL, ",")))
 							{
-								char *v = strdup(t);
 								r = calloc(sizeof( int64_t ), 1);
-								*r = strtoull(v, NULL, 0);
-								free(v);
+								*r = strtoull(t, NULL, 0);
 								if (!list_append(arg->response.value.list, r))
 									free(r);
 							}
@@ -412,9 +410,49 @@ end_line:
 						}
 						else
 						{
-							char *x = strdup(next);
-							if (!list_append(arg->response.value.list, x))
-								free(x);
+							int64_t *r = calloc(sizeof( int64_t ), 1);
+							*r = strtoull(next, NULL, 0);
+							if (!list_append(arg->response.value.list, r))
+								free(r);
+						}
+						break;
+
+					case CONFIG_ARG_LIST_DECIMAL:
+						if (!arg->seen && arg->response.value.list)
+						{
+							free(arg->response.value.list);
+							arg->response.value.list = NULL;
+						}
+						arg->seen = true;
+						if (!arg->response.value.list)
+							arg->response.value.list = list_default();
+						if (strchr(next, ','))
+						{
+							char *s = strdup(next);
+							if (!s)
+								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
+							char *u = strdup(strtok(s, ","));
+							_Float128 *r = calloc(sizeof( _Float128 ), 1);
+							*r = strtof128(next, NULL);
+							free(u);
+							if (!list_append(arg->response.value.list, r))
+								free(r);
+							char *t = NULL;
+							while ((t = strtok(NULL, ",")))
+							{
+								r = calloc(sizeof( _Float128 ), 1);
+								*r = strtof128(t, NULL);
+								if (!list_append(arg->response.value.list, r))
+									free(r);
+							}
+							free(s);
+						}
+						else
+						{
+							_Float128 *r = calloc(sizeof( _Float128 ), 1);
+							*r = strtof128(next, NULL);
+							if (!list_append(arg->response.value.list, r))
+								free(r);
 						}
 						break;
 
