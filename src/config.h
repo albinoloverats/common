@@ -191,6 +191,14 @@ extern void update_config(const char * const restrict o, const char * const rest
  */
 extern int config_named_compare(const void *a, const void *b);
 
+/*!
+ * \brief         Compare config_unnamed_t's
+ * \param[in]  a  First config_unnamed_t
+ * \param[in]  b  Second config_unnamed_t
+ * \return        The difference between the two
+ *
+ * Compare two config_unnamed_t using the description.
+ */
 extern int config_unnamed_compare(const void *a, const void *b);
 
 extern void config_named_free(void *f);

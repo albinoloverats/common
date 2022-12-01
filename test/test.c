@@ -496,6 +496,7 @@ int main(int argc, char **argv)
 	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 1 ]");
 
 	LIST xtra = list_default();
+	list_add(xtra, &((config_unnamed_t){ "other", { CONFIG_ARG_STRING,  { .string = NULL } }, false, false }));
 
 	bool all = !config_parse(argc, argv, args, xtra, notes);
 
@@ -552,6 +553,8 @@ int main(int argc, char **argv)
 	while (list_has_next(i))
 	{
 		const config_unnamed_t *u = list_get_next(i);
+		if (!u->seen)
+			continue;
 		switch (u->response.type)
 		{
 			case CONFIG_ARG_BOOLEAN:
@@ -587,6 +590,11 @@ int main(int argc, char **argv)
 	if (!((config_named_t *)list_get(args, 3))->seen)
 		free(cur_dir);
 
+	// the [0] item is not dynamically allocated but the value might be
+	config_unnamed_t *x = (config_unnamed_t *)list_remove_index(xtra, 0);
+	if (x->seen)
+		free(x->response.value.string);
+	// all other items will need to be freed
 	list_deinit(xtra, config_unnamed_free);
 	list_deinit(args);
 	list_deinit(notes);
