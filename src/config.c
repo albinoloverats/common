@@ -67,10 +67,10 @@ static bool  parse_integer(const char *, const char *, int64_t   *);
 static bool  parse_decimal(const char *, const char *, _Float128 *);
 static char *parse_string (const char *, const char *, char      *);
 
-static pair_boolean_t  *parse_pair_boolean(const char *c, const char *l);
-static pair_integer_t  *parse_pair_integer(const char *c, const char *l);
-static pair_decimal_t  *parse_pair_decimal(const char *c, const char *l);
-static pair_string_t   *parse_pair_string(const char *c, const char *l);
+static bool parse_pair_boolean(const char *c, const char *l, pair_boolean_t *);
+static bool parse_pair_integer(const char *c, const char *l, pair_integer_t *);
+static bool parse_pair_decimal(const char *c, const char *l, pair_decimal_t *);
+static bool parse_pair_string (const char *c, const char *l, pair_string_t  *);
 
 static pair_u *parse_pair(const char *c, const char *l);
 static char *parse_tail(const char *, const char *);
@@ -203,43 +203,19 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								break;
 
 							case CONFIG_ARG_PAIR_BOOLEAN:
-								{
-									arg->seen = true;
-									pair_boolean_t *pair = parse_pair_boolean(arg->long_option, line);
-									arg->response.value.pair.boolean.b1 = pair->b1;
-									arg->response.value.pair.boolean.b2 = pair->b2;
-									free(pair);
-								}
+								arg->seen = parse_pair_boolean(arg->long_option, line, &arg->response.value.pair.boolean);
 								break;
 
 							case CONFIG_ARG_PAIR_INTEGER:
-								{
-									arg->seen = true;
-									pair_integer_t *pair = parse_pair_integer(arg->long_option, line);
-									arg->response.value.pair.integer.i1 = pair->i1;
-									arg->response.value.pair.integer.i2 = pair->i2;
-									free(pair);
-								}
+								arg->seen = parse_pair_integer(arg->long_option, line, &arg->response.value.pair.integer);
 								break;
 
 							case CONFIG_ARG_PAIR_DECIMAL:
-								{
-									arg->seen = true;
-									pair_decimal_t *pair = parse_pair_decimal(arg->long_option, line);
-									arg->response.value.pair.decimal.d1 = pair->d1;
-									arg->response.value.pair.decimal.d2 = pair->d2;
-									free(pair);
-								}
+								arg->seen = parse_pair_decimal(arg->long_option, line, &arg->response.value.pair.decimal);
 								break;
 
 							case CONFIG_ARG_PAIR_STRING:
-								{
-									arg->seen = true;
-									pair_string_t *pair = parse_pair_string(arg->long_option, line);
-									arg->response.value.pair.string.s1 = pair->s1;
-									arg->response.value.pair.string.s2 = pair->s2;
-									free(pair);
-								}
+								arg->seen = parse_pair_string(arg->long_option, line, &arg->response.value.pair.string);
 								break;
 
 							case CONFIG_ARG_LIST_STRING:
@@ -255,16 +231,23 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								break;
 
 							case CONFIG_ARG_LIST_PAIR_STRING:
-								if (!arg->seen && arg->response.value.list)
 								{
-									free(arg->response.value.list);
-									arg->response.value.list = NULL;
+									if (!arg->seen && arg->response.value.list)
+									{
+										free(arg->response.value.list);
+										arg->response.value.list = NULL;
+									}
+									arg->seen = true;
+									if (!arg->response.value.list)
+										arg->response.value.list = list_default();
+									// would this not be a map?
+									pair_string_t *pair = malloc(sizeof( pair_string_t ));
+									if (!pair)
+										die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( pair_string_t ));
+									if (parse_pair_string(arg->long_option, line, pair))
+										if (!list_append(arg->response.value.list, pair))
+											free(pair);
 								}
-								arg->seen = true;
-								if (!arg->response.value.list)
-									arg->response.value.list = list_default();
-								// would this not be a map?
-								list_append(arg->response.value.list, parse_pair_string(arg->long_option, line));
 								break;
 
 							default:
@@ -1070,59 +1053,46 @@ static char *parse_tail(const char *c, const char *l)
 	return tail;
 }
 
-static pair_boolean_t *parse_pair_boolean(const char *c, const char *l)
+static bool parse_pair_boolean(const char *c, const char *l, pair_boolean_t *pair)
 {
-	pair_boolean_t *pair = calloc(1, sizeof (pair_boolean_t));
-	if (!pair)
-		die("Out of memory @ %s:%d:%s [%zu]", __FILE__, __LINE__, __func__, sizeof (pair_boolean_t));
 	pair_u *p = parse_pair(c, l);
-	/* FIXME this only verifies is a value is true, and doesn't default like above */
-	pair->b1 = (!strcasecmp(CONF_TRUE, p->string.s1) || !strcasecmp(CONF_ON, p->string.s1) || !strcasecmp(CONF_ENABLED, p->string.s1));
-	pair->b2 = (!strcasecmp(CONF_TRUE, p->string.s2) || !strcasecmp(CONF_ON, p->string.s2) || !strcasecmp(CONF_ENABLED, p->string.s2));
+	bool p1 = parse_boolean(NULL, p->string.s1, &pair->b1);
+	bool p2 = parse_boolean(NULL, p->string.s2, &pair->b2);
 	free(p->string.s1);
 	free(p->string.s2);
 	free(p);
-	return pair;
+	return p1 && p2;
 }
 
-static pair_integer_t *parse_pair_integer(const char *c, const char *l)
+static bool parse_pair_integer(const char *c, const char *l, pair_integer_t *pair)
 {
-	pair_integer_t *pair = calloc(1, sizeof (pair_integer_t));
-	if (!pair)
-		die("Out of memory @ %s:%d:%s [%zu]", __FILE__, __LINE__, __func__, sizeof (pair_integer_t));
 	pair_u *p = parse_pair(c, l);
-	pair->i1 = strtoull(p->string.s1, NULL, 0);
-	pair->i2 = strtoull(p->string.s2, NULL, 0);
+	bool p1 = parse_integer(NULL, p->string.s1, &pair->i1);
+	bool p2 = parse_integer(NULL, p->string.s2, &pair->i2);
 	free(p->string.s1);
 	free(p->string.s2);
 	free(p);
-	return pair;
+	return p1 && p2;
 }
 
-static pair_decimal_t *parse_pair_decimal(const char *c, const char *l)
+static bool parse_pair_decimal(const char *c, const char *l, pair_decimal_t *pair)
 {
-	pair_decimal_t *pair = calloc(1, sizeof (pair_decimal_t));
-	if (!pair)
-		die("Out of memory @ %s:%d:%s [%zu]", __FILE__, __LINE__, __func__, sizeof (pair_integer_t));
 	pair_u *p = parse_pair(c, l);
-	pair->d1 = strtof128(p->string.s1, NULL);
-	pair->d2 = strtof128(p->string.s2, NULL);
+	bool p1 = parse_decimal(NULL, p->string.s1, &pair->d1);
+	bool p2 = parse_decimal(NULL, p->string.s2, &pair->d2);
 	free(p->string.s1);
 	free(p->string.s2);
 	free(p);
-	return pair;
+	return p1 && p2;
 }
 
-static pair_string_t *parse_pair_string(const char *c, const char *l)
+static bool parse_pair_string(const char *c, const char *l, pair_string_t *pair)
 {
-	pair_string_t *pair = calloc(1, sizeof (pair_string_t));
-	if (!pair)
-		die("Out of memory @ %s:%d:%s [%zu]", __FILE__, __LINE__, __func__, sizeof (pair_string_t));
 	pair_u *p = parse_pair(c, l);
 	pair->s1 = p->string.s1;
 	pair->s2 = p->string.s2;
 	free(p);
-	return pair;
+	return pair->s1 && pair->s2;
 }
 
 static pair_u *parse_pair(const char *c, const char *l)
