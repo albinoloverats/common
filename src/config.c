@@ -60,6 +60,7 @@ static void show_version(LIST args, LIST notes, LIST extra) __attribute__((noret
 static void show_help(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 static void show_licence(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 
+static bool *parse_bool_ptr(const char *);
 static bool parse_boolean(const char *, bool);
 
 static bool    parse_config_boolean(const char *, const char *, bool);
@@ -326,7 +327,7 @@ end_line:
 			if (is_argument(arg->short_option, arg->long_option, curr))
 			{
 				unknown = false;
-				if (arg->response.type & CONFIG_ARG_REQUIRED || next[0] != '-')
+				if (next && (arg->response.type & CONFIG_ARG_REQUIRED || next[0] != '-'))
 					i++;
 				else
 					next = NULL;
@@ -376,7 +377,39 @@ end_line:
 							arg->response.value.boolean = !arg->response.value.boolean;
 						break;
 
-					/* TODO extend handling of lists and pairs and list of pairs... */
+					case CONFIG_ARG_LIST_BOOLEAN:
+						if (!arg->seen && arg->response.value.list)
+						{
+							free(arg->response.value.list);
+							arg->response.value.list = NULL;
+						}
+						arg->seen = true;
+						if (!arg->response.value.list)
+							arg->response.value.list = list_default();
+						if (strchr(next, ','))
+						{
+							char *s = strdup(next);
+							if (!s)
+								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
+							bool *r = parse_bool_ptr(strtok(s, ","));
+							if (r && !list_append(arg->response.value.list, r))
+								free(r);
+							char *t = NULL;
+							while ((t = strtok(NULL, ",")))
+							{
+								r = parse_bool_ptr(t);
+								if (r && !list_append(arg->response.value.list, r))
+									free(r);
+							}
+							free(s);
+						}
+						else
+						{
+							bool *r = parse_bool_ptr(next);
+							if (r && !list_append(arg->response.value.list, r))
+								free(r);
+						}
+						break;
 
 					case CONFIG_ARG_LIST_INTEGER:
 						if (!arg->seen && arg->response.value.list)
@@ -392,10 +425,8 @@ end_line:
 							char *s = strdup(next);
 							if (!s)
 								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
-							char *u = strdup(strtok(s, ","));
 							int64_t *r = calloc(sizeof( int64_t ), 1);
-							*r = strtoull(u, NULL, 0);
-							free(u);
+							*r = strtoull(strtok(s, ","), NULL, 0);
 							if (!list_append(arg->response.value.list, r))
 								free(r);
 							char *t = NULL;
@@ -431,10 +462,8 @@ end_line:
 							char *s = strdup(next);
 							if (!s)
 								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
-							char *u = strdup(strtok(s, ","));
 							_Float128 *r = calloc(sizeof( _Float128 ), 1);
-							*r = strtof128(next, NULL);
-							free(u);
+							*r = strtof128(strtok(s, ","), NULL);
 							if (!list_append(arg->response.value.list, r))
 								free(r);
 							char *t = NULL;
@@ -489,6 +518,8 @@ end_line:
 								free(x);
 						}
 						break;
+
+					/* TODO extend handling of pairs and list of pairs... */
 
 					default:
 						arg->response.value.boolean = !arg->response.value.boolean;
@@ -1013,8 +1044,9 @@ extern void update_config(const char * const restrict o, const char * const rest
 	return;
 }
 
-static bool parse_boolean(const char *v, bool b)
+static bool *parse_bool_ptr(const char *v)
 {
+	bool b;
 	if (!strcasecmp(CONF_TRUE, v)
 	 || !strcasecmp(CONF_ON, v)
 	 || !strcasecmp(CONF_ENABLED, v)
@@ -1027,6 +1059,20 @@ static bool parse_boolean(const char *v, bool b)
 		 !strcasecmp(CONF_NO, v) ||
 		 !strcmp(CONF_ZERO, v))
 		b = false;
+	else
+		return NULL;
+	bool *p = malloc(sizeof b);
+	*p = b;
+	return p;
+}
+
+static bool parse_boolean(const char *v, bool b)
+{
+	bool *p = parse_bool_ptr(v);
+	if (!p)
+		return b;
+	b = *p;
+	free(p);
 	return b;
 }
 
