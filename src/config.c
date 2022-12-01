@@ -54,19 +54,18 @@
 #endif
 
 
-inline static bool is_argument(char s, const char *l, const char *a);
-
 static void show_version(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 static void show_help(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 static void show_licence(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
 
-static bool *parse_bool_ptr(const char *);
-static bool parse_boolean(const char *, bool);
+inline static bool is_argument(char, const char *, const char *);
+inline static void format_section(char *);
+inline static void print_usage(LIST, LIST);
 
-static bool    parse_config_boolean(const char *, const char *, bool);
-static int64_t parse_config_integer(const char *, const char *, int64_t);
-static _Float128 parse_config_decimal(const char *, const char *, _Float128);
-static char   *parse_config_string(const char *, const char *, char *);
+static bool  parse_boolean(const char *, const char *, bool      *);
+static bool  parse_integer(const char *, const char *, int64_t   *);
+static bool  parse_decimal(const char *, const char *, _Float128 *);
+static char *parse_string (const char *, const char *, char      *);
 
 static pair_boolean_t  *parse_pair_boolean(const char *c, const char *l);
 static pair_integer_t  *parse_pair_integer(const char *c, const char *l);
@@ -74,7 +73,13 @@ static pair_decimal_t  *parse_pair_decimal(const char *c, const char *l);
 static pair_string_t   *parse_pair_string(const char *c, const char *l);
 
 static pair_u *parse_pair(const char *c, const char *l);
-static char *parse_config_tail(const char *, const char *);
+static char *parse_tail(const char *, const char *);
+
+static void parse_list_boolean(const char *, LIST list);
+static void parse_list_integer(const char *, LIST list);
+static void parse_list_decimal(const char *, LIST list);
+
+static void parse_list(config_arg_e, const char *, LIST);
 
 static bool init = false;
 static config_about_t about = { 0x0 };
@@ -172,24 +177,21 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								(void)0; // for Slackware's older GCC
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_BOOLEAN:
-								arg->seen = true;
-								arg->response.value.boolean = parse_config_boolean(arg->long_option, line, arg->response.value.boolean);
+								arg->seen = parse_boolean(arg->long_option, line, &arg->response.value.boolean);
 								break;
 
 							case CONFIG_ARG_OPT_INTEGER:
 								(void)0; // for Slackware's older GCC
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_INTEGER:
-								arg->seen = true;
-								arg->response.value.integer = parse_config_integer(arg->long_option, line, arg->response.value.integer);
+								arg->seen = parse_integer(arg->long_option, line, &arg->response.value.integer);
 								break;
 
 							case CONFIG_ARG_OPT_DECIMAL:
 								(void)0; // for Slackware's older GCC
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_DECIMAL:
-								arg->seen = true;
-								arg->response.value.decimal = parse_config_decimal(arg->long_option, line, arg->response.value.decimal);
+								arg->seen = parse_decimal(arg->long_option, line, &arg->response.value.decimal);
 								break;
 
 							case CONFIG_ARG_OPT_STRING:
@@ -197,7 +199,7 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_STRING:
 								arg->seen = true;
-								arg->response.value.string = parse_config_string(arg->long_option, line, arg->response.value.string);
+								arg->response.value.string = parse_string(arg->long_option, line, arg->response.value.string);
 								break;
 
 							case CONFIG_ARG_PAIR_BOOLEAN:
@@ -249,7 +251,7 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								arg->seen = true;
 								if (!arg->response.value.list)
 									arg->response.value.list = list_default();
-								list_append(arg->response.value.list, parse_config_string(arg->long_option, line, NULL));
+								list_append(arg->response.value.list, parse_string(arg->long_option, line, NULL));
 								break;
 
 							case CONFIG_ARG_LIST_PAIR_STRING:
@@ -333,14 +335,24 @@ end_line:
 					next = NULL;
 				switch (arg->response.type)
 				{
+					case CONFIG_ARG_OPT_BOOLEAN:
+						(void)0; // for Slackware's older GCC
+						__attribute__((fallthrough)); /* allow fall-through; argument was seen */
+					case CONFIG_ARG_REQ_BOOLEAN:
+						arg->seen = true;
+						if (next)
+							parse_boolean(NULL, next, &arg->response.value.boolean);
+						else
+							arg->response.value.boolean = !arg->response.value.boolean;
+						break;
+
 					case CONFIG_ARG_OPT_INTEGER:
 						arg->seen = true;
 						if (!next)
 							break;
 						__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
 					case CONFIG_ARG_REQ_INTEGER:
-						arg->seen = true;
-						arg->response.value.integer = strtoull(next, NULL, 0);
+						arg->seen = parse_integer(NULL, next, &arg->response.value.integer);
 						break;
 
 					case CONFIG_ARG_OPT_DECIMAL:
@@ -349,8 +361,7 @@ end_line:
 							break;
 						__attribute__((fallthrough)); /* allow fall-through; argument was seen and has a value */
 					case CONFIG_ARG_REQ_DECIMAL:
-						arg->seen = true;
-						arg->response.value.decimal = strtof128(next, NULL);
+						arg->seen = parse_decimal(NULL, next, &arg->response.value.decimal);
 						break;
 
 					case CONFIG_ARG_OPT_STRING:
@@ -366,17 +377,6 @@ end_line:
 							die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
 						break;
 
-					case CONFIG_ARG_OPT_BOOLEAN:
-						(void)0; // for Slackware's older GCC
-						__attribute__((fallthrough)); /* allow fall-through; argument was seen */
-					case CONFIG_ARG_REQ_BOOLEAN:
-						arg->seen = true;
-						if (next)
-							arg->response.value.boolean = parse_boolean(next, arg->response.value.boolean);
-						else
-							arg->response.value.boolean = !arg->response.value.boolean;
-						break;
-
 					case CONFIG_ARG_LIST_BOOLEAN:
 						if (!arg->seen && arg->response.value.list)
 						{
@@ -387,28 +387,9 @@ end_line:
 						if (!arg->response.value.list)
 							arg->response.value.list = list_default();
 						if (strchr(next, ','))
-						{
-							char *s = strdup(next);
-							if (!s)
-								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
-							bool *r = parse_bool_ptr(strtok(s, ","));
-							if (r && !list_append(arg->response.value.list, r))
-								free(r);
-							char *t = NULL;
-							while ((t = strtok(NULL, ",")))
-							{
-								r = parse_bool_ptr(t);
-								if (r && !list_append(arg->response.value.list, r))
-									free(r);
-							}
-							free(s);
-						}
+							parse_list(CONFIG_ARG_BOOLEAN, next, arg->response.value.list);
 						else
-						{
-							bool *r = parse_bool_ptr(next);
-							if (r && !list_append(arg->response.value.list, r))
-								free(r);
-						}
+							parse_list_boolean(next, arg->response.value.list);
 						break;
 
 					case CONFIG_ARG_LIST_INTEGER:
@@ -421,31 +402,9 @@ end_line:
 						if (!arg->response.value.list)
 							arg->response.value.list = list_default();
 						if (strchr(next, ','))
-						{
-							char *s = strdup(next);
-							if (!s)
-								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
-							int64_t *r = calloc(sizeof( int64_t ), 1);
-							*r = strtoull(strtok(s, ","), NULL, 0);
-							if (!list_append(arg->response.value.list, r))
-								free(r);
-							char *t = NULL;
-							while ((t = strtok(NULL, ",")))
-							{
-								r = calloc(sizeof( int64_t ), 1);
-								*r = strtoull(t, NULL, 0);
-								if (!list_append(arg->response.value.list, r))
-									free(r);
-							}
-							free(s);
-						}
+							parse_list(CONFIG_ARG_INTEGER, next, arg->response.value.list);
 						else
-						{
-							int64_t *r = calloc(sizeof( int64_t ), 1);
-							*r = strtoull(next, NULL, 0);
-							if (!list_append(arg->response.value.list, r))
-								free(r);
-						}
+							parse_list_integer(next, arg->response.value.list);
 						break;
 
 					case CONFIG_ARG_LIST_DECIMAL:
@@ -458,31 +417,9 @@ end_line:
 						if (!arg->response.value.list)
 							arg->response.value.list = list_default();
 						if (strchr(next, ','))
-						{
-							char *s = strdup(next);
-							if (!s)
-								die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(next) + 1);
-							_Float128 *r = calloc(sizeof( _Float128 ), 1);
-							*r = strtof128(strtok(s, ","), NULL);
-							if (!list_append(arg->response.value.list, r))
-								free(r);
-							char *t = NULL;
-							while ((t = strtok(NULL, ",")))
-							{
-								r = calloc(sizeof( _Float128 ), 1);
-								*r = strtof128(t, NULL);
-								if (!list_append(arg->response.value.list, r))
-									free(r);
-							}
-							free(s);
-						}
+							parse_list(CONFIG_ARG_DECIMAL, next, arg->response.value.list);
 						else
-						{
-							_Float128 *r = calloc(sizeof( _Float128 ), 1);
-							*r = strtof128(next, NULL);
-							if (!list_append(arg->response.value.list, r))
-								free(r);
-						}
+							parse_list_decimal(next, arg->response.value.list);
 						break;
 
 					case CONFIG_ARG_LIST_STRING:
@@ -543,25 +480,22 @@ end_line:
 				config_unnamed_t *x = (config_unnamed_t *)list_get(extra, j);
 				switch (x->response.type)
 				{
+					case CONFIG_ARG_BOOLEAN:
+						x->seen = parse_boolean(NULL, curr, &x->response.value.boolean);
+						break;
+					case CONFIG_ARG_INTEGER:
+						x->seen = parse_integer(NULL, curr, &x->response.value.integer);
+						break;
+					case CONFIG_ARG_DECIMAL:
+						x->seen = parse_decimal(NULL, curr, &x->response.value.decimal);
+						break;
 					case CONFIG_ARG_STRING:
 						if (!(x->response.value.string = strdup(curr)))
 							die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(curr));
 						break;
-					case CONFIG_ARG_INTEGER:
-						x->response.value.integer = strtoull(curr, NULL, 0);
-						break;
-					case CONFIG_ARG_DECIMAL:
-						x->response.value.decimal = strtof128(curr, NULL);
-						break;
-					case CONFIG_ARG_BOOLEAN:
-						(void)0; // for Slackware's older GCC
-						__attribute__((fallthrough)); /* allow fall-through; argument was seen */
 					default:
-						x->response.value.boolean = true;
 						break;
-
 				}
-				x->seen = true;
 				j++;
 			}
 			else if (warn)
@@ -1044,83 +978,80 @@ extern void update_config(const char * const restrict o, const char * const rest
 	return;
 }
 
-static bool *parse_bool_ptr(const char *v)
+static bool parse_boolean(const char *c, const char *l, bool *v)
 {
-	bool b;
-	if (!strcasecmp(CONF_TRUE, v)
-	 || !strcasecmp(CONF_ON, v)
-	 || !strcasecmp(CONF_ENABLED, v)
-	 || !strcasecmp(CONF_YES, v)
-	 || !strcmp(CONF_ONE, v))
-		b = true;
-	else if (!strcasecmp(CONF_FALSE, v) ||
-		 !strcasecmp(CONF_OFF, v) ||
-		 !strcasecmp(CONF_DISABLED, v) ||
-		 !strcasecmp(CONF_NO, v) ||
-		 !strcmp(CONF_ZERO, v))
-		b = false;
-	else
-		return NULL;
-	bool *p = malloc(sizeof b);
-	*p = b;
-	return p;
-}
-
-static bool parse_boolean(const char *v, bool b)
-{
-	bool *p = parse_bool_ptr(v);
-	if (!p)
-		return b;
-	b = *p;
-	free(p);
-	return b;
-}
-
-static bool parse_config_boolean(const char *c, const char *l, bool d)
-{
-	bool r = d;
-	char *v = parse_config_tail(c, l);
-	if (v)
-	{
-		r = parse_boolean(v, r);
-		free(v);
-	}
-	return r;
-}
-
-static int64_t parse_config_integer(const char *c, const char *l, int64_t d)
-{
-	int64_t r = d;
-	char *n = parse_config_tail(c, l);
+	bool r = false;
+	char *n = parse_tail(c, l);
 	if (n)
 	{
-		r = strtoull(n, NULL, 0);
+		if (!strcasecmp(CONF_TRUE, n)
+		 || !strcasecmp(CONF_ON, n)
+		 || !strcasecmp(CONF_ENABLED, n)
+		 || !strcasecmp(CONF_YES, n)
+		 || !strcmp(CONF_ONE, n))
+		{
+			*v = true;
+			r = true;
+		}
+		else if (!strcasecmp(CONF_FALSE, n) ||
+			 !strcasecmp(CONF_OFF, n) ||
+			 !strcasecmp(CONF_DISABLED, n) ||
+			 !strcasecmp(CONF_NO, n) ||
+			 !strcmp(CONF_ZERO, n))
+		{
+			*v = false;
+			r = true;
+		}
 		free(n);
 	}
+	if (!r)
+		cli_eprintf("invalid boolean value [%s]\n", l);
 	return r;
 }
 
-static _Float128 parse_config_decimal(const char *c, const char *l, _Float128 d)
+static bool parse_integer(const char *c, const char *l, int64_t *v)
 {
-	_Float128 r = d;
-	char *n = parse_config_tail(c, l);
+	bool r = false;
+	char *n = parse_tail(c, l);
 	if (n)
 	{
-		r = strtof128(n, NULL);
+		char *e = NULL;
+		*v = strtoull(n, &e, 0);
+		if (e != n)
+			r = true;
 		free(n);
 	}
+	if (!r)
+		cli_eprintf("invalid integer value [%s]\n", l);
 	return r;
 }
 
-static char *parse_config_string(const char *c, const char *l, char *d)
+static bool parse_decimal(const char *c, const char *l, _Float128 *v)
 {
-	char *r = parse_config_tail(c, l);
-	return r ? : d;
+	bool r = false;
+	char *n = parse_tail(c, l);
+	if (n)
+	{
+		char *e = NULL;
+		*v = strtof128(n, &e);
+		if (e != n)
+			r = true;
+		free(n);
+	}
+	if (!r)
+		cli_eprintf("invalid decimal value [%s]\n", l);
+	return r;
 }
 
-static char *parse_config_tail(const char *c, const char *l)
+static char *parse_string(const char *c, const char *l, char *v)
 {
-	char *x = strdup(l + strlen(c));
+	char *r = parse_tail(c, l);
+	return r ? : v;
+}
+
+static char *parse_tail(const char *c, const char *l)
+{
+	char *x = strdup(l + (c ? strlen(c) : 0));
 	if (!x)
 		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(l) - strlen(c) + 1);
 	size_t i = 0;
@@ -1231,4 +1162,81 @@ static pair_u *parse_pair(const char *c, const char *l)
 	/* all done */
 	free(x);
 	return pair;
+}
+
+static void parse_list_boolean(const char *text, LIST list)
+{
+	bool *r = malloc(sizeof( bool ));
+	if (!r)
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( bool ));
+	if (parse_boolean(NULL, text, r))
+	{
+		if (!list_append(list, r))
+			free(r);
+	}
+	else
+		free(r);
+	return;
+}
+
+static void parse_list_integer(const char *text, LIST list)
+{
+	int64_t *r = malloc(sizeof( int64_t ));
+	if (!r)
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( int64_t ));
+	if (parse_integer(NULL, text, r))
+	{
+		if (!list_append(list, r))
+			free(r);
+	}
+	else
+		free(r);
+	return;
+}
+
+static void parse_list_decimal(const char *text, LIST list)
+{
+	_Float128 *r = malloc(sizeof( _Float128 ));
+	if (!r)
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( _Float128 ));
+	if (parse_decimal(NULL, text, r))
+	{
+		if (!list_append(list, r))
+			free(r);
+	}
+	else
+		free(r);
+	return;
+}
+
+static void parse_list(config_arg_e type, const char *text, LIST list)
+{
+	char *s = strdup(text);
+	if (!s)
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(text) + 1);
+	char *t = s;
+	char *u = s;
+	while ((t = strtok(u, ",")))
+	{
+		switch (type)
+		{
+			case CONFIG_ARG_BOOLEAN:
+				parse_list_boolean(t, list);
+				break;
+
+			case CONFIG_ARG_INTEGER:
+				parse_list_integer(t, list);
+				break;
+
+			case CONFIG_ARG_DECIMAL:
+				parse_list_decimal(t, list);
+				break;
+
+			default:
+				break;
+		}
+		u = NULL;
+	}
+	free(s);
+	return;
 }
