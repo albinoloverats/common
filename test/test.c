@@ -568,7 +568,7 @@ int main(int argc, char **argv)
 		ITER i = list_iterator(l);
 		while (list_has_next(i))
 		{
-			const _Float128 *v = list_get_next(i);
+			const __float128 *v = list_get_next(i);
 			char buf[0xFF] = { 0x00 };
 			strfromf128(buf, sizeof buf, "%.9f", *v);
 			cli_printf("  Decimal : %s\n", buf);
