@@ -251,7 +251,7 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								break;
 
 							default:
-								// ignore anything else for now
+								break;
 						}
 				}
 				free(iter);
@@ -494,6 +494,12 @@ end_line:
 		config_named_t *arg = (config_named_t *)list_get_next(iter);
 		if (arg->seen)
 			r++;
+		else if (arg->required && !arg->seen && warn)
+		{
+			cli_eprintf("Missing required argument \"%s\"\n", arg->description);
+			config_show_usage(args, extra);
+		}
+
 	}
 	free(iter);
 	iter = list_iterator(extra);
@@ -546,7 +552,7 @@ inline static void print_usage(LIST args, LIST extra)
 	int max_width = (csbi.srWindow.Right - csbi.srWindow.Left + 1) - strlen(about.name) - 2;
 #endif
 	if (max_width <= 0 || !isatty(STDERR_FILENO))
-		max_width = 77 - strlen(about.name); // needed for MSYS2
+		max_width = CLI_MAX_WIDTH - strlen(about.name); // needed for MSYS2
 	format_section(_("Usage"));
 	int j = cli_eprintf("  " ANSI_COLOUR_GREEN "%s", about.name) - strlen(ANSI_COLOUR_GREEN) - 2;
 	if (extra)
@@ -639,7 +645,7 @@ static void print_option(int indent, char sopt, char *lopt, char *type, char *de
 	int max_width = (csbi.srWindow.Right - csbi.srWindow.Left + 1) - 2;
 #endif
 	if (max_width <= 0 || !isatty(STDERR_FILENO))
-		max_width = 77; // needed for MSYS2, but also sensible default if output is being redirected
+		max_width = CLI_MAX_WIDTH; // needed for MSYS2, but also sensible default if output is being redirected
 	int width = max_width - indent;
 	for (; isspace(*desc); desc++)
 		;
@@ -664,6 +670,7 @@ static void print_option(int indent, char sopt, char *lopt, char *type, char *de
 		asprintf(&x_desc, "%s" ANSI_COLOUR_WHITE " (default:" ANSI_COLOUR_GREEN " %s" ANSI_COLOUR_WHITE ")", desc, def);
 	else
 		x_desc = desc;
+	l = strlen(x_desc);
 
 	cli_eprintf(ANSI_COLOUR_BLUE);
 	if (l < width)

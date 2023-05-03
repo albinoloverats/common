@@ -495,7 +495,7 @@ int main(int argc, char **argv)
 	LIST notes = list_string();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
 	list_add(notes, "File types: [ folder / file / link / block / char / socket / pipe ]");
-	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 1 ]");
+	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 0 ]");
 
 	LIST xtra = list_default();
 	list_add(xtra, &((config_unnamed_t){ "other", { CONFIG_ARG_STRING,  { .string = NULL } }, false, false }));
