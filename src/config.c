@@ -55,9 +55,9 @@
 #endif
 
 
-static void show_version(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
-static void show_help(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
-static void show_licence(LIST args, LIST notes, LIST extra) __attribute__((noreturn));
+static void show_version(LIST args, LIST largs, LIST notes, LIST extra) __attribute__((noreturn));
+static void show_help(LIST args, LIST largs, LIST notes, LIST extra) __attribute__((noreturn));
+static void show_licence(LIST args, LIST largs, LIST notes, LIST extra) __attribute__((noreturn));
 
 inline static bool is_argument(char, const char *, const char *);
 inline static void format_section(char *);
@@ -294,11 +294,11 @@ end_line:
 	}
 	/* handle help et al first */
 	if (list_contains(largs, "-h") || list_contains(largs, "--help"))
-		show_help(args, notes, extra);
+		show_help(args, largs, notes, extra);
 	if (list_contains(largs, "-v") || list_contains(largs, "--version"))
-		show_version(args, notes, extra);
+		show_version(args, largs, notes, extra);
 	if (list_contains(largs, "-l") || list_contains(largs, "--licence"))
-		show_licence(args, notes, extra);
+		show_licence(args, largs, notes, extra);
 
 	for (size_t i = 0, j = 0; i < list_size(largs); i++)
 	{
@@ -530,12 +530,13 @@ inline static void format_section(char *s)
 	return;
 }
 
-static void show_version(LIST args, LIST notes, LIST extra)
+static void show_version(LIST args, LIST largs, LIST notes, LIST extra)
 {
 	version_print(about.name, about.version, about.url);
 	while (version_is_checking)
 		sleep(1);
 	list_deinit(args);
+	list_deinit(largs, free);
 	list_deinit(notes);
 	list_deinit(extra);
 	exit(EXIT_SUCCESS);
@@ -808,7 +809,7 @@ static char *parse_default(config_arg_e type, config_arg_u value)
 	return d;
 }
 
-static void show_help(LIST args, LIST notes, LIST extra)
+static void show_help(LIST args, LIST largs, LIST notes, LIST extra)
 {
 	version_print(about.name, about.version, about.url);
 	cli_eprintf("\n");
@@ -885,17 +886,19 @@ static void show_help(LIST args, LIST notes, LIST extra)
 	while (version_is_checking)
 		sleep(1);
 	list_deinit(args);
+	list_deinit(largs, free);
 	list_deinit(notes);
 	list_deinit(extra);
 	exit(EXIT_SUCCESS);
 }
 
-static void show_licence(LIST args, LIST notes, LIST extra)
+static void show_licence(LIST args, LIST largs, LIST notes, LIST extra)
 {
 	cli_eprintf(_(TEXT_LICENCE));
 	while (version_is_checking)
 		sleep(1);
 	list_deinit(args);
+	list_deinit(largs, free);
 	list_deinit(notes);
 	list_deinit(extra);
 	exit(EXIT_SUCCESS);
