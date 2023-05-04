@@ -74,6 +74,7 @@ static bool parse_pair_decimal(const char *c, const char *l, pair_decimal_t *);
 static bool parse_pair_string (const char *c, const char *l, pair_string_t  *);
 
 static pair_u *parse_pair(const char *c, const char *l);
+
 static char *parse_tail(const char *, const char *);
 
 static void parse_list_boolean(const char *, LIST list);
@@ -1045,6 +1046,8 @@ static char *parse_string(const char *c, const char *l, char *v)
 
 static char *parse_tail(const char *c, const char *l)
 {
+	if (!l)
+		return NULL;
 	char *x = strdup(l + (c ? strlen(c) : 0));
 	if (!x)
 		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(l) - strlen(c) + 1);
