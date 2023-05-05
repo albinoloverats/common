@@ -487,10 +487,12 @@ int main(int argc, char **argv)
 	list_add(args, &((config_named_t){ 'b', "boolean",  "boolean",          "See how boolean values are parsed",                   { CONFIG_ARG_OPT_BOOLEAN,  { .boolean = false      } }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'i', "integer",  "integer",          "See how integer values are parsed",                   { CONFIG_ARG_REQ_INTEGER,  { .integer = 0          } }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'd', "decimal",  "decimal",          "See how decimal values are parsed",                   { CONFIG_ARG_REQ_DECIMAL,  { .decimal = 0.0f       } }, false, false, false, false }));
+	list_add(args, &((config_named_t){ 'z', "string",   "string",           "See how string values are parsed",                    { CONFIG_ARG_REQ_STRING,   { .string  = NULL       } }, false, false, false, false }));
 
 	list_add(args, &((config_named_t){ 'B', "booleans", "list of booleans", "See how lists of boolean values are parsed",          { CONFIG_ARG_LIST_BOOLEAN, { .list    = NULL       } }, false, true,  false, false }));
 	list_add(args, &((config_named_t){ 'I', "integers", "list of integers", "See how lists of integer values are parsed",          { CONFIG_ARG_LIST_INTEGER, { .list    = NULL       } }, false, true,  false, false }));
 	list_add(args, &((config_named_t){ 'D', "decimals", "list of decimals", "See how lists of decimal values are parsed",          { CONFIG_ARG_LIST_DECIMAL, { .list    = NULL       } }, false, true,  false, false }));
+	list_add(args, &((config_named_t){ 'Z', "strings",  "list of strings",  "See how lists of string values are parsed",           { CONFIG_ARG_LIST_STRING,  { .list    = NULL       } }, false, true,  false, false }));
 
 	LIST notes = list_string();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
@@ -537,27 +539,17 @@ int main(int argc, char **argv)
 		cli_printf("  Decimal : %s\n", buf);
 		//cli_printf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response.value.decimal);
 	}
+	if (all || ((config_named_t *)list_get(args, 8))->seen)
+		cli_printf("  String  : %s\n", ((config_named_t *)list_get(args, 8))->response.value.string);
 
-	if (((config_named_t *)list_get(args, 8))->seen)
-	{
-		LIST l = ((config_named_t *)list_get(args, 8))->response.value.list;
-		ITER i = list_iterator(l);
-		while (list_has_next(i))
-		{
-			const bool *v = list_get_next(i);
-			cli_printf("  Boolean : %s\n", *v ? "true" : "false");
-		}
-		free(i);
-		list_deinit(l, free);
-	}
 	if (((config_named_t *)list_get(args, 9))->seen)
 	{
 		LIST l = ((config_named_t *)list_get(args, 9))->response.value.list;
 		ITER i = list_iterator(l);
 		while (list_has_next(i))
 		{
-			const int64_t *v = list_get_next(i);
-			cli_printf("  Integer : %" PRIi64 "\n", *v);
+			const bool *v = list_get_next(i);
+			cli_printf("  Boolean : %s\n", *v ? "true" : "false");
 		}
 		free(i);
 		list_deinit(l, free);
@@ -568,10 +560,34 @@ int main(int argc, char **argv)
 		ITER i = list_iterator(l);
 		while (list_has_next(i))
 		{
+			const int64_t *v = list_get_next(i);
+			cli_printf("  Integer : %" PRIi64 "\n", *v);
+		}
+		free(i);
+		list_deinit(l, free);
+	}
+	if (((config_named_t *)list_get(args, 11))->seen)
+	{
+		LIST l = ((config_named_t *)list_get(args, 11))->response.value.list;
+		ITER i = list_iterator(l);
+		while (list_has_next(i))
+		{
 			const __float128 *v = list_get_next(i);
 			char buf[0xFF] = { 0x00 };
 			strfromf128(buf, sizeof buf, "%.9f", *v);
 			cli_printf("  Decimal : %s\n", buf);
+		}
+		free(i);
+		list_deinit(l, free);
+	}
+	if (((config_named_t *)list_get(args, 12))->seen)
+	{
+		LIST l = ((config_named_t *)list_get(args, 12))->response.value.list;
+		ITER i = list_iterator(l);
+		while (list_has_next(i))
+		{
+			const char *v = list_get_next(i);
+			cli_printf("  String  : %s\n", v);
 		}
 		free(i);
 		list_deinit(l, free);
