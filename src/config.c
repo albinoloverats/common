@@ -135,6 +135,40 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 		cli_eprintf(_("Call config_init() first\n"));
 		return -1;
 	}
+
+	LIST largs = list_init((void *)strcmp, true, false);
+	for (int i = 1; i < argc; i++) // from 1, skip invokation name
+	{
+		char *x = argv[i];
+		if (x[0] == '-' && x[1] == '-')
+		{
+			// long option, check for '='
+			char *o = strchr(x, '=');
+			if (o)
+			{
+				list_append(largs, strndup(x, o - x));
+				list_append(largs, strdup(o + 1));
+			}
+			else
+				list_append(largs, strdup(argv[i]));
+		}
+		else if (x[0] == '-' && strlen(x) > 2)
+		{
+			// short option, check for anything after '-x...'
+			list_append(largs, strndup(x, 2));
+			list_append(largs, strdup(x + 2));
+		}
+		else
+			list_append(largs, strdup(argv[i]));
+	}
+	/* handle help et al first */
+	if (list_contains(largs, "-h") || list_contains(largs, "--help"))
+		show_help(args, largs, notes, extra);
+	if (list_contains(largs, "-v") || list_contains(largs, "--version"))
+		show_version(args, largs, notes, extra);
+	if (list_contains(largs, "-l") || list_contains(largs, "--licence"))
+		show_licence(args, largs, notes, extra);
+
 	/*
 	 * check for options in rc file
 	 */
@@ -327,39 +361,6 @@ end_line:
 		}
 		free(rc);
 	}
-
-	LIST largs = list_init((void *)strcmp, true, false);
-	for (int i = 1; i < argc; i++) // from 1, skip invokation name
-	{
-		char *x = argv[i];
-		if (x[0] == '-' && x[1] == '-')
-		{
-			// long option, check for '='
-			char *o = strchr(x, '=');
-			if (o)
-			{
-				list_append(largs, strndup(x, o - x));
-				list_append(largs, strdup(o + 1));
-			}
-			else
-				list_append(largs, strdup(argv[i]));
-		}
-		else if (x[0] == '-' && strlen(x) > 2)
-		{
-			// short option, check for anything after '-x...'
-			list_append(largs, strndup(x, 2));
-			list_append(largs, strdup(x + 2));
-		}
-		else
-			list_append(largs, strdup(argv[i]));
-	}
-	/* handle help et al first */
-	if (list_contains(largs, "-h") || list_contains(largs, "--help"))
-		show_help(args, largs, notes, extra);
-	if (list_contains(largs, "-v") || list_contains(largs, "--version"))
-		show_version(args, largs, notes, extra);
-	if (list_contains(largs, "-l") || list_contains(largs, "--licence"))
-		show_licence(args, largs, notes, extra);
 
 	for (size_t i = 0, j = 0; i < list_size(largs); i++)
 	{
@@ -860,11 +861,13 @@ static char *parse_default(config_arg_e type, config_arg_u value)
 				asprintf(&d, "%s", buf);
 			}
 			break;
+		case CONFIG_ARG_OPT_STRING:
+			(void)0; // for Slackware's older GCC
+			__attribute__((fallthrough)); /* allow fall-through */
+
 		default: // all other defaults to be displayed should be string
-			{
-				if (value.string)
-					d = strdup((char *)value.string);
-			}
+			if (value.string)
+				d = strdup((char *)value.string);
 			break;
 	}
 	return d;
