@@ -238,6 +238,8 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 								__attribute__((fallthrough)); /* allow fall-through */
 							case CONFIG_ARG_REQ_STRING:
 								arg->seen = true;
+								if (arg->response.value.string)
+									free(arg->response.value.string);
 								arg->response.value.string = parse_string(arg->long_option, line, arg->response.value.string);
 								break;
 
