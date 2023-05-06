@@ -866,7 +866,9 @@ static char *parse_default(config_arg_e type, config_arg_u value)
 		case CONFIG_ARG_OPT_STRING:
 			(void)0; // for Slackware's older GCC
 			__attribute__((fallthrough)); /* allow fall-through */
-
+		case CONFIG_ARG_REQ_STRING:
+			d = strdup(value.string ? : "(null)");
+			break;
 		default: // all other defaults to be displayed should be string
 			if (value.string)
 				d = strdup((char *)value.string);
