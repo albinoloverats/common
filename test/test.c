@@ -471,6 +471,8 @@ int main(int argc, char **argv)
 {
 	srand48(time(NULL));
 
+	error_init();
+
 	config_init(about);
 
 	int item_count = 10;

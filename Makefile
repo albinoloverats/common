@@ -5,8 +5,8 @@ APP       = test-app
 SRC       = test/test.c src/error.c src/list.c src/tlv.c src/map.c src/dir.c src/version.c src/config.c src/cli.c
 MISC      = src/misc.h
 
-# -fsanitize=address
-CFLAGS   += -O0 -ggdb -pg -Wall -Wextra -Werror -std=gnu99 -pipe -Wformat=2 -Wno-unused-result
+# -fsanitize=address -pg
+CFLAGS   += -O0 -ggdb -Wall -Wextra -Werror -std=gnu99 -pipe -Wformat=2 -Wno-unused-result
 CPPFLAGS += -Isrc -D__DEBUG__ -DMALLOC_CHECK_=1 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64 -DGIT_COMMIT=\"$(shell git log | head -n1 | cut -f2 -d' ')\" -DBUILD_OS=\"$(shell grep PRETTY_NAME /etc/os-release | cut -d= -f2)\"
 
 LIBS      = -lpthread -lcurl

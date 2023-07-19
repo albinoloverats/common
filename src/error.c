@@ -38,6 +38,8 @@
 #include "error.h"
 #include "non-gnu.h"
 
+#define ERROR_DIVIDE "\n********** ********** ********** **********\n\n"
+
 #ifdef BUILD_GUI
 static void error_gui_alert(const char * const restrict);
 
@@ -60,6 +62,7 @@ extern void on_error(int s)
 	fatal_error_in_progress = 1;
 
 	write(STDERR_FILENO, "\e[?25h\n", strlen("\e[?25h\n"));
+	write(STDERR_FILENO, ERROR_DIVIDE, strlen(ERROR_DIVIDE));
 
 	char m[32] = { 0x0 };
 	strcat(m, "Received fatal signal [");
@@ -85,6 +88,8 @@ extern void on_error(int s)
 	}
 #endif
 
+	write(STDERR_FILENO, ERROR_DIVIDE, strlen(ERROR_DIVIDE));
+
 #ifndef __APPLE__
 	signal(s, SIG_DFL);
 	raise(s);
@@ -104,6 +109,7 @@ extern void error_init(void)
 	signal(SIGBUS,  on_error);
 	signal(SIGABRT, on_error);
 	signal(SIGSYS,  on_error);
+	signal(SIGPROF, on_error);
 
 	error_inited = true;
 
