@@ -483,6 +483,7 @@ int main(int argc, char **argv)
 	list_add(args, &((config_named_t){ 's', "list",     "integer",          "Run ‘LIST’ tests, with the given number of items",    { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'm', "map",      "integer",          "Run ‘MAP’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 'v', "tlv",      "integer",          "Run ‘TLV’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
+
 	list_add(args, &((config_named_t){ 'f', "fs",       "path",             "Run ‘FS’ tests, on the given path",                   { CONFIG_ARG_OPT_STRING,   { .string  = cur_dir    } }, false, false, false, false }));
 	list_add(args, &((config_named_t){ 't', "types",    "file types",       "Which file types to search for the the FS tree test", { CONFIG_ARG_LIST_STRING,  { .string  = all_types  } }, false, true,  false, false }));
 
