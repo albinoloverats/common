@@ -497,10 +497,13 @@ int main(int argc, char **argv)
 	list_add(args, &((config_named_t){ 'D', "decimals", "list of decimals", "See how lists of decimal values are parsed",          { CONFIG_ARG_LIST_DECIMAL, { .list    = NULL       } }, false, true,  false, false }));
 	list_add(args, &((config_named_t){ 'Z', "strings",  "list of strings",  "See how lists of string values are parsed",           { CONFIG_ARG_LIST_STRING,  { .list    = NULL       } }, false, true,  false, false }));
 
+	list_add(args, &((config_named_t){ 'S', "sort",     "boolean",          "Whether the list tests should sort their lists",      { CONFIG_ARG_OPT_BOOLEAN,  { .boolean = false      } }, false, true,  false, false }));
+
 	LIST notes = list_string();
-	list_add(notes, "Not specifying any tests is the same as specifying all tests.");
+	list_add(notes, "Not specifying any tests is the same as specifying all tests");
 	list_add(notes, "File types: [ folder / file / link / block / char / socket / pipe ]");
 	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 0 ]");
+	list_add(notes, "Sorting of lists is done “manually” after parsing; a new sorted list is created and items are duplicated from the original list");
 
 	LIST xtra = list_default();
 	list_add(xtra, &((config_unnamed_t){ "other", { CONFIG_ARG_STRING,  { .string = NULL } }, false, false }));
@@ -545,6 +548,8 @@ int main(int argc, char **argv)
 	if (all || ((config_named_t *)list_get(args, 8))->seen)
 		cli_printf("  String  : %s\n", ((config_named_t *)list_get(args, 8))->response.value.string);
 
+	bool sort = ((config_named_t *)list_get(args, 13))->response.value.boolean;
+
 	if (((config_named_t *)list_get(args, 9))->seen)
 	{
 		LIST l = ((config_named_t *)list_get(args, 9))->response.value.list;
@@ -561,38 +566,91 @@ int main(int argc, char **argv)
 	{
 		LIST l = ((config_named_t *)list_get(args, 10))->response.value.list;
 		ITER i = list_iterator(l);
+		LIST s = list_integer();
+		if (sort)
+			cli_printf("Original list:\n");
 		while (list_has_next(i))
 		{
 			const int64_t *v = list_get_next(i);
+			if (sort)
+				list_add(s, v);
 			cli_printf("  Integer : %" PRIi64 "\n", *v);
 		}
 		free(i);
+		if (sort)
+		{
+			i = list_iterator(s);
+			cli_printf("Sorted list:\n");
+			while (list_has_next(i))
+			{
+				const int64_t *v = list_get_next(i);
+				cli_printf("  Integer : %" PRIi64 "\n", *v);
+			}
+			free(i);
+		}
+		list_deinit(s);
 		list_deinit(l, free);
 	}
 	if (((config_named_t *)list_get(args, 11))->seen)
 	{
 		LIST l = ((config_named_t *)list_get(args, 11))->response.value.list;
 		ITER i = list_iterator(l);
+		LIST s = list_decimal();
+		if (sort)
+			cli_printf("Original list:\n");
 		while (list_has_next(i))
 		{
 			const __float128 *v = list_get_next(i);
+			if (sort)
+				list_add(s, v);
 			char buf[0xFF] = { 0x00 };
 			strfromf128(buf, sizeof buf, "%.9f", *v);
 			cli_printf("  Decimal : %s\n", buf);
 		}
 		free(i);
+		if (sort)
+		{
+			i = list_iterator(s);
+			cli_printf("Sorted list:\n");
+			while (list_has_next(i))
+			{
+				const __float128 *v = list_get_next(i);
+				char buf[0xFF] = { 0x00 };
+				strfromf128(buf, sizeof buf, "%.9f", *v);
+				cli_printf("  Decimal : %s\n", buf);
+			}
+			free(i);
+		}
+		list_deinit(s);
 		list_deinit(l, free);
 	}
 	if (((config_named_t *)list_get(args, 12))->seen)
 	{
 		LIST l = ((config_named_t *)list_get(args, 12))->response.value.list;
 		ITER i = list_iterator(l);
+		LIST s = list_string();
+		if (sort)
+			cli_printf("Original list:\n");
 		while (list_has_next(i))
 		{
 			const char *v = list_get_next(i);
+			if (sort)
+				list_add(s, v);
 			cli_printf("  String  : %s\n", v);
 		}
 		free(i);
+		if (sort)
+		{
+			i = list_iterator(s);
+			cli_printf("Sorted list:\n");
+			while (list_has_next(i))
+			{
+				const char *v = list_get_next(i);
+				cli_printf("  String  : %s\n", v);
+			}
+			free(i);
+		}
+		list_deinit(s);
 		list_deinit(l, free);
 	}
 
