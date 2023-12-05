@@ -1,6 +1,6 @@
 /*
  * stegfs ~ a steganographic file system for unix-like systems
- * Copyright © 2007-2022, albinoloverats ~ Software Development
+ * Copyright © 2007-2024, albinoloverats ~ Software Development
  * email: stegfs@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
@@ -182,12 +182,14 @@ static void get_tree(LIST l, const char *path, dir_type_e type)
 				case S_IFREG:
 					add = type & DIR_FILE;
 					break;
+#ifndef _WIN32
 				case S_IFLNK:
 					add = type & DIR_LINK;
 					break;
 				case S_IFSOCK:
 					add = type & DIR_SOCKET;
 					break;
+#endif
 				case S_IFIFO:
 					add = type & DIR_PIPE;
 					break;

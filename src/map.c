@@ -1,6 +1,6 @@
 /*
  * Common code for dealing with maps.
- * Copyright © 2022-2022, albinoloverats ~ Software Development
+ * Copyright © 2024-2024, albinoloverats ~ Software Development
  * email: webmaster@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
@@ -169,7 +169,8 @@ static int map_compare(const void *a, const void *b)
 static void map_free(void *m)
 {
 	entry_t *e = (entry_t *)m;
-	if (e->parent->free) {
+	if (e->parent->free)
+	{
 		free((void *)e->pair.p1);
 		free((void *)e->pair.p2);
 	}

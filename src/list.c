@@ -1,6 +1,6 @@
 /*
  * Common code for dealing with linked lists.
- * Copyright © 2021-2022, albinoloverats ~ Software Development
+ * Copyright © 2021-2024, albinoloverats ~ Software Development
  * email: webmaster@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 #include <stdbool.h>
 
 #include "common.h"
+#include "non-gnu.h"
 #include "list.h"
 #include "error.h"
 
@@ -351,7 +352,9 @@ extern int list_compare_integer(void *a, void *b)
 
 extern int list_compare_decimal(void *a, void *b)
 {
-	const __float128 *x = a;
-	const __float128 *y = b;
+	//const __float128 *x = a;
+	//const __float128 *y = b;
+	const long double *x = a;
+	const long double *y = b;
 	return *x - *y;
 }

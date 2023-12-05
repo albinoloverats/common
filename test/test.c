@@ -503,6 +503,7 @@ int main(int argc, char **argv)
 	list_add(notes, "Not specifying any tests is the same as specifying all tests");
 	list_add(notes, "File types: [ folder / file / link / block / char / socket / pipe ]");
 	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 0 ]");
+	list_add(notes, "Numerical values support suffixes: k, m, g, t, p, e [KILO, MEGA, GIGA, TERA, PETA, EXA]; use lowercase for 1,000 and uppercase for 1,024");
 	list_add(notes, "Sorting of lists is done “manually” after parsing; a new sorted list is created and items are duplicated from the original list");
 
 	LIST xtra = list_default();
@@ -537,13 +538,13 @@ int main(int argc, char **argv)
 	if (all || ((config_named_t *)list_get(args, 5))->seen)
 		cli_printf("  Boolean : %s\n", ((config_named_t *)list_get(args, 5))->response.value.boolean ? "true" : "false");
 	if (all || ((config_named_t *)list_get(args, 6))->seen)
-		cli_printf("  Integer : %" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response.value.integer);
+		cli_printf("  Integer : %'" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response.value.integer);
 	if (all || ((config_named_t *)list_get(args, 7))->seen)
 	{
-		char buf[0xFF] = { 0x00 };
-		strfromf128(buf, sizeof buf, "%.9f", ((config_named_t *)list_get(args, 7))->response.value.decimal);
-		cli_printf("  Decimal : %s\n", buf);
-		//cli_printf("  Decimal : %.9Lf", ((config_named_t *)list_get(args, 7))->response.value.decimal);
+		//char buf[0xFF] = { 0x00 };
+		//strfromf128(buf, sizeof buf, "%'.9f", ((config_named_t *)list_get(args, 7))->response.value.decimal);
+		//cli_printf("  Decimal : %s\n", buf);
+		cli_printf("  Decimal : %'.9Lf\n", ((config_named_t *)list_get(args, 7))->response.value.decimal);
 	}
 	if (all || ((config_named_t *)list_get(args, 8))->seen)
 		cli_printf("  String  : %s\n", ((config_named_t *)list_get(args, 8))->response.value.string);
@@ -574,7 +575,7 @@ int main(int argc, char **argv)
 			const int64_t *v = list_get_next(i);
 			if (sort)
 				list_add(s, v);
-			cli_printf("  Integer : %" PRIi64 "\n", *v);
+			cli_printf("  Integer : %'" PRIi64 "\n", *v);
 		}
 		free(i);
 		if (sort)
@@ -584,7 +585,7 @@ int main(int argc, char **argv)
 			while (list_has_next(i))
 			{
 				const int64_t *v = list_get_next(i);
-				cli_printf("  Integer : %" PRIi64 "\n", *v);
+				cli_printf("  Integer : %'" PRIi64 "\n", *v);
 			}
 			free(i);
 		}
@@ -600,12 +601,14 @@ int main(int argc, char **argv)
 			cli_printf("Original list:\n");
 		while (list_has_next(i))
 		{
-			const __float128 *v = list_get_next(i);
+			//const __float128 *v = list_get_next(i);
+			const long double *v = list_get_next(i);
 			if (sort)
 				list_add(s, v);
-			char buf[0xFF] = { 0x00 };
-			strfromf128(buf, sizeof buf, "%.9f", *v);
-			cli_printf("  Decimal : %s\n", buf);
+			//char buf[0xFF] = { 0x00 };
+			//strfromf128(buf, sizeof buf, "%'.9f", *v);
+			//cli_printf("  Decimal : %s\n", buf);
+			cli_printf("  Decimal : %'.9Lf\n", *v);
 		}
 		free(i);
 		if (sort)
@@ -614,10 +617,12 @@ int main(int argc, char **argv)
 			cli_printf("Sorted list:\n");
 			while (list_has_next(i))
 			{
-				const __float128 *v = list_get_next(i);
-				char buf[0xFF] = { 0x00 };
-				strfromf128(buf, sizeof buf, "%.9f", *v);
-				cli_printf("  Decimal : %s\n", buf);
+				//const __float128 *v = list_get_next(i);
+				const long double *v = list_get_next(i);
+				//char buf[0xFF] = { 0x00 };
+				//strfromf128(buf, sizeof buf, "%'.9f", *v);
+				//cli_printf("  Decimal : %s\n", buf);
+				cli_printf("  Decimal : %'.9Lf\n", *v);
 			}
 			free(i);
 		}
@@ -672,9 +677,10 @@ int main(int argc, char **argv)
 
 			case CONFIG_ARG_DECIMAL:
 				{
-					char buf[0xFF] = { 0x00 };
-					strfromf128(buf, sizeof buf, "%.9f", u->response.value.decimal);
-					cli_printf("  Found decimal : %s\n", buf);
+					//char buf[0xFF] = { 0x00 };
+					//strfromf128(buf, sizeof buf, "%'.9f", u->response.value.decimal);
+					//cli_printf("  Found decimal : %s\n", buf);
+					cli_printf("  Found decimal : %'.9Lf\n", u->response.value.decimal);
 				}
 				break;
 

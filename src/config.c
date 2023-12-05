@@ -1,6 +1,6 @@
 /*
  * encrypt ~ a simple, multi-OS encryption utility
- * Copyright © 2005-2022, albinoloverats ~ Software Development
+ * Copyright © 2005-2024, albinoloverats ~ Software Development
  * email: encrypt@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
@@ -63,9 +63,12 @@ inline static bool is_argument(char, const char *, const char *);
 inline static void format_section(char *);
 inline static void print_usage(LIST, LIST);
 
+static int64_t parse_number_size_suffix(const char *s);
+
 static bool  parse_boolean(const char *, const char *, bool      *);
 static bool  parse_integer(const char *, const char *, int64_t   *);
-static bool  parse_decimal(const char *, const char *, __float128 *);
+//static bool  parse_decimal(const char *, const char *, __float128 *);
+static bool  parse_decimal(const char *, const char *, long double *);
 static char *parse_string (const char *, const char *, char      *);
 
 static bool parse_pair_boolean(const char *c, const char *l, pair_boolean_t *);
@@ -175,7 +178,8 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 	if (args && about.config != NULL)
 	{
 		char *rc = NULL;
-#ifndef _WIN32
+#ifndef __DEBUG__
+	#ifndef _WIN32
 		if (about.config[0] == '/' || (about.config[0] == '.' && about.config[1] == '/'))
 		{
 			if (!(rc = strdup(about.config)))
@@ -183,12 +187,16 @@ extern int config_parse_aux(int argc, char **argv, LIST args, LIST extra, LIST n
 		}
 		else if (!asprintf(&rc, "%s/%s", getenv("HOME") ? : ".", about.config))
 			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(getenv("HOME")) + strlen(about.config) + 2);
-#else
+	#else
 		if (!(rc = calloc(MAX_PATH, sizeof( char ))))
 			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, MAX_PATH);
 		SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, rc);
 		strcat(rc, "\\");
 		strcat(rc, about.config);
+	#endif
+#else
+		if (!(rc = strdup(about.config)))
+			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, strlen(about.config) + 1);
 #endif
 		FILE *f = fopen(rc, "rb");
 		if (f)
@@ -567,14 +575,17 @@ end_line:
 
 	}
 	free(iter);
-	iter = list_iterator(extra);
-	while (list_has_next(iter))
+	if (extra)
 	{
-		config_unnamed_t *arg = (config_unnamed_t *)list_get_next(iter);
-		if (arg->seen)
-			r++;
+		iter = list_iterator(extra);
+		while (list_has_next(iter))
+		{
+			config_unnamed_t *arg = (config_unnamed_t *)list_get_next(iter);
+			if (arg->seen)
+				r++;
+		}
+		free(iter);
 	}
-	free(iter);
 
 	return r;
 }
@@ -851,17 +862,18 @@ static char *parse_default(config_arg_e type, config_arg_u value)
 			(void)0; // for Slackware's older GCC
 			__attribute__((fallthrough)); /* allow fall-through */
 		case CONFIG_ARG_REQ_INTEGER:
-			asprintf(&d, "%" PRIi64, (int64_t)value.integer);
+			asprintf(&d, "%'" PRIi64, (int64_t)value.integer);
 			break;
 		case CONFIG_ARG_OPT_DECIMAL:
 			(void)0; // for Slackware's older GCC
 			__attribute__((fallthrough)); /* allow fall-through */
 		case CONFIG_ARG_REQ_DECIMAL:
-			{
-				char buf[0xFF] = { 0x00 };
-				strfromf128(buf, sizeof buf, "%.9f", (__float128)value.decimal);
-				asprintf(&d, "%s", buf);
-			}
+			//{
+			//	char buf[0xFF] = { 0x00 };
+			//	strfromf128(buf, sizeof buf, "%'.9f", (__float128)value.decimal);
+			//	asprintf(&d, "%s", buf);
+			//}
+			asprintf(&d, "%'Lf", (long double)value.decimal);
 			break;
 		case CONFIG_ARG_OPT_STRING:
 			(void)0; // for Slackware's older GCC
@@ -1071,6 +1083,56 @@ static bool parse_boolean(const char *c, const char *l, bool *v)
 	return r;
 }
 
+static int64_t parse_number_size_suffix(const char *s)
+{
+	if (s[0] == ' ')
+		return 1;
+	int64_t r = 1;
+	switch (s[0])
+	{
+		case 'E':
+			r *= KILOBYTE;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'P':
+			r *= KILOBYTE;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'T':
+			r *= KILOBYTE;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'G':
+			r *= KILOBYTE;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'M':
+			r *= KILOBYTE;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'K':
+			r *= KILOBYTE;
+			break;
+		case 'e':
+			r *= THOUSAND;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'p':
+			r *= THOUSAND;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 't':
+			r *= THOUSAND;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'g':
+			r *= THOUSAND;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'm':
+			r *= THOUSAND;
+			__attribute__((fallthrough)); /* allow fall-through; keep multiplying to get the correct size increase */
+		case 'k':
+			r *= THOUSAND;
+			break;
+		default:
+			cli_eprintf("invalid size suffix [%c]\n", s[0]);
+			break;
+	}
+	return r;
+}
+
 static bool parse_integer(const char *c, const char *l, int64_t *v)
 {
 	bool r = false;
@@ -1080,7 +1142,11 @@ static bool parse_integer(const char *c, const char *l, int64_t *v)
 		char *e = NULL;
 		*v = strtoull(n, &e, 0);
 		if (e != n)
+		{
+			int64_t m = strlen(e) >= 1 ? parse_number_size_suffix(e) : 1;
+			*v *= m;
 			r = true;
+		}
 		free(n);
 	}
 	if (!r)
@@ -1088,7 +1154,8 @@ static bool parse_integer(const char *c, const char *l, int64_t *v)
 	return r;
 }
 
-static bool parse_decimal(const char *c, const char *l, __float128 *v)
+//static bool parse_decimal(const char *c, const char *l, __float128 *v)
+static bool parse_decimal(const char *c, const char *l, long double *v)
 {
 	bool r = false;
 	char *n = parse_tail(c, l);
@@ -1097,7 +1164,11 @@ static bool parse_decimal(const char *c, const char *l, __float128 *v)
 		char *e = NULL;
 		*v = strtof128(n, &e);
 		if (e != n)
+		{
+			int64_t m = strlen(e) >= 1 ? parse_number_size_suffix(e) : 1;
+			*v *= m;
 			r = true;
+		}
 		free(n);
 	}
 	if (!r)
@@ -1247,9 +1318,11 @@ static void parse_list_integer(const char *text, LIST list)
 
 static void parse_list_decimal(const char *text, LIST list)
 {
-	__float128 *r = malloc(sizeof( __float128 ));
+	//__float128 *r = malloc(sizeof( __float128 ));
+	long double *r = malloc(sizeof( long double ));
 	if (!r)
-		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( __float128 ));
+		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( long double ));
+	//die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( __float128 ));
 	if (parse_decimal(NULL, text, r))
 	{
 		if (!list_append(list, r))

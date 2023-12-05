@@ -1,6 +1,6 @@
 /*
  * Common code for providing a cmomand line progress bar
- * Copyright © 2005-2022, albinoloverats ~ Software Development
+ * Copyright © 2005-2024, albinoloverats ~ Software Development
  * email: webmaster@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include <string.h>
 
+#include <time.h>
 #include <signal.h>
 
 #include <sys/stat.h>
@@ -68,7 +69,7 @@ static void cli_init(void);
 static int cli_inited = -1; // -1 (no), 0 (failed), 1 (okay)
 
 static int cli_bps_sort(const void *, const void *);
-static int cli_print(FILE *, char *);
+static int cli_print(FILE *, const char *);
 
 extern int cli_printf(const char * const restrict s, ...)
 {
@@ -95,6 +96,33 @@ extern int cli_eprintf(const char * const restrict s, ...)
 	int x = cli_print(stderr, d);
 	va_end(ap);
 	free(d);
+	return x;
+}
+
+extern int logger(const char * const restrict s, ...)
+{
+	CLI_DO_INIT;
+
+	int x = 0;
+#if 0
+	time_t now = time(NULL);
+	char at[24];
+	struct tm t;
+	localtime_r(&now, &t);
+	strftime(at, sizeof at, "%F %T : ", &t);
+	x += cli_print(stderr, at);
+#endif
+	va_list ap;
+	va_start(ap, s);
+	char *d = NULL;
+	vasprintf(&d, s, ap);
+	x += cli_print(stderr, d);
+	va_end(ap);
+	free(d);
+
+	static const char nl[] = "\n";
+	x += cli_print(stderr, nl);
+
 	return x;
 }
 
@@ -162,7 +190,7 @@ extern double cli_calc_bps(cli_bps_t *bps)
 		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, BPS * sizeof( cli_bps_t ));
 	for (int i = 0; i < BPS; i++)
 	{
-		copy[i].time = bps[i].time;
+		copy[i].time  = bps[i].time;
 		copy[i].bytes = bps[i].bytes;
 	}
 	qsort(copy, BPS, sizeof( cli_bps_t ), cli_bps_sort);
@@ -329,7 +357,7 @@ static int cli_bps_sort(const void *a, const void *b)
 	return (ba->time > bb->time) - (ba->time < bb->time);
 }
 
-static int cli_print(FILE *stream, char *text)
+static int cli_print(FILE *stream, const char *text)
 {
 	size_t l = strlen(text);
 	char *copy = calloc(1, l + 1);
@@ -346,7 +374,7 @@ static int cli_print(FILE *stream, char *text)
 #endif
 	if (strip)
 	{
-		char *ptr = text;
+		char *ptr = (char *)text;
 		for (size_t i = 0, j = 0; i < l; i++)
 		{
 			char *e = strstr(ptr, "\x1b[");

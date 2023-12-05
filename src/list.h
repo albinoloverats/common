@@ -1,6 +1,6 @@
 /*
  * Common code for dealing with linked lists.
- * Copyright © 2021-2022, albinoloverats ~ Software Development
+ * Copyright © 2021-2024, albinoloverats ~ Software Development
  * email: webmaster@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@
 /*!
  * \file    list.h
  * \author  albinoloverats ~ Software Development
- * \date    2021-2022
+ * \date    2021-2024
  * \brief   Common linked list code shared between projects
  *
  * Common linked list implementation.
@@ -77,7 +77,7 @@ typedef void * ITER;
  * values. It allows duplicates and will sort the list according to
  * their values. Returns NULL on error.
  */
-#define list_decimal() list_init((void *)list_compare_integer, true, true)
+#define list_decimal() list_init((void *)list_compare_decimal, true, true)
 
 /*!
  * \brief         Create a new linked list

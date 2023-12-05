@@ -1,6 +1,6 @@
 /*
  * encrypt ~ a simple, multi-OS encryption utility
- * Copyright © 2005-2022, albinoloverats ~ Software Development
+ * Copyright © 2005-2024, albinoloverats ~ Software Development
  * email: encrypt@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
@@ -83,7 +83,8 @@ typedef union
 {
 	bool boolean;
 	int64_t integer;
-	__float128 decimal;
+	//__float128 decimal;
+	long double decimal;
 	char *string;
 	pair_u pair;
 	LIST *list;
