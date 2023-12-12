@@ -566,31 +566,39 @@ int main(int argc, char **argv)
 	if (((config_named_t *)list_get(args, 10))->seen)
 	{
 		LIST l = ((config_named_t *)list_get(args, 10))->response.value.list;
-		ITER i = list_iterator(l);
-		LIST s = list_integer();
-		if (sort)
-			cli_printf("Original list:\n");
-		while (list_has_next(i))
+		cli_printf("Original list:\n");
+		void p(const void *p)
 		{
-			const int64_t *v = list_get_next(i);
-			if (sort)
-				list_add(s, v);
-			cli_printf("  Integer : %'" PRIi64 "\n", *v);
+			int64_t *i = (int64_t *)p;
+			cli_printf("  Integer : %'" PRIi64 "\n", *i);
 		}
-		free(i);
+		list_for_each(l, p);
+
+		void *c(const void *p)
+		{
+			int64_t *i = (int64_t *)p;
+			int64_t *j = calloc(1, sizeof *i);
+			memcpy(j, i, sizeof *i);
+			return j;
+		}
 		if (sort)
 		{
-			i = list_iterator(s);
+			LIST s = list_integer();
+			list_add_all(s, l, c);
 			cli_printf("Sorted list:\n");
-			while (list_has_next(i))
-			{
-				const int64_t *v = list_get_next(i);
-				cli_printf("  Integer : %'" PRIi64 "\n", *v);
-			}
-			free(i);
+			list_for_each(s, p);
+			list_deinit(s, free);
 		}
-		list_deinit(s);
+
+		cli_printf("Copied %slist:\n", sort ? "sorted " : "");
+		LIST k = list_copy(l, c);
+		list_add_comparator(k, list_compare_integer);
+		if (sort)
+			list_sort(k);
+		list_for_each(k, p);
+
 		list_deinit(l, free);
+		list_deinit(k, free);
 	}
 	if (((config_named_t *)list_get(args, 11))->seen)
 	{

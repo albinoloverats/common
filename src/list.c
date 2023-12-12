@@ -81,6 +81,22 @@ extern void list_deinit_aux(LIST ptr, void f(void *))
 	return;
 }
 
+extern LIST list_copy(LIST ptr, void *c(const void *))
+{
+	list_t *list_ptr = (list_t *)ptr;
+	if (!list_ptr)
+		return NULL;
+	if (!c)
+		return NULL;
+	LIST copy = list_init(list_ptr->compare, list_ptr->duplicates, list_ptr->sorted);
+	void a(const void *i)
+	{
+		list_append(copy, c(i));
+	}
+	list_for_each(ptr, a);
+	return copy;
+}
+
 /*
  * TODO see whether this could be better as a macro
  */
@@ -213,6 +229,28 @@ extern bool list_add(LIST ptr, const void *d)
 	return true;
 }
 
+extern int list_add_all(LIST ptr, LIST otr, void *c(const void *))
+{
+	list_t *list_ptr = (list_t *)ptr;
+	if (!list_ptr)
+		return -1;
+	list_t *list_otr = (list_t *)otr;
+	if (!list_otr)
+		return -1;
+	if (!c)
+		return -1;
+
+	int r = 0;
+	void a(const void *i)
+	{
+		if (list_add(ptr, c(i)))
+			r++;
+	}
+	list_for_each(otr, a);
+
+	return r;
+}
+
 extern const void *list_get(LIST ptr, size_t i)
 {
 	list_t *list_ptr = (list_t *)ptr;
@@ -334,6 +372,51 @@ extern bool list_has_next(ITER ptr)
 	return iter_ptr->next;
 }
 
+extern void list_for_each(LIST ptr, void f(const void *))
+{
+	list_t *list_ptr = (list_t *)ptr;
+	if (!list_ptr)
+		return;
+
+	item_t *item = list_ptr->head;
+	for (size_t i = 0; i < list_ptr->size; i++)
+	{
+		f(item->data);
+		item = item->next;
+	}
+
+	return;
+}
+
+extern void list_sort(LIST ptr)
+{
+	list_t *list_ptr = (list_t *)ptr;
+	if (!list_ptr)
+		return;
+	if (!list_ptr->compare)
+		return;
+
+	list_t * copy = list_init(list_ptr->compare, list_ptr->duplicates, true);
+	void a(const void *i)
+	{
+		list_append(copy, i);
+	}
+	list_for_each(ptr, a);
+	size_t z = list_ptr->size;
+	for (size_t i = 0; i < z; i++)
+		list_remove_index(list_ptr, 0);
+	list_ptr->sorted = true;
+	void b(const void *i)
+	{
+		list_append(ptr, i);
+	}
+	list_for_each(copy, b);
+
+	list_deinit(copy);
+
+	return;
+}
+
 extern void list_add_comparator(LIST ptr, int c(const void *, const void *))
 {
 	list_t *list_ptr = (list_t *)ptr;
@@ -343,14 +426,14 @@ extern void list_add_comparator(LIST ptr, int c(const void *, const void *))
 	return;
 }
 
-extern int list_compare_integer(void *a, void *b)
+extern int list_compare_integer(const void *a, const void *b)
 {
 	const int64_t *x = a;
 	const int64_t *y = b;
 	return *x - *y;
 }
 
-extern int list_compare_decimal(void *a, void *b)
+extern int list_compare_decimal(const void *a, const void *b)
 {
 	//const __float128 *x = a;
 	//const __float128 *y = b;
