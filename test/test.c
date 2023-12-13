@@ -358,7 +358,7 @@ static void map_tests(int i)
 	assert(map_size(m) == (size_t)i);
 	t = map_iterator(m);
 	assert(t != NULL);
-	while (list_has_next(t))
+	while (map_has_next(t))
 	{
 		const pair_object_t *p = map_get_next(t);
 		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
@@ -386,7 +386,7 @@ static void map_tests(int i)
 	assert(map_size(m) == 1);
 	t = map_iterator(m);
 	assert(t != NULL);
-	while (list_has_next(t))
+	while (map_has_next(t))
 	{
 		const pair_object_t *p = map_get_next(t);
 		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
@@ -414,7 +414,7 @@ static void map_tests(int i)
 	assert(map_size(m) == 1);
 	t = map_iterator(m);
 	assert(t != NULL);
-	while (list_has_next(t))
+	while (map_has_next(t))
 	{
 		const pair_object_t *p = map_get_next(t);
 		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
@@ -456,7 +456,7 @@ static void map_tests(int i)
 	assert(map_size(m) == (size_t)i);
 	t = map_iterator(m);
 	assert(t != NULL);
-	while (list_has_next(t))
+	while (map_has_next(t))
 	{
 		const pair_object_t *p = map_get_next(t);
 		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);

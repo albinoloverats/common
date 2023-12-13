@@ -41,10 +41,16 @@ typedef void * MAP; /*!< The user visible MAP type */
 
 /*!
  * \brief         Create a new map
+ * \param[in]  c  Function to compare keys during insertion
+ * \param[in]  f  Whether to call free() when replacing/removing entries
+ * \param[in]  s  Whether the keys are sorted
+ * \param[in]  o  Whether to overwrite existing entries when adding
  * \return        A new map
  *
  * Create a new map instance; all further operations are then performed
  * against this handle. Returns NULL on error.
+ *
+ * Note: if o==true and f==false you may leak memory!
  */
 #define map_default() map_init(NULL, true, false, false)
 
@@ -159,6 +165,6 @@ extern bool map_has_next(ITER h) __attribute__((nonnull(1)));
  *
  * Add a comparator to the map so that items can be compared.
  */
-extern void list_add_comparator(MAP h, int c(const void *, const void *)) __attribute__((nonnull(1, 2)));
+extern void map_add_comparator(MAP h, int c(const void *, const void *)) __attribute__((nonnull(1, 2)));
 
 #endif /* _COMMON_MAP_H_ */
