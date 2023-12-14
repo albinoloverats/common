@@ -173,11 +173,11 @@ void tlv_tests(int i)
 		free(v.value);
 	}
 	assert(tlv_size(t) == (size_t)i);
-	for (int j = 0; j < tlv_size(t); j++)
+	void f(uint8_t t, uint16_t l, const void *v)
 	{
-		const tlv_t *v = tlv_get(t, j + 1);
-		cli_printf("    Tag  [%2d] (%2d) = %s\n", v->tag, v->length, (char *)v->value);
+		cli_printf("    Tag  [%2d] (%2d) = %s\n", t, l, (char *)v);
 	}
+	tlv_for_each(t, f);
 	tlv_deinit(t);
 
 	cli_printf("  Remove TLV list (creating initial list of %d)\n", i * 2);
@@ -325,14 +325,11 @@ static void map_tests(int i)
 		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i);
-	ITER t = map_iterator(m);
-	assert(t != NULL);
-	while (map_has_next(t))
+	void f(const void *a, const void *b)
 	{
-		const pair_object_t *p = map_get_next(t);
-		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
+		cli_printf("    Entry [%s] = %s\n", (char *)a, (char *)b);
 	}
-	free(t);
+	map_for_each(m, f);
 	map_deinit(m);
 
 	cli_printf("  Sorted map\n");
@@ -356,7 +353,7 @@ static void map_tests(int i)
 		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i);
-	t = map_iterator(m);
+	ITER t = map_iterator(m);
 	assert(t != NULL);
 	while (map_has_next(t))
 	{
@@ -454,14 +451,7 @@ static void map_tests(int i)
 		free(v);
 	}
 	assert(map_size(m) == (size_t)i);
-	t = map_iterator(m);
-	assert(t != NULL);
-	while (map_has_next(t))
-	{
-		const pair_object_t *p = map_get_next(t);
-		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
-	}
-	free(t);
+	map_for_each(m, f);
 	map_deinit(m);
 
 	return;

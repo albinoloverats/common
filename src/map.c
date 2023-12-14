@@ -157,6 +157,24 @@ extern bool map_has_next(ITER ptr)
 	return list_has_next(ptr);
 }
 
+extern void map_for_each(MAP ptr, void f(const void *, const void *))
+{
+	map_private_t *map_ptr = (map_private_t *)ptr;
+	if (!map_ptr)
+		return;
+
+	LIST entries = map_ptr->entries;
+	void for_each(const void *e)
+	{
+		const entry_t *entry = (entry_t *)e;
+		pair_object_t pair = entry->pair;
+		f(pair.p1, pair.p2);
+	}
+	list_for_each(entries, for_each);
+
+	return;
+}
+
 static int map_compare(const void *a, const void *b)
 {
 	const entry_t *x = a;

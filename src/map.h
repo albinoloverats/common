@@ -159,6 +159,15 @@ extern const pair_object_t *map_get_next(ITER h) __attribute__((nonnull(1)));
 extern bool map_has_next(ITER h) __attribute__((nonnull(1)));
 
 /*!
+ * \brief         Call the given function for each item in the map
+ * \param[in]  h  A pointer to the map
+ * \param[in]  f  The function to call
+ *
+ * Iterate through the map, calling the given function for each item.
+ */
+extern void map_for_each(MAP h, void f(const void *, const void *)) __attribute__((nonnull(1, 2)));
+
+/*!
  * \brief         Add comparator to the map
  * \param[in]  h  A pointer to the map
  * \param[in]  c  The comparator to add
