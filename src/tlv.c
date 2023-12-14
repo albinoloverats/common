@@ -200,15 +200,16 @@ extern void tlv_for_each(TLV ptr, void f(uint8_t , uint16_t, const void *))
 	tlv_private_t *tlv_ptr = (tlv_private_t *)ptr;
 	if (!tlv_ptr)
 		return;
-
-	LIST entries = tlv_ptr->tags;
-	void for_each(const void *e)
+	if (!list_size(tlv_ptr->tags))
+		return;
+	ITER iter = list_iterator(tlv_ptr->tags);
+	do
 	{
-		const tlv_t *entry = (tlv_t *)e;
+		const tlv_t *entry = (tlv_t *)list_get_next(iter);
 		f(entry->tag, entry->length, entry->value);
 	}
-	list_for_each(entries, for_each);
-
+	while (list_has_next(iter));
+	free(iter);
 	return;
 }
 

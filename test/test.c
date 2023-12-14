@@ -146,7 +146,12 @@ static void list_tests(int i)
 	return;
 }
 
-void tlv_tests(int i)
+static void tlv_print(uint8_t t, uint16_t l, const void *v)
+{
+	cli_printf("    Tag  [%2d] (%2d) = %s\n", t, l, (char *)v);
+}
+
+static void tlv_tests(int i)
 {
 	if (i < 1)
 	{
@@ -173,11 +178,7 @@ void tlv_tests(int i)
 		free(v.value);
 	}
 	assert(tlv_size(t) == (size_t)i);
-	void f(uint8_t t, uint16_t l, const void *v)
-	{
-		cli_printf("    Tag  [%2d] (%2d) = %s\n", t, l, (char *)v);
-	}
-	tlv_for_each(t, f);
+	tlv_for_each(t, tlv_print);
 	tlv_deinit(t);
 
 	cli_printf("  Remove TLV list (creating initial list of %d)\n", i * 2);
@@ -295,6 +296,11 @@ static dir_type_e parse_type(const char *s)
 	return t;
 }
 
+static void map_print(const void *a, const void *b)
+{
+	cli_printf("    Entry [%s] = %s\n", (char *)a, (char *)b);
+}
+
 static void map_tests(int i)
 {
 	if (i < 1)
@@ -325,11 +331,7 @@ static void map_tests(int i)
 		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i);
-	void f(const void *a, const void *b)
-	{
-		cli_printf("    Entry [%s] = %s\n", (char *)a, (char *)b);
-	}
-	map_for_each(m, f);
+	map_for_each(m, map_print);
 	map_deinit(m);
 
 	cli_printf("  Sorted map\n");
@@ -451,10 +453,23 @@ static void map_tests(int i)
 		free(v);
 	}
 	assert(map_size(m) == (size_t)i);
-	map_for_each(m, f);
+	map_for_each(m, map_print);
 	map_deinit(m);
 
 	return;
+}
+
+static void int_print(const void *i)
+{
+	cli_printf("  Integer : %'" PRIi64 "\n", *(int64_t *)i);
+}
+
+static void *int_copy(const void *p)
+{
+	int64_t *i = (int64_t *)p;
+	int64_t *j = calloc(1, sizeof *i);
+	memcpy(j, i, sizeof *i);
+	return j;
 }
 
 int main(int argc, char **argv)
@@ -557,35 +572,23 @@ int main(int argc, char **argv)
 	{
 		LIST l = ((config_named_t *)list_get(args, 10))->response.value.list;
 		cli_printf("Original list:\n");
-		void p(const void *p)
-		{
-			int64_t *i = (int64_t *)p;
-			cli_printf("  Integer : %'" PRIi64 "\n", *i);
-		}
-		list_for_each(l, p);
+		list_for_each(l, int_print);
 
-		void *c(const void *p)
-		{
-			int64_t *i = (int64_t *)p;
-			int64_t *j = calloc(1, sizeof *i);
-			memcpy(j, i, sizeof *i);
-			return j;
-		}
 		if (sort)
 		{
 			LIST s = list_integer();
-			list_add_all(s, l, c);
+			list_add_all(s, l, int_copy);
 			cli_printf("Sorted list:\n");
-			list_for_each(s, p);
+			list_for_each(s, int_print);
 			list_deinit(s, free);
 		}
 
 		cli_printf("Copied %slist:\n", sort ? "sorted " : "");
-		LIST k = list_copy(l, c);
+		LIST k = list_copy(l, int_copy);
 		list_add_comparator(k, list_compare_integer);
 		if (sort)
 			list_sort(k);
-		list_for_each(k, p);
+		list_for_each(k, int_print);
 
 		list_deinit(l, free);
 		list_deinit(k, free);

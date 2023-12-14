@@ -86,14 +86,16 @@ extern LIST list_copy(LIST ptr, void *c(const void *))
 	list_t *list_ptr = (list_t *)ptr;
 	if (!list_ptr)
 		return NULL;
-	if (!c)
-		return NULL;
 	LIST copy = list_init(list_ptr->compare, list_ptr->duplicates, list_ptr->sorted);
-	void a(const void *i)
+	if (!list_ptr->size)
+		return copy;
+	item_t *item = list_ptr->head;
+	do
 	{
-		list_append(copy, c(i));
+		list_append(copy, c(item->data));
+		item = item->next;
 	}
-	list_for_each(ptr, a);
+	while (item);
 	return copy;
 }
 
@@ -237,17 +239,17 @@ extern int list_add_all(LIST ptr, LIST otr, void *c(const void *))
 	list_t *list_otr = (list_t *)otr;
 	if (!list_otr)
 		return -1;
-	if (!c)
-		return -1;
-
+	if (!list_otr->size)
+		return 0;
 	int r = 0;
-	void a(const void *i)
+	item_t *item = list_otr->head;
+	do
 	{
-		if (list_add(ptr, c(i)))
+		if (list_append(list_ptr, c(item->data)))
 			r++;
+		item = item->next;
 	}
-	list_for_each(otr, a);
-
+	while (item);
 	return r;
 }
 
@@ -377,15 +379,21 @@ extern void list_for_each(LIST ptr, void f(const void *))
 	list_t *list_ptr = (list_t *)ptr;
 	if (!list_ptr)
 		return;
-
+	if (!list_ptr->size)
+		return;
 	item_t *item = list_ptr->head;
-	for (size_t i = 0; i < list_ptr->size; i++)
+	do
 	{
 		f(item->data);
 		item = item->next;
 	}
-
+	while (item);
 	return;
+}
+
+static void *list_sort_noop(const void *x)
+{
+	return (void *)x;
 }
 
 extern void list_sort(LIST ptr)
@@ -395,22 +403,18 @@ extern void list_sort(LIST ptr)
 		return;
 	if (!list_ptr->compare)
 		return;
+	if (!list_ptr->size)
+		return;
 
-	list_t * copy = list_init(list_ptr->compare, list_ptr->duplicates, true);
-	void a(const void *i)
-	{
-		list_append(copy, i);
-	}
-	list_for_each(ptr, a);
+	list_t *copy = list_init(list_ptr->compare, list_ptr->duplicates, true);
+	list_add_all(copy, list_ptr, list_sort_noop);
+
 	size_t z = list_ptr->size;
 	for (size_t i = 0; i < z; i++)
 		list_remove_index(list_ptr, 0);
+
 	list_ptr->sorted = true;
-	void b(const void *i)
-	{
-		list_append(ptr, i);
-	}
-	list_for_each(copy, b);
+	list_add_all(list_ptr, copy, list_sort_noop);
 
 	list_deinit(copy);
 

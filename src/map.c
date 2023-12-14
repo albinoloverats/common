@@ -162,16 +162,17 @@ extern void map_for_each(MAP ptr, void f(const void *, const void *))
 	map_private_t *map_ptr = (map_private_t *)ptr;
 	if (!map_ptr)
 		return;
-
-	LIST entries = map_ptr->entries;
-	void for_each(const void *e)
+	if (!list_size(map_ptr->entries))
+		return;
+	ITER iter = list_iterator(map_ptr->entries);
+	do
 	{
-		const entry_t *entry = (entry_t *)e;
+		const entry_t *entry = (entry_t *)list_get_next(iter);
 		pair_object_t pair = entry->pair;
 		f(pair.p1, pair.p2);
 	}
-	list_for_each(entries, for_each);
-
+	while (list_has_next(iter));
+	free(iter);
 	return;
 }
 
