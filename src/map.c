@@ -23,7 +23,7 @@
 #include <stdbool.h>
 
 #include "common.h"
-#include "error.h"
+#include "mem.h"
 #include "map.h"
 #include "pair.h"
 
@@ -49,9 +49,7 @@ static void map_free(void *map);
 
 extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o)
 {
-	map_private_t *m = calloc(sizeof( map_private_t ), sizeof( byte_t ));
-	if (!m)
-		die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( map_private_t ));
+	map_private_t *m = m_calloc(sizeof( map_private_t ), sizeof( byte_t ));
 	m->entries = list_init(map_compare, false, s);
 	m->keys = list_init(c, false, s);
 	m->compare = c;

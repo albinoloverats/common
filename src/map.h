@@ -65,7 +65,7 @@ extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o);
  * functions will not result in undefined behaviour. If called with f as
  * false then keys and values items will not be freed.
  */
-extern void map_deinit(MAP h) __attribute__((nonnull(1)));
+extern void map_deinit(MAP h);
 
 /*!
  * \brief         Get the number of entries in the map

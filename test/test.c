@@ -14,6 +14,7 @@
 #include <time.h>
 
 #include "error.h"
+#include "mem.h"
 #include "config.h"
 #include "cli.h"
 #include "list.h"
@@ -57,9 +58,7 @@ static void list_tests(int i)
 	assert(l != NULL);
 	for (int j = 0; j < i; j++)
 	{
-		int *k = malloc(sizeof( int ));
-		if (!k)
-			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( int ));
+		int *k = m_malloc(sizeof( int ));
 		*k = (int)lrand48();
 		if (!list_append(l, k))
 			free(k);
@@ -79,9 +78,7 @@ static void list_tests(int i)
 	l = list_init(compare_integer, true, true);
 	for (int j = 0; j < i; j++)
 	{
-		int *k = malloc(sizeof( int ));
-		if (!k)
-			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( int ));
+		int *k = m_malloc(sizeof( int ));
 		*k = (int)lrand48();
 		if (!list_append(l, k))
 			free(k);
@@ -119,9 +116,7 @@ static void list_tests(int i)
 	assert(l != NULL);
 	for (int j = 0; j < i * 2; j++)
 	{
-		int *k = malloc(sizeof( int ));
-		if (!k)
-			die(_("Out of memory @ %s:%d:%s [%zu]"), __FILE__, __LINE__, __func__, sizeof( int ));
+		int *k = m_malloc(sizeof( int ));
 		*k = (int)lrand48();
 		if (!list_append(l, k))
 			free(k);
@@ -169,9 +164,7 @@ static void tlv_tests(int i)
 		tlv_t v;
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
-		v.value  = calloc(v.length, 1);
-		if (!v.value)
-			die(_("Out of memory @ %s:%d:%s [%u]"), __FILE__, __LINE__, __func__, v.length);
+		v.value  = m_calloc(v.length, 1);
 		for (int k = 0; k < v.length - 1; k++)
 			((char *)v.value)[k] = (lrand48() % 26) + 'A';
 		tlv_append(t, v);
@@ -189,9 +182,7 @@ static void tlv_tests(int i)
 		tlv_t v;
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
-		v.value  = calloc(v.length, 1);
-		if (!v.value)
-			die(_("Out of memory @ %s:%d:%s [%u]"), __FILE__, __LINE__, __func__, v.length);
+		v.value  = m_calloc(v.length, 1);
 		for (int k = 0; k < v.length - 1; k++)
 			((char *)v.value)[k] = (lrand48() % 26) + 'A';
 		tlv_append(t, v);
@@ -316,12 +307,8 @@ static void map_tests(int i)
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
 	{
-		char *k = calloc(2, sizeof( char ));
-		if (!k)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
-		char *v = calloc(16, sizeof( char ));
-		if (!v)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		char *k = m_calloc(2, sizeof( char ));
+		char *v = m_calloc(16, sizeof( char ));
 		for (int z = 0; z < 15; z++)
 			v[z] = (lrand48() % 26) + 'a';
 		do
@@ -339,13 +326,9 @@ static void map_tests(int i)
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
 	{
-		char *k = calloc(2, sizeof( char ));
-		if (!k)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
+		char *k = m_calloc(2, sizeof( char ));
 		k[0] = 'a' + j;
-		char *v = calloc(16, sizeof( char ));
-		if (!v)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		char *v = m_calloc(16, sizeof( char ));
 		for (int z = 0; z < 15; z++)
 			v[z] = (lrand48() % 26) + 'a';
 		do
@@ -368,15 +351,11 @@ static void map_tests(int i)
 	cli_printf("  Unique map (will attempt to insert the same key %d times)\n", i);
 	m = map_init(compare_string, true, true, false);
 	assert(m != NULL);
-	char *k = calloc(2, sizeof( char ));
-	if (!k)
-		die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
+	char *k = m_calloc(2, sizeof( char ));
 	k[0] = 'a' + (lrand48() % 26);
 	for (int j = 0; j < i; j++)
 	{
-		char *v = calloc(16, sizeof( char ));
-		if (!v)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		char *v = m_calloc(16, sizeof( char ));
 		for (int z = 0; z < 15; z++)
 			v[z] = (lrand48() % 26) + 'a';
 		if (!map_add(m, k, v))
@@ -397,14 +376,10 @@ static void map_tests(int i)
 	m = map_init(compare_string, true, false, true);
 	assert(m != NULL);
 	k = calloc(2, sizeof( char ));
-	if (!k)
-		die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
 	k[0] = 'a' + (lrand48() % 26);
 	for (int j = 0; j < i; j++)
 	{
-		char *v = calloc(16, sizeof( char ));
-		if (!v)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		char *v = m_calloc(16, sizeof( char ));
 		for (int z = 0; z < 15; z++)
 			v[z] = (lrand48() % 26) + 'a';
 		if (!map_add(m, k, v))
@@ -426,12 +401,8 @@ static void map_tests(int i)
 	assert(m != NULL);
 	for (int j = 0; j < i * 2; j++)
 	{
-		char *k = calloc(2, sizeof( char ));
-		if (!k)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 2);
-		char *v = calloc(16, sizeof( char ));
-		if (!v)
-			die(_("Out of memory @ %s:%d:%s [%d]"), __FILE__, __LINE__, __func__, 16);
+		char *k = m_calloc(2, sizeof( char ));
+		char *v = m_calloc(16, sizeof( char ));
 		for (int z = 0; z < 15; z++)
 			v[z] = (lrand48() % 26) + 'a';
 		do
@@ -467,7 +438,7 @@ static void int_print(const void *i)
 static void *int_copy(const void *p)
 {
 	int64_t *i = (int64_t *)p;
-	int64_t *j = calloc(1, sizeof *i);
+	int64_t *j = m_calloc(1, sizeof *i);
 	memcpy(j, i, sizeof *i);
 	return j;
 }
@@ -481,8 +452,8 @@ int main(int argc, char **argv)
 	config_init(about);
 
 	int item_count = 10;
-	char *cur_dir = strdup(CURRENT_DIRECTORY);
-	char *all_types = strdup(ALL_TYPES);
+	char *cur_dir = m_strdup(CURRENT_DIRECTORY);
+	char *all_types = m_strdup(ALL_TYPES);
 
 	LIST args = list_init(config_named_compare, false, false);
 	list_add(args, &((config_named_t){ 's', "list",     "integer",          "Run ‘LIST’ tests, with the given number of items",    { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));

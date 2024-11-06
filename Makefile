@@ -2,7 +2,7 @@
 
 APP       = test-app
 
-SRC       = test/test.c src/error.c src/list.c src/tlv.c src/map.c src/dir.c src/version.c src/config.c src/cli.c
+SRC       = test/test.c src/error.c src/mem.c src/list.c src/tlv.c src/map.c src/dir.c src/version.c src/config.c src/cli.c
 MISC      = src/misc.h
 
 # -fsanitize=address -pg
