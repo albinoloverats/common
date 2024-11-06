@@ -25,7 +25,7 @@
 #define CURRENT_DIRECTORY "current directory"
 #define ALL_TYPES "all"
 
-static config_about_t about =
+static config_about_s about =
 {
 	"test",
 	"T1",
@@ -161,7 +161,7 @@ static void tlv_tests(int i)
 	assert(t != NULL);
 	for (int j = 0; j < i; j++)
 	{
-		tlv_t v;
+		tlv_s v;
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
 		v.value  = m_calloc(v.length, 1);
@@ -179,7 +179,7 @@ static void tlv_tests(int i)
 	assert(t != NULL);
 	for (int j = 0; j < i * 2; j++)
 	{
-		tlv_t v;
+		tlv_s v;
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
 		v.value  = m_calloc(v.length, 1);
@@ -197,7 +197,7 @@ static void tlv_tests(int i)
 			r = lrand48() % (i * 2 + 1);
 		}
 		while (!tlv_has_tag(t, r));
-		const tlv_t *v = tlv_remove_tag(t, r);
+		const tlv_s *v = tlv_remove_tag(t, r);
 		free(v->value);
 		free((void *)v);
 	}
@@ -206,7 +206,7 @@ static void tlv_tests(int i)
 	assert(r != NULL);
 	while (tlv_has_next(r))
 	{
-		const tlv_t *v = tlv_get_next(r);
+		const tlv_s *v = tlv_get_next(r);
 		assert(v != NULL);
 		cli_printf("    Tag  [%2d] (%2d) = %s\n", v->tag, v->length, (char *)v->value);
 	}
@@ -342,7 +342,7 @@ static void map_tests(int i)
 	assert(t != NULL);
 	while (map_has_next(t))
 	{
-		const pair_object_t *p = map_get_next(t);
+		const pair_object_s *p = map_get_next(t);
 		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
@@ -366,7 +366,7 @@ static void map_tests(int i)
 	assert(t != NULL);
 	while (map_has_next(t))
 	{
-		const pair_object_t *p = map_get_next(t);
+		const pair_object_s *p = map_get_next(t);
 		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
@@ -390,7 +390,7 @@ static void map_tests(int i)
 	assert(t != NULL);
 	while (map_has_next(t))
 	{
-		const pair_object_t *p = map_get_next(t);
+		const pair_object_s *p = map_get_next(t);
 		cli_printf("    Entry [%s] = %s\n", (char *)p->p1, (char *)p->p2);
 	}
 	free(t);
@@ -456,24 +456,24 @@ int main(int argc, char **argv)
 	char *all_types = m_strdup(ALL_TYPES);
 
 	LIST args = list_init(config_named_compare, false, false);
-	list_add(args, &((config_named_t){ 's', "list",     "integer",          "Run ‘LIST’ tests, with the given number of items",    { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'm', "map",      "integer",          "Run ‘MAP’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'v', "tlv",      "integer",          "Run ‘TLV’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 's', "list",     "integer",          "Run ‘LIST’ tests, with the given number of items",    { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 'm', "map",      "integer",          "Run ‘MAP’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 'v', "tlv",      "integer",          "Run ‘TLV’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
 
-	list_add(args, &((config_named_t){ 'f', "fs",       "path",             "Run ‘FS’ tests, on the given path",                   { CONFIG_ARG_OPT_STRING,   { .string  = cur_dir    } }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 't', "types",    "file types",       "Which file types to search for the the FS tree test", { CONFIG_ARG_LIST_STRING,  { .string  = all_types  } }, false, true,  false, false }));
+	list_add(args, &((config_named_s){ 'f', "fs",       "path",             "Run ‘FS’ tests, on the given path",                   { CONFIG_ARG_OPT_STRING,   { .string  = cur_dir    } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 't', "types",    "file types",       "Which file types to search for the the FS tree test", { CONFIG_ARG_LIST_STRING,  { .string  = all_types  } }, false, true,  false, false }));
 
-	list_add(args, &((config_named_t){ 'b', "boolean",  "boolean",          "See how boolean values are parsed",                   { CONFIG_ARG_OPT_BOOLEAN,  { .boolean = false      } }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'i', "integer",  "integer",          "See how integer values are parsed",                   { CONFIG_ARG_REQ_INTEGER,  { .integer = 0          } }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'd', "decimal",  "decimal",          "See how decimal values are parsed",                   { CONFIG_ARG_REQ_DECIMAL,  { .decimal = 0.0f       } }, false, false, false, false }));
-	list_add(args, &((config_named_t){ 'z', "string",   "string",           "See how string values are parsed",                    { CONFIG_ARG_REQ_STRING,   { .string  = NULL       } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 'b', "boolean",  "boolean",          "See how boolean values are parsed",                   { CONFIG_ARG_OPT_BOOLEAN,  { .boolean = false      } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 'i', "integer",  "integer",          "See how integer values are parsed",                   { CONFIG_ARG_REQ_INTEGER,  { .integer = 0          } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 'd', "decimal",  "decimal",          "See how decimal values are parsed",                   { CONFIG_ARG_REQ_DECIMAL,  { .decimal = 0.0f       } }, false, false, false, false }));
+	list_add(args, &((config_named_s){ 'z', "string",   "string",           "See how string values are parsed",                    { CONFIG_ARG_REQ_STRING,   { .string  = NULL       } }, false, false, false, false }));
 
-	list_add(args, &((config_named_t){ 'B', "booleans", "list of booleans", "See how lists of boolean values are parsed",          { CONFIG_ARG_LIST_BOOLEAN, { .list    = NULL       } }, false, true,  false, false }));
-	list_add(args, &((config_named_t){ 'I', "integers", "list of integers", "See how lists of integer values are parsed",          { CONFIG_ARG_LIST_INTEGER, { .list    = NULL       } }, false, true,  false, false }));
-	list_add(args, &((config_named_t){ 'D', "decimals", "list of decimals", "See how lists of decimal values are parsed",          { CONFIG_ARG_LIST_DECIMAL, { .list    = NULL       } }, false, true,  false, false }));
-	list_add(args, &((config_named_t){ 'Z', "strings",  "list of strings",  "See how lists of string values are parsed",           { CONFIG_ARG_LIST_STRING,  { .list    = NULL       } }, false, true,  false, false }));
+	list_add(args, &((config_named_s){ 'B', "booleans", "list of booleans", "See how lists of boolean values are parsed",          { CONFIG_ARG_LIST_BOOLEAN, { .list    = NULL       } }, false, true,  false, false }));
+	list_add(args, &((config_named_s){ 'I', "integers", "list of integers", "See how lists of integer values are parsed",          { CONFIG_ARG_LIST_INTEGER, { .list    = NULL       } }, false, true,  false, false }));
+	list_add(args, &((config_named_s){ 'D', "decimals", "list of decimals", "See how lists of decimal values are parsed",          { CONFIG_ARG_LIST_DECIMAL, { .list    = NULL       } }, false, true,  false, false }));
+	list_add(args, &((config_named_s){ 'Z', "strings",  "list of strings",  "See how lists of string values are parsed",           { CONFIG_ARG_LIST_STRING,  { .list    = NULL       } }, false, true,  false, false }));
 
-	list_add(args, &((config_named_t){ 'S', "sort",     "boolean",          "Whether the list tests should sort their lists",      { CONFIG_ARG_OPT_BOOLEAN,  { .boolean = false      } }, false, true,  false, false }));
+	list_add(args, &((config_named_s){ 'S', "sort",     "boolean",          "Whether the list tests should sort their lists",      { CONFIG_ARG_OPT_BOOLEAN,  { .boolean = false      } }, false, true,  false, false }));
 
 	LIST notes = list_string();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests");
@@ -483,53 +483,53 @@ int main(int argc, char **argv)
 	list_add(notes, "Sorting of lists is done “manually” after parsing; a new sorted list is created and items are duplicated from the original list");
 
 	LIST xtra = list_default();
-	list_add(xtra, &((config_unnamed_t){ "other", { CONFIG_ARG_STRING,  { .string = NULL } }, false, false }));
+	list_add(xtra, &((config_unnamed_s){ "other", { CONFIG_ARG_STRING,  { .string = NULL } }, false, false }));
 
 	bool all = !config_parse(argc, argv, args, xtra, notes);
 
 	errno = EXIT_SUCCESS;
 
-	if (all || ((config_named_t *)list_get(args, 0))->seen)
-		list_tests(((config_named_t *)list_get(args, 0))->response.value.integer);
-	if (all || ((config_named_t *)list_get(args, 1))->seen)
-		map_tests(((config_named_t *)list_get(args, 1))->response.value.integer);
-	if (all || ((config_named_t *)list_get(args, 2))->seen)
-		tlv_tests(((config_named_t *)list_get(args, 2))->response.value.integer);
-	if (all || ((config_named_t *)list_get(args, 3))->seen)
+	if (all || ((config_named_s *)list_get(args, 0))->seen)
+		list_tests(((config_named_s *)list_get(args, 0))->response.value.integer);
+	if (all || ((config_named_s *)list_get(args, 1))->seen)
+		map_tests(((config_named_s *)list_get(args, 1))->response.value.integer);
+	if (all || ((config_named_s *)list_get(args, 2))->seen)
+		tlv_tests(((config_named_s *)list_get(args, 2))->response.value.integer);
+	if (all || ((config_named_s *)list_get(args, 3))->seen)
 	{
 		dir_type_e types = DIR_NONE;
-		if (((config_named_t *)list_get(args, 4))->seen)
+		if (((config_named_s *)list_get(args, 4))->seen)
 		{
-			LIST l = ((config_named_t *)list_get(args, 4))->response.value.list;
+			LIST l = ((config_named_s *)list_get(args, 4))->response.value.list;
 			ITER i = list_iterator(l);
 			while (list_has_next(i))
 				types |= parse_type(list_get_next(i));
 			free(i);
 			list_deinit(l, free);
 		}
-		char *d = ((config_named_t *)list_get(args, 3))->response.value.string;
+		char *d = ((config_named_s *)list_get(args, 3))->response.value.string;
 		fs_tests(strcmp(CURRENT_DIRECTORY, d) ? d : NULL, types);
 	}
 
-	if (all || ((config_named_t *)list_get(args, 5))->seen)
-		cli_printf("  Boolean : %s\n", ((config_named_t *)list_get(args, 5))->response.value.boolean ? "true" : "false");
-	if (all || ((config_named_t *)list_get(args, 6))->seen)
-		cli_printf("  Integer : %'" PRIi64 "\n", ((config_named_t *)list_get(args, 6))->response.value.integer);
-	if (all || ((config_named_t *)list_get(args, 7))->seen)
+	if (all || ((config_named_s *)list_get(args, 5))->seen)
+		cli_printf("  Boolean : %s\n", ((config_named_s *)list_get(args, 5))->response.value.boolean ? "true" : "false");
+	if (all || ((config_named_s *)list_get(args, 6))->seen)
+		cli_printf("  Integer : %'" PRIi64 "\n", ((config_named_s *)list_get(args, 6))->response.value.integer);
+	if (all || ((config_named_s *)list_get(args, 7))->seen)
 	{
 		//char buf[0xFF] = { 0x00 };
-		//strfromf128(buf, sizeof buf, "%'.9f", ((config_named_t *)list_get(args, 7))->response.value.decimal);
+		//strfromf128(buf, sizeof buf, "%'.9f", ((config_named_s *)list_get(args, 7))->response.value.decimal);
 		//cli_printf("  Decimal : %s\n", buf);
-		cli_printf("  Decimal : %'.9Lf\n", ((config_named_t *)list_get(args, 7))->response.value.decimal);
+		cli_printf("  Decimal : %'.9Lf\n", ((config_named_s *)list_get(args, 7))->response.value.decimal);
 	}
-	if (all || ((config_named_t *)list_get(args, 8))->seen)
-		cli_printf("  String  : %s\n", ((config_named_t *)list_get(args, 8))->response.value.string);
+	if (all || ((config_named_s *)list_get(args, 8))->seen)
+		cli_printf("  String  : %s\n", ((config_named_s *)list_get(args, 8))->response.value.string);
 
-	bool sort = ((config_named_t *)list_get(args, 13))->response.value.boolean;
+	bool sort = ((config_named_s *)list_get(args, 13))->response.value.boolean;
 
-	if (((config_named_t *)list_get(args, 9))->seen)
+	if (((config_named_s *)list_get(args, 9))->seen)
 	{
-		LIST l = ((config_named_t *)list_get(args, 9))->response.value.list;
+		LIST l = ((config_named_s *)list_get(args, 9))->response.value.list;
 		ITER i = list_iterator(l);
 		while (list_has_next(i))
 		{
@@ -539,9 +539,9 @@ int main(int argc, char **argv)
 		free(i);
 		list_deinit(l, free);
 	}
-	if (((config_named_t *)list_get(args, 10))->seen)
+	if (((config_named_s *)list_get(args, 10))->seen)
 	{
-		LIST l = ((config_named_t *)list_get(args, 10))->response.value.list;
+		LIST l = ((config_named_s *)list_get(args, 10))->response.value.list;
 		cli_printf("Original list:\n");
 		list_for_each(l, int_print);
 
@@ -564,9 +564,9 @@ int main(int argc, char **argv)
 		list_deinit(l, free);
 		list_deinit(k, free);
 	}
-	if (((config_named_t *)list_get(args, 11))->seen)
+	if (((config_named_s *)list_get(args, 11))->seen)
 	{
-		LIST l = ((config_named_t *)list_get(args, 11))->response.value.list;
+		LIST l = ((config_named_s *)list_get(args, 11))->response.value.list;
 		ITER i = list_iterator(l);
 		LIST s = list_decimal();
 		if (sort)
@@ -601,9 +601,9 @@ int main(int argc, char **argv)
 		list_deinit(s);
 		list_deinit(l, free);
 	}
-	if (((config_named_t *)list_get(args, 12))->seen)
+	if (((config_named_s *)list_get(args, 12))->seen)
 	{
-		LIST l = ((config_named_t *)list_get(args, 12))->response.value.list;
+		LIST l = ((config_named_s *)list_get(args, 12))->response.value.list;
 		ITER i = list_iterator(l);
 		LIST s = list_string();
 		if (sort)
@@ -634,7 +634,7 @@ int main(int argc, char **argv)
 	ITER i = list_iterator(xtra);
 	while (list_has_next(i))
 	{
-		const config_unnamed_t *u = list_get_next(i);
+		const config_unnamed_s *u = list_get_next(i);
 		if (!u->seen)
 			continue;
 		switch (u->response.type)
@@ -668,13 +668,13 @@ int main(int argc, char **argv)
 	free(i);
 
 	// if these were seen then they have already been freed
-	if (!((config_named_t *)list_get(args, 4))->seen)
+	if (!((config_named_s *)list_get(args, 4))->seen)
 		free(all_types);
-	if (!((config_named_t *)list_get(args, 3))->seen)
+	if (!((config_named_s *)list_get(args, 3))->seen)
 		free(cur_dir);
 
 	// the [0] item is not dynamically allocated but the value might be
-	config_unnamed_t *x = (config_unnamed_t *)list_remove_index(xtra, 0);
+	config_unnamed_s *x = (config_unnamed_s *)list_remove_index(xtra, 0);
 	if (x->seen)
 		free(x->response.value.string);
 	// all other items will need to be freed

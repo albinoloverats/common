@@ -146,7 +146,7 @@ extern ITER map_iterator(MAP h) __attribute__((nonnull(1)));
  * Allow iterating through the map, this returns pair of pointers for
  * the next key/value entry.
  */
-extern const pair_object_t *map_get_next(ITER h) __attribute__((nonnull(1)));
+extern const pair_object_s *map_get_next(ITER h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Indicates if there is another item in the map

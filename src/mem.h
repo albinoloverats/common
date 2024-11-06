@@ -41,9 +41,9 @@ extern void *mem_rod(const char *, int, const char *, void *, size_t);
 extern char *mem_sod(const char *, int, const char *, const char *);
 extern char *mem_nod(const char *, int, const char *, const char *, size_t);
 
-extern int mem_aod(const char *, int, const char *, char **, const char *, ...);
+extern int mem_aod(const char *, int, const char *, char **, const char *, ...) __attribute__((nonnull(5), format(printf, 5, 6)));
 
-extern char *mem_fod(const char *, int, const char *, const char *, ...);
+extern char *mem_fod(const char *, int, const char *, const char *, ...) __attribute__((nonnull(4), format(printf, 4, 5)));
 
 #ifdef USE_GCRYPT
 
