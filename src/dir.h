@@ -56,6 +56,27 @@
 #define dir_get_name_2(A, B)  dir_get_name_aux(A, B)
 #define dir_get_name(...) CONCAT(dir_get_name_, DIR_GET_NAME_ARGS_COUNT(__VA_ARGS__))(__VA_ARGS__)
 
+#define DIR_SCAN_TOP                                                            \
+	struct dirent **eps = NULL;                                             \
+	int n = 0;                                                              \
+	if ((n = scandir(path, &eps, NULL, alphasort)))                         \
+	{                                                                       \
+		for (int dxxi = 0; dxxi < n; ++dxxi)                               \
+		{                                                               \
+			char *nm = eps[dxxi]->d_name;                            \
+			if (!strcmp(".", nm) || !strcmp("..", nm))              \
+				continue;                                       \
+			char *file = m_strdupf("%s/%s", path, eps[dxxi]->d_name)
+
+#define DIR_SCAN_END                                                            \
+			free(file);                                             \
+		}                                                               \
+	}                                                                       \
+	for (int dxxi = 0; dxxi < n; ++dxxi)                                             \
+		free(eps[dxxi]);                                                   \
+	free(eps)
+
+
 typedef enum
 {
 	DIR_NONE    = 0x0000,
