@@ -1,5 +1,5 @@
 /*
- * stegfs ~ a steganographic file system for unix-like systems
+ * Common code for working with directory trees.
  * Copyright © 2007-2024, albinoloverats ~ Software Development
  * email: stegfs@albinoloverats.net
  *

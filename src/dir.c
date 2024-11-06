@@ -1,5 +1,5 @@
 /*
- * stegfs ~ a steganographic file system for unix-like systems
+ * Common code for working with directory trees.
  * Copyright © 2007-2024, albinoloverats ~ Software Development
  * email: stegfs@albinoloverats.net
  *
@@ -128,8 +128,7 @@ static void get_tree(LIST l, const char *path, dir_type_e type)
 		{
 			if (!strcmp(".", eps[i]->d_name) || !strcmp("..", eps[i]->d_name))
 				continue;
-			char *full_path = NULL;
-			m_asprintf(&full_path, "%s/%s", path, eps[i]->d_name);
+			char *full_path = m_strdupf("%s/%s", path, eps[i]->d_name);
 			bool add = false;
 			bool dir = false;
 			/*
