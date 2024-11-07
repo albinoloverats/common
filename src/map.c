@@ -29,8 +29,8 @@
 
 typedef struct
 {
-	LIST entries;
-	LIST keys; // keeping a list of keys might help in the future (I don't know yet)
+	list_t entries;
+	list_t keys; // keeping a list of keys might help in the future (I don't know yet)
 	int (*compare)(const void *, const void *); /*!< How to compare entries (keys) in the map */
 	bool free:1;
 	bool overwrite:1;
@@ -47,7 +47,7 @@ entry_s;
 static int map_compare(const void *a, const void *b);
 static void map_free(void *map);
 
-extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o)
+extern map_t map_init(int c(const void *, const void *), bool f, bool s, bool o)
 {
 	map_private_s *m = m_calloc(sizeof( map_private_s ), sizeof( byte_t ));
 	m->entries = list_init(map_compare, false, s);
@@ -58,7 +58,7 @@ extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o)
 	return m;
 }
 
-extern void map_deinit(MAP ptr)
+extern void map_deinit(map_t ptr)
 {
 	map_private_s *map = (map_private_s *)ptr;
 	if (!map)
@@ -69,12 +69,12 @@ extern void map_deinit(MAP ptr)
 	return;
 }
 
-extern size_t map_size(MAP ptr)
+extern size_t map_size(map_t ptr)
 {
 	return list_size(((map_private_s *)ptr)->entries);
 }
 
-extern bool map_add(MAP ptr, const void *k, const void *v)
+extern bool map_add(map_t ptr, const void *k, const void *v)
 {
 	map_private_s *map = (map_private_s *)ptr;
 	if (!map)
@@ -105,7 +105,7 @@ extern bool map_add(MAP ptr, const void *k, const void *v)
 	return false;
 }
 
-extern const void *map_get(MAP ptr, const void *k)
+extern const void *map_get(map_t ptr, const void *k)
 {
 	map_private_s *map = (map_private_s *)ptr;
 	if (!map)
@@ -116,12 +116,12 @@ extern const void *map_get(MAP ptr, const void *k)
 	return r->pair.p2;
 }
 
-extern bool map_contains(MAP ptr, const void *k)
+extern bool map_contains(map_t ptr, const void *k)
 {
 	return map_get(ptr, k);
 }
 
-extern const void *map_remove(MAP ptr, const void *k)
+extern const void *map_remove(map_t ptr, const void *k)
 {
 	map_private_s *map = (map_private_s *)ptr;
 	if (!map)
@@ -137,7 +137,7 @@ extern const void *map_remove(MAP ptr, const void *k)
 	return x;
 }
 
-extern ITER map_iterator(MAP ptr)
+extern iter_t map_iterator(map_t ptr)
 {
 	map_private_s *map_ptr = (map_private_s *)ptr;
 	if (!map_ptr)
@@ -145,24 +145,24 @@ extern ITER map_iterator(MAP ptr)
 	return list_iterator(map_ptr->entries);
 }
 
-extern const pair_object_s *map_get_next(ITER ptr)
+extern const pair_object_s *map_get_next(iter_t ptr)
 {
 	return list_get_next(ptr);
 }
 
-extern bool map_has_next(ITER ptr)
+extern bool map_has_next(iter_t ptr)
 {
 	return list_has_next(ptr);
 }
 
-extern void map_for_each(MAP ptr, void f(const void *, const void *))
+extern void map_for_each(map_t ptr, void f(const void *, const void *))
 {
 	map_private_s *map_ptr = (map_private_s *)ptr;
 	if (!map_ptr)
 		return;
 	if (!list_size(map_ptr->entries))
 		return;
-	ITER iter = list_iterator(map_ptr->entries);
+	iter_t iter = list_iterator(map_ptr->entries);
 	do
 	{
 		const entry_s *entry = (entry_s *)list_get_next(iter);
@@ -195,7 +195,7 @@ static void map_free(void *m)
 	return;
 }
 
-extern void map_add_comparator(MAP ptr, int c(const void *, const void *))
+extern void map_add_comparator(map_t ptr, int c(const void *, const void *))
 {
 	map_private_s *map_ptr = (map_private_s *)ptr;
 	if (!map_ptr)

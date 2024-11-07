@@ -54,7 +54,7 @@ static void list_tests(int i)
 	cli_printf("Running list tests with %d items\n", i);
 
 	cli_printf("  Simple list\n");
-	LIST l = list_default();
+	list_t l = list_default();
 	assert(l != NULL);
 	for (int j = 0; j < i; j++)
 	{
@@ -64,7 +64,7 @@ static void list_tests(int i)
 			free(k);
 	}
 	assert(list_size(l) == (size_t)i);
-	ITER t = list_iterator(l);
+	iter_t t = list_iterator(l);
 	assert(t != NULL);
 	for (int j = 0; list_has_next(t); j++)
 	{
@@ -157,11 +157,11 @@ static void tlv_tests(int i)
 	cli_printf("Running TLV tests with %d items\n", i);
 
 	cli_printf("  Simple TLV\n");
-	TLV t = tlv_init();
+	tlv_t t = tlv_init();
 	assert(t != NULL);
 	for (int j = 0; j < i; j++)
 	{
-		tlv_s v;
+		tlv_entry_s v;
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
 		v.value  = m_calloc(v.length, 1);
@@ -179,7 +179,7 @@ static void tlv_tests(int i)
 	assert(t != NULL);
 	for (int j = 0; j < i * 2; j++)
 	{
-		tlv_s v;
+		tlv_entry_s v;
 		v.tag    = j + 1;
 		v.length = (lrand48() % 9) + 2;
 		v.value  = m_calloc(v.length, 1);
@@ -197,16 +197,16 @@ static void tlv_tests(int i)
 			r = lrand48() % (i * 2 + 1);
 		}
 		while (!tlv_has_tag(t, r));
-		const tlv_s *v = tlv_remove_tag(t, r);
+		const tlv_entry_s *v = tlv_remove_tag(t, r);
 		free(v->value);
 		free((void *)v);
 	}
 	assert(tlv_size(t) == (size_t)i);
-	ITER r = tlv_iterator(t);
+	iter_t r = tlv_iterator(t);
 	assert(r != NULL);
 	while (tlv_has_next(r))
 	{
-		const tlv_s *v = tlv_get_next(r);
+		const tlv_entry_s *v = tlv_get_next(r);
 		assert(v != NULL);
 		cli_printf("    Tag  [%2d] (%2d) = %s\n", v->tag, v->length, (char *)v->value);
 	}
@@ -224,21 +224,21 @@ static void fs_tests(char *root, dir_type_e type)
 
 	if (type == DIR_NONE)
 	{
-		LIST files = dir_get_tree(root, DIR_FILE);
+		list_t files = dir_get_tree(root, DIR_FILE);
 		cli_printf("  Found files:\n");
-		ITER i = list_iterator(files);
+		iter_t i = list_iterator(files);
 		while (list_has_next(i))
 			cli_printf("    %s\n", (const char *)list_get_next(i));
 		free(i);
 
-		LIST folders = dir_get_tree(root, DIR_FOLDER);
+		list_t folders = dir_get_tree(root, DIR_FOLDER);
 		cli_printf("  Found folders:\n");
 		i = list_iterator(folders);
 		while (list_has_next(i))
 			cli_printf("    %s\n", (const char *)list_get_next(i));
 		free(i);
 
-		LIST both = dir_get_tree(root, DIR_FOLDER | DIR_FILE);
+		list_t both = dir_get_tree(root, DIR_FOLDER | DIR_FILE);
 		cli_printf("  Combined:\n");
 		size_t a = list_size(files);
 		size_t b = list_size(folders);
@@ -252,9 +252,9 @@ static void fs_tests(char *root, dir_type_e type)
 	}
 	else
 	{
-		LIST files = dir_get_tree(root, type);
+		list_t files = dir_get_tree(root, type);
 		cli_printf("  Found entries:\n");
-		ITER i = list_iterator(files);
+		iter_t i = list_iterator(files);
 		while (list_has_next(i))
 			cli_printf("    %s\n", (const char *)list_get_next(i));
 		free(i);
@@ -303,7 +303,7 @@ static void map_tests(int i)
 	cli_printf("Running map tests with %d items\n", i);
 
 	cli_printf("  Simple map\n");
-	MAP m = map_init(compare_string, true, false, false);
+	map_t m = map_init(compare_string, true, false, false);
 	assert(m != NULL);
 	for (int j = 0; j < i; j++)
 	{
@@ -338,7 +338,7 @@ static void map_tests(int i)
 		while (!map_add(m, k, v));
 	}
 	assert(map_size(m) == (size_t)i);
-	ITER t = map_iterator(m);
+	iter_t t = map_iterator(m);
 	assert(t != NULL);
 	while (map_has_next(t))
 	{
@@ -455,7 +455,7 @@ int main(int argc, char **argv)
 	char *cur_dir = m_strdup(CURRENT_DIRECTORY);
 	char *all_types = m_strdup(ALL_TYPES);
 
-	LIST args = list_init(config_named_compare, false, false);
+	list_t args = list_init(config_named_compare, false, false);
 	list_add(args, &((config_named_s){ 's', "list",     "integer",          "Run ‘LIST’ tests, with the given number of items",    { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
 	list_add(args, &((config_named_s){ 'm', "map",      "integer",          "Run ‘MAP’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
 	list_add(args, &((config_named_s){ 'v', "tlv",      "integer",          "Run ‘TLV’ tests, with the given number of items",     { CONFIG_ARG_OPT_INTEGER,  { .integer = item_count } }, false, false, false, false }));
@@ -475,14 +475,14 @@ int main(int argc, char **argv)
 
 	list_add(args, &((config_named_s){ 'S', "sort",     "boolean",          "Whether the list tests should sort their lists",      { CONFIG_ARG_OPT_BOOLEAN,  { .boolean = false      } }, false, true,  false, false }));
 
-	LIST notes = list_string();
+	list_t notes = list_string();
 	list_add(notes, "Not specifying any tests is the same as specifying all tests");
 	list_add(notes, "File types: [ folder / file / link / block / char / socket / pipe ]");
 	list_add(notes, "Boolean values: [ true / on / enabled / yes / 1 ] or [ false / off / disabled / no / 0 ]");
 	list_add(notes, "Numerical values support suffixes: k, m, g, t, p, e [KILO, MEGA, GIGA, TERA, PETA, EXA]; use lowercase for 1,000 and uppercase for 1,024");
 	list_add(notes, "Sorting of lists is done “manually” after parsing; a new sorted list is created and items are duplicated from the original list");
 
-	LIST xtra = list_default();
+	list_t xtra = list_default();
 	list_add(xtra, &((config_unnamed_s){ "other", { CONFIG_ARG_STRING,  { .string = NULL } }, false, false }));
 
 	bool all = !config_parse(argc, argv, args, xtra, notes);
@@ -500,8 +500,8 @@ int main(int argc, char **argv)
 		dir_type_e types = DIR_NONE;
 		if (((config_named_s *)list_get(args, 4))->seen)
 		{
-			LIST l = ((config_named_s *)list_get(args, 4))->response.value.list;
-			ITER i = list_iterator(l);
+			list_t l = ((config_named_s *)list_get(args, 4))->response.value.list;
+			iter_t i = list_iterator(l);
 			while (list_has_next(i))
 				types |= parse_type(list_get_next(i));
 			free(i);
@@ -529,8 +529,8 @@ int main(int argc, char **argv)
 
 	if (((config_named_s *)list_get(args, 9))->seen)
 	{
-		LIST l = ((config_named_s *)list_get(args, 9))->response.value.list;
-		ITER i = list_iterator(l);
+		list_t l = ((config_named_s *)list_get(args, 9))->response.value.list;
+		iter_t i = list_iterator(l);
 		while (list_has_next(i))
 		{
 			const bool *v = list_get_next(i);
@@ -541,13 +541,13 @@ int main(int argc, char **argv)
 	}
 	if (((config_named_s *)list_get(args, 10))->seen)
 	{
-		LIST l = ((config_named_s *)list_get(args, 10))->response.value.list;
+		list_t l = ((config_named_s *)list_get(args, 10))->response.value.list;
 		cli_printf("Original list:\n");
 		list_for_each(l, int_print);
 
 		if (sort)
 		{
-			LIST s = list_integer();
+			list_t s = list_integer();
 			list_add_all(s, l, int_copy);
 			cli_printf("Sorted list:\n");
 			list_for_each(s, int_print);
@@ -555,7 +555,7 @@ int main(int argc, char **argv)
 		}
 
 		cli_printf("Copied %slist:\n", sort ? "sorted " : "");
-		LIST k = list_copy(l, int_copy);
+		list_t k = list_copy(l, int_copy);
 		list_add_comparator(k, list_compare_integer);
 		if (sort)
 			list_sort(k);
@@ -566,9 +566,9 @@ int main(int argc, char **argv)
 	}
 	if (((config_named_s *)list_get(args, 11))->seen)
 	{
-		LIST l = ((config_named_s *)list_get(args, 11))->response.value.list;
-		ITER i = list_iterator(l);
-		LIST s = list_decimal();
+		list_t l = ((config_named_s *)list_get(args, 11))->response.value.list;
+		iter_t i = list_iterator(l);
+		list_t s = list_decimal();
 		if (sort)
 			cli_printf("Original list:\n");
 		while (list_has_next(i))
@@ -603,9 +603,9 @@ int main(int argc, char **argv)
 	}
 	if (((config_named_s *)list_get(args, 12))->seen)
 	{
-		LIST l = ((config_named_s *)list_get(args, 12))->response.value.list;
-		ITER i = list_iterator(l);
-		LIST s = list_string();
+		list_t l = ((config_named_s *)list_get(args, 12))->response.value.list;
+		iter_t i = list_iterator(l);
+		list_t s = list_string();
 		if (sort)
 			cli_printf("Original list:\n");
 		while (list_has_next(i))
@@ -631,7 +631,7 @@ int main(int argc, char **argv)
 		list_deinit(l, free);
 	}
 
-	ITER i = list_iterator(xtra);
+	iter_t i = list_iterator(xtra);
 	while (list_has_next(i))
 	{
 		const config_unnamed_s *u = list_get_next(i);

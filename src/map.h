@@ -37,7 +37,7 @@
 #include "list.h"
 #include "pair.h"
 
-typedef void * MAP; /*!< The user visible MAP type */
+typedef void * map_t; /*!< The user visible MAP type */
 
 /*!
  * \brief         Create a new map
@@ -54,7 +54,7 @@ typedef void * MAP; /*!< The user visible MAP type */
  */
 #define map_default() map_init(NULL, true, false, false)
 
-extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o);
+extern map_t map_init(int c(const void *, const void *), bool f, bool s, bool o);
 
 /*!
  * \brief         Destroy a map
@@ -65,7 +65,7 @@ extern MAP map_init(int c(const void *, const void *), bool f, bool s, bool o);
  * functions will not result in undefined behaviour. If called with f as
  * false then keys and values items will not be freed.
  */
-extern void map_deinit(MAP h);
+extern void map_deinit(map_t h);
 
 /*!
  * \brief         Get the number of entries in the map
@@ -74,7 +74,7 @@ extern void map_deinit(MAP h);
  *
  * Get the number of entries in the map.
  */
-extern size_t map_size(MAP h) __attribute__((nonnull(1)));
+extern size_t map_size(map_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Add an entry to the map
@@ -89,7 +89,7 @@ extern size_t map_size(MAP h) __attribute__((nonnull(1)));
  * overwritten depends on how the map was initialised. Returns true if
  * the key/value are added/replaced, false otherwise.
  */
-extern bool map_add(MAP h, const void *k, const void *v) __attribute__((nonnull(1, 2, 3)));
+extern bool map_add(map_t h, const void *k, const void *v) __attribute__((nonnull(1, 2, 3)));
 
 /*!
  * \brief         Get a value from the map
@@ -99,7 +99,7 @@ extern bool map_add(MAP h, const void *k, const void *v) __attribute__((nonnull(
  *
  * Retrieve the value for the given key from within the map.
  */
-extern const void *map_get(MAP h, const void *k) __attribute__((nonnull(1, 2)));
+extern const void *map_get(map_t h, const void *k) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Check if the map contains the key
@@ -112,7 +112,7 @@ extern const void *map_get(MAP h, const void *k) __attribute__((nonnull(1, 2)));
  * during initialisation then that is used instead of just comparing the
  * pointer.
  */
-extern bool map_contains(MAP h, const void *k) __attribute__((nonnull(1, 2)));
+extern bool map_contains(map_t h, const void *k) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Remove a key/value from the map
@@ -126,7 +126,7 @@ extern bool map_contains(MAP h, const void *k) __attribute__((nonnull(1, 2)));
  * during initialisation then that is used instead of just comparing the
  * pointer.
  */
-extern const void *map_remove(MAP h, const void *k) __attribute__((nonnull(1, 2)));
+extern const void *map_remove(map_t h, const void *k) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Set the map up for iterating
@@ -136,7 +136,7 @@ extern const void *map_remove(MAP h, const void *k) __attribute__((nonnull(1, 2)
  * Set the map up to be iterated over. The iterator should be freed
  * after use.
  */
-extern ITER map_iterator(MAP h) __attribute__((nonnull(1)));
+extern iter_t map_iterator(map_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Get the next entryin the map
@@ -146,7 +146,7 @@ extern ITER map_iterator(MAP h) __attribute__((nonnull(1)));
  * Allow iterating through the map, this returns pair of pointers for
  * the next key/value entry.
  */
-extern const pair_object_s *map_get_next(ITER h) __attribute__((nonnull(1)));
+extern const pair_object_s *map_get_next(iter_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Indicates if there is another item in the map
@@ -156,7 +156,7 @@ extern const pair_object_s *map_get_next(ITER h) __attribute__((nonnull(1)));
  * Allow iterating through the map, this returns whether there is
  * another entry.
  */
-extern bool map_has_next(ITER h) __attribute__((nonnull(1)));
+extern bool map_has_next(iter_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Call the given function for each item in the map
@@ -165,7 +165,7 @@ extern bool map_has_next(ITER h) __attribute__((nonnull(1)));
  *
  * Iterate through the map, calling the given function for each item.
  */
-extern void map_for_each(MAP h, void f(const void *, const void *)) __attribute__((nonnull(1, 2)));
+extern void map_for_each(map_t h, void f(const void *, const void *)) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Add comparator to the map
@@ -174,6 +174,6 @@ extern void map_for_each(MAP h, void f(const void *, const void *)) __attribute_
  *
  * Add a comparator to the map so that items can be compared.
  */
-extern void map_add_comparator(MAP h, int c(const void *, const void *)) __attribute__((nonnull(1, 2)));
+extern void map_add_comparator(map_t h, int c(const void *, const void *)) __attribute__((nonnull(1, 2)));
 
 #endif /* _COMMON_MAP_H_ */
