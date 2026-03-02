@@ -83,7 +83,7 @@ extern char *dir_get_pass(const char * const restrict path)
 
 extern char *dir_get_path(const char * const restrict path)
 {
-	char *s = strrchr(path, DIR_SEPARATOR_CHAR);
+	const char *s = strrchr(path, DIR_SEPARATOR_CHAR);
 	if (!s)
 		return m_strdup("");
 	char *p = strndup(path, s - path);
