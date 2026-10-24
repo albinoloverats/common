@@ -82,27 +82,32 @@ extern bool map_add(map_t ptr, const void *k, const void *v)
 	bool exists = list_contains(map->keys, k);
 	if (exists && !map->overwrite)
 		return false; // already exists and not overwritting
-	if (!list_append(map->keys, k))
-		return false;
 	entry_s *e;
 	if (exists && map->overwrite)
 	{
-		e = (entry_s *)list_remove_item(map->entries, &e);
+		entry_s key = { { (void *)k, NULL }, map };
+		e = (entry_s *)list_contains(map->entries, &key);
+		if (!e)
+			return false;
 		if (map->free)
 			free((void *)e->pair.p2);
+		e->pair.p2 = (void *)v;
 	}
 	else
 	{
+		if (!list_append(map->keys, k))
+			return false;
 		e = calloc(sizeof( entry_s ), sizeof( byte_t ));
 		e->parent = map;
 		e->pair.p1 = (void *)k;
+		e->pair.p2 = (void *)v;
+		if (list_append(map->entries, e))
+			return true;
+		list_remove_item(map->keys, k);
+		free(e);
+		return false;
 	}
-	e->pair.p2 = (void *)v;
-	if (list_append(map->entries, e))
-		return true;
-	list_remove_item(map->keys, k);
-	free(e);
-	return false;
+	return true;
 }
 
 extern const void *map_get(map_t ptr, const void *k)

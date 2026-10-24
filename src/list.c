@@ -296,6 +296,8 @@ extern const void *list_remove_item(list_t ptr, const void *d)
 				prev->next = item->next;
 			else
 				list_ptr->head = item->next;
+			if (item == list_ptr->tail)
+				list_ptr->tail = prev;
 			list_ptr->size--;
 			free(item);
 			item = prev ? prev->next : list_ptr->head;
@@ -318,17 +320,20 @@ extern const void *list_remove_index(list_t ptr, size_t i)
 	if (i >= list_ptr->size)
 		return NULL;
 	item_s *item = list_ptr->head;
+	item_s *prev = NULL;
 	if (i == 0)
 		list_ptr->head = item->next;
 	else
 	{
-		item_s *prev = item;
+		prev = item;
 		for (size_t j = 0; j < i - 1; j++)
 			prev = prev->next;
 		item = prev->next;
 		item_s *next = item->next;
 		prev->next = next;
 	}
+	if (item == list_ptr->tail)
+		list_ptr->tail = i == 0 ? NULL : prev;
 	const void *data = item->data;
 	list_ptr->size--;
 	free(item);
@@ -425,7 +430,7 @@ extern int list_compare_integer(const void *a, const void *b)
 {
 	const int64_t *x = a;
 	const int64_t *y = b;
-	return *x - *y;
+	return (*x > *y) - (*x < *y);
 }
 
 extern int list_compare_decimal(const void *a, const void *b)
@@ -434,5 +439,5 @@ extern int list_compare_decimal(const void *a, const void *b)
 	//const __float128 *y = b;
 	const long double *x = a;
 	const long double *y = b;
-	return *x - *y;
+	return (*x > *y) - (*x < *y);
 }

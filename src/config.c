@@ -537,6 +537,7 @@ end_line:
 						x->seen = parse_decimal(NULL, curr, &x->response.value.decimal);
 						break;
 					case CONFIG_ARG_STRING:
+						x->seen = true;
 						x->response.value.string = m_strdup(curr);
 						break;
 					default:
