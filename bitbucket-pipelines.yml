@@ -3,10 +3,12 @@ image: gcc:16@sha256:07280eb2e744f1b7a2d8d4a3894c089ea07266c109758afc388a634bd09
 pipelines:
   default:
     - step:
-        name: Test and generate coverage
+        name: Build and Test
         script:
           - apt-get update && apt-get install -y git gcovr=7.2+really-1.1 libgcrypt20-dev libcurl4-gnutls-dev libcmocka-dev
           - git config --global --add safe.directory "$BITBUCKET_CLONE_DIR"
-          - make coverage-report
+          - mkdir -p test-reports
+          - CC=gcc CMOCKA_MESSAGE_OUTPUT=XML CMOCKA_XML_FILE=test-reports/common.xml make coverage-report
         artifacts:
           - coverage/**
+          - test-reports/**
