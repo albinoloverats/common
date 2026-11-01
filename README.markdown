@@ -8,68 +8,78 @@ it in your own code.
 It includes a test suite that hopefully shows how to make use of some of
 the extensions.
 
+### Notes
+
 Coverage totals may differ between CI providers even for the same
 commit; some tests depend on the runner environment, including which
 device types are present under `/dev` and the length of generated
 build/runtime information used by version-formatting tests.
 
-## CCcypt
+### Status
+
+[![C/C++ CI](https://github.com/albinoloverats/common/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/albinoloverats/common/actions/workflows/c-cpp.yml)
+[![Gitlab Pipelines](https://gitlab.com/albinoloverats/common/badges/desktop/pipeline.svg)](https://gitlab.com/albinoloverats/common/-/commits/desktop)
+[![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/albinoloverats/common/desktop)](https://bitbucket.org/albinoloverats/common/src/desktop)
+
+## Components
+
+### CCcypt
 
 Common cryptographic functions, typically parsing of string values to
 enum constants.
 
-## CLI
+### CLI
 
 Various formatted CLI output functions, including a progress bar.
 
-## Common
+### Common
 
 Common constants.
 
-## Config
+### Config
 
 Parsing of config files and command line arguments (where arguments
 override/replace values from files). Can also handle updating of config
 files if necessary.
 
-## Dir
+### Dir
 
 A couple recursive directory functions, creating and reading. The others
 are more specific to [stegfs][2] though may be useful for something.
 
-## ECC
+### ECC
 
 Error correction code handling.
 
-## Error
+### Error
 
 Error handling, including dumping a stacktrace (if possible) on error.
 
-## List
+### List
 
 Custom linked list implementation.
 
-## Map
+### Map
 
 Custom key/value map implementation.
 
-## Mem
+### Mem
 
 Do-or-die memory allocation.
 
-## Non-GNU
+### Non-GNU
 
 Various functions available on GNU systems but not elsewhere.
 
-## Pair
+### Pair
 
 Pairs of values.
 
-## TLV
+### TLV
 
 Custom tag-length-value implementation.
 
-## Version
+### Version
 
 Application versioning, including getting build and system information
 for `--help` command line argument.
