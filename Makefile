@@ -1,4 +1,4 @@
-.PHONY: clean distclean test coverage
+.PHONY: clean distclean test coverage coverage-report
 
 APP       = test-app
 UNIT_TEST = test-unit
@@ -14,6 +14,9 @@ CPPFLAGS += -Isrc -D__DEBUG__ -DMALLOC_CHECK_=1 -D_GNU_SOURCE -D_FILE_OFFSET_BIT
 LIBS      = -lpthread -lcurl
 TEST_LIBS = $(shell pkg-config --libs cmocka)
 UNIT_LIBS = ${TEST_LIBS} $(shell pkg-config --libs libgcrypt libcurl) -lpthread -lm
+ALLOCATOR_WRAP = -Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc -Wl,--wrap=strdup -Wl,--wrap=strndup -Wl,--wrap=vasprintf
+GCOV = $(shell gcc -print-prog-name=gcov)
+COVERAGE = coverage
 
 default: gcc
 
@@ -32,14 +35,18 @@ clang:
 	-@echo -e "built ‘`echo -e ${SRC} | sed 's/ /’\n      ‘/g'`’ → ‘${APP}-clang’"
 
 test:
-	 @gcc $(CFLAGS) $(CPPFLAGS) $(shell pkg-config --cflags cmocka libgcrypt libcurl) ${UNIT_SRC} ${UNIT_LIBS} -o ${UNIT_TEST}
+	 @gcc $(CFLAGS) $(CPPFLAGS) $(shell pkg-config --cflags cmocka libgcrypt libcurl) ${UNIT_SRC} ${UNIT_LIBS} ${ALLOCATOR_WRAP} -o ${UNIT_TEST}
 	 @./${UNIT_TEST}
 
 coverage:
 	 @rm -f test-unit-*.gcda test-unit-*.gcno *.gcov
-	 @gcc $(CFLAGS) $(CPPFLAGS) $(shell pkg-config --cflags cmocka libgcrypt libcurl) --coverage ${UNIT_SRC} ${UNIT_LIBS} -o ${UNIT_TEST}
+	 @gcc $(CFLAGS) $(CPPFLAGS) $(shell pkg-config --cflags cmocka libgcrypt libcurl) --coverage ${UNIT_SRC} ${UNIT_LIBS} ${ALLOCATOR_WRAP} -o ${UNIT_TEST}
 	 @./${UNIT_TEST}
 	 @gcov -r -b -c test-unit-error.gcno test-unit-mem.gcno test-unit-list.gcno test-unit-tlv.gcno test-unit-map.gcno test-unit-ecc.gcno test-unit-dir.gcno test-unit-cli.gcno test-unit-config.gcno test-unit-ccrypt.gcno test-unit-version.gcno
+
+coverage-report: coverage
+	 @mkdir -p ${COVERAGE}
+	 @gcovr --root . --gcov-executable "${GCOV}" --filter 'src/' --xml-pretty --output ${COVERAGE}/coverage.xml --html-details ${COVERAGE}/index.html --print-summary
 
 #extra:
 #	# -fanalyzer-verbosity=4
@@ -51,6 +58,7 @@ coverage:
 clean:
 	 @rm -fv ${MISC}
 	 @rm -fv gmon.out ${UNIT_TEST} *.gcda *.gcno *.gcov
+	 @rm -fvr ${COVERAGE}
 
 distclean: clean
 	 @rm -fv ${APP}-gcc ${APP}-clang

@@ -1,5 +1,12 @@
 #include "test_support.h"
 
+static void assert_sorted_names(list_t names)
+{
+	assert_true(list_size(names) > 0);
+	for (size_t i = 1; i < list_size(names); i++)
+		assert_true(strcmp(list_get(names, i - 1), list_get(names, i)) < 0);
+}
+
 static void test_crypto_name_mappings_and_modes(void **state)
 {
 	(void)state;
@@ -25,10 +32,22 @@ static void test_crypto_name_mappings_and_modes(void **state)
 	assert_false(mode_valid_for_cipher(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_GCM));
 	assert_true(mode_valid_for_cipher(GCRY_CIPHER_AES128, GCRY_CIPHER_MODE_AESWRAP));
 	assert_false(mode_valid_for_cipher(GCRY_CIPHER_3DES, GCRY_CIPHER_MODE_AESWRAP));
-	assert_true(list_size(list_of_ciphers()) > 0);
-	assert_true(list_size(list_of_hashes()) > 0);
-	assert_true(list_size(list_of_modes()) > 0);
-	assert_true(list_size(list_of_macs()) > 0);
+	list_t ciphers = list_of_ciphers();
+	list_t hashes = list_of_hashes();
+	list_t modes = list_of_modes();
+	list_t macs = list_of_macs();
+	assert_sorted_names(ciphers);
+	assert_sorted_names(hashes);
+	assert_sorted_names(modes);
+	assert_sorted_names(macs);
+	assert_non_null(list_contains(ciphers, "AES"));
+	assert_non_null(list_contains(hashes, "SHA256"));
+	assert_non_null(list_contains(modes, "CBC"));
+	assert_non_null(list_contains(macs, "HMAC_SHA256"));
+	assert_ptr_equal(ciphers, list_of_ciphers());
+	assert_ptr_equal(hashes, list_of_hashes());
+	assert_ptr_equal(modes, list_of_modes());
+	assert_ptr_equal(macs, list_of_macs());
 }
 
 static const struct CMUnitTest tests[] =

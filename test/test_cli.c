@@ -19,6 +19,13 @@ static void test_cli_output_and_speed_calculation(void **state)
 
 	output = tmpfile();
 	assert_non_null(output);
+	assert_int_equal(cli_fprintx(output, bytes, 0), 0);
+	assert_int_equal(fseek(output, 0, SEEK_END), 0);
+	assert_int_equal(ftell(output), 0);
+	fclose(output);
+
+	output = tmpfile();
+	assert_non_null(output);
 	uint8_t block[17];
 	for (size_t i = 0; i < sizeof block; i++)
 		block[i] = (uint8_t)i;
@@ -66,6 +73,7 @@ static void test_cli_stream_helpers_and_ansi_stripping(void **state)
 	assert_true(saved >= 0);
 	fflush(stderr);
 	assert_int_equal(dup2(fileno(output), STDERR_FILENO), STDERR_FILENO);
+	assert_int_equal(cli_eprintf("error %d\n", 23), 9);
 	written = logger("message %d", 7);
 	fflush(stderr);
 	assert_int_equal(dup2(saved, STDERR_FILENO), STDERR_FILENO);
@@ -74,14 +82,57 @@ static void test_cli_stream_helpers_and_ansi_stripping(void **state)
 	assert_int_equal(fseek(output, 0, SEEK_SET), 0);
 	memset(text, 0, sizeof text);
 	assert_non_null(fgets(text, sizeof text, output));
+	assert_string_equal(text, "error 23\n");
+	memset(text, 0, sizeof text);
+	assert_non_null(fgets(text, sizeof text, output));
 	assert_string_equal(text, "message 7\n");
+	fclose(output);
+}
+
+static void test_cli_hex_stdout_and_stderr_wrappers(void **state)
+{
+	(void)state;
+	const uint8_t bytes[] = { 0x00, 0x01, 0xfe };
+	const char expected[] = "00000000: 0001 fe\n";
+	char text[32] = { 0 };
+
+	FILE *output = tmpfile();
+	assert_non_null(output);
+	int saved = dup(STDOUT_FILENO);
+	assert_true(saved >= 0);
+	fflush(stdout);
+	assert_int_equal(dup2(fileno(output), STDOUT_FILENO), STDOUT_FILENO);
+	assert_int_equal(cli_printx(bytes, sizeof bytes), (int)strlen(expected));
+	fflush(stdout);
+	assert_int_equal(dup2(saved, STDOUT_FILENO), STDOUT_FILENO);
+	close(saved);
+	assert_int_equal(fseek(output, 0, SEEK_SET), 0);
+	assert_non_null(fgets(text, sizeof text, output));
+	assert_string_equal(text, expected);
+	fclose(output);
+
+	output = tmpfile();
+	assert_non_null(output);
+	saved = dup(STDERR_FILENO);
+	assert_true(saved >= 0);
+	fflush(stderr);
+	assert_int_equal(dup2(fileno(output), STDERR_FILENO), STDERR_FILENO);
+	assert_int_equal(cli_eprintx(bytes, sizeof bytes), (int)strlen(expected));
+	fflush(stderr);
+	assert_int_equal(dup2(saved, STDERR_FILENO), STDERR_FILENO);
+	close(saved);
+	assert_int_equal(fseek(output, 0, SEEK_SET), 0);
+	memset(text, 0, sizeof text);
+	assert_non_null(fgets(text, sizeof text, output));
+	assert_string_equal(text, expected);
 	fclose(output);
 }
 
 static const struct CMUnitTest tests[] =
 {
 	cmocka_unit_test(test_cli_output_and_speed_calculation),
-	cmocka_unit_test(test_cli_stream_helpers_and_ansi_stripping)
+	cmocka_unit_test(test_cli_stream_helpers_and_ansi_stripping),
+	cmocka_unit_test(test_cli_hex_stdout_and_stderr_wrappers)
 };
 
 REGISTER_TESTS(cli, tests)

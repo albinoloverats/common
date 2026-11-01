@@ -70,10 +70,53 @@ static void test_tlv_remove_and_iteration(void **state)
 	tlv_deinit(tlv);
 }
 
+static void test_tlv_empty_null_and_exact_removal(void **state)
+{
+	(void)state;
+	tlv_t null_tlv = NULL;
+	uint8_t value = 0x5a;
+	assert_false(tlv_append(null_tlv, (tlv_entry_s){ 1, 1, &value }));
+	assert_null(tlv_remove(null_tlv, (tlv_entry_s){ 1, 0, NULL }));
+	assert_null(tlv_remove_tag(null_tlv, 1));
+	assert_null(tlv_get(null_tlv, 1));
+	assert_false(tlv_has_tag(null_tlv, 1));
+	assert_null(tlv_value_of(null_tlv, 1));
+	assert_null(tlv_value_of(null_tlv, 1, &value));
+	assert_int_equal(tlv_length_of(null_tlv, 1), 0);
+	assert_null(tlv_export(null_tlv));
+	assert_int_equal(tlv_length(null_tlv), 0);
+	assert_null(tlv_iterator(null_tlv));
+	assert_null(tlv_get_next(null_tlv));
+	assert_false(tlv_has_next(null_tlv));
+	tlv_for_each(null_tlv, count_tlv_item);
+	tlv_deinit(null_tlv);
+
+	tlv_t tlv = tlv_init();
+	assert_non_null(tlv_export(tlv));
+	assert_int_equal(tlv_length(tlv), 0);
+	assert_null(tlv_get(tlv, 1));
+	assert_false(tlv_has_tag(tlv, 1));
+	assert_int_equal(tlv_length_of(tlv, 1), 0);
+
+	assert_true(tlv_append(tlv, (tlv_entry_s){ 1, 1, &value }));
+	assert_true(tlv_append(tlv, (tlv_entry_s){ 2, 1, &value }));
+	const tlv_entry_s *removed = tlv_remove(tlv, (tlv_entry_s){ 2, 0, NULL });
+	assert_non_null(removed);
+	assert_int_equal(removed->tag, 2);
+	free(removed->value);
+	free((void *)removed);
+	assert_null(tlv_remove(tlv, (tlv_entry_s){ 3, 0, NULL }));
+
+	const uint8_t expected[] = { 1, 0, 1, 0x5a };
+	assert_memory_equal(tlv_export(tlv), expected, sizeof expected);
+	tlv_deinit(tlv);
+}
+
 static const struct CMUnitTest tests[] =
 {
 	cmocka_unit_test(test_tlv_add_lookup_and_export),
-	cmocka_unit_test(test_tlv_remove_and_iteration)
+	cmocka_unit_test(test_tlv_remove_and_iteration),
+	cmocka_unit_test(test_tlv_empty_null_and_exact_removal)
 };
 
 REGISTER_TESTS(tlv, tests)

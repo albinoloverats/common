@@ -1,6 +1,6 @@
 #include "test_support.h"
 
-#define MAX_TESTS 32
+#define MAX_TESTS 48
 
 void register_mem_tests(struct CMUnitTest *, size_t *);
 void register_error_tests(struct CMUnitTest *, size_t *);

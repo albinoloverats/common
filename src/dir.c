@@ -66,10 +66,13 @@ extern char *dir_get_part(const char * const path, const uint16_t index)
 	char *ptr = (char *)path;
 	for (uint16_t i = 0; i < index; i++)
 	{
-		ptr = strchr(ptr, DIR_SEPARATOR_CHAR);
-		if (!ptr)
+		char *separator = strchr(ptr, DIR_SEPARATOR_CHAR);
+		if (!separator)
+		{
+			ptr += strlen(ptr);
 			break;
-		ptr++;
+		}
+		ptr = separator + 1;
 	}
 	return m_strndup(ptr, strchrnul(ptr, DIR_SEPARATOR_CHAR) - ptr);
 }

@@ -12,6 +12,9 @@ static void test_directory_path_helpers(void **state)
 	value = dir_get_name("file.txt", '.');
 	assert_string_equal(value, "file");
 	free(value);
+	value = dir_get_name("file", '.');
+	assert_string_equal(value, "file");
+	free(value);
 	value = dir_get_pass("/tmp/archive/file:password");
 	assert_string_equal(value, "password");
 	free(value);
@@ -34,6 +37,9 @@ static void test_directory_path_helpers(void **state)
 	value = dir_get_part("/a/b/c", 2);
 	assert_string_equal(value, "b");
 	free(value);
+	value = dir_get_part("/a/b/c", 4);
+	assert_string_equal(value, "");
+	free(value);
 }
 
 
@@ -42,9 +48,14 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	(void)state;
 	char root[] = "/tmp/common-unit-XXXXXX";
 	assert_non_null(mkdtemp(root));
-	char nested[256], file[256], link_path[256], fifo[256], socket_path[256];
+	char nested[256], empty[256], file[256], link_path[256], fifo[256], socket_path[256];
 	snprintf(nested, sizeof nested, "%s/a/b", root);
 	dir_mk_recursive(nested, 0700);
+	snprintf(empty, sizeof empty, "%s/empty", root);
+	assert_int_equal(mkdir(empty, 0700), 0);
+	list_t empty_tree = dir_get_tree(empty, DIR_ALL);
+	assert_int_equal(list_size(empty_tree), 0);
+	list_deinit(empty_tree, free);
 	char nested_slash[sizeof nested + 1];
 	snprintf(nested_slash, sizeof nested_slash, "%s/", nested);
 	dir_mk_recursive(nested_slash, 0700);
@@ -74,14 +85,17 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	list_t everything = dir_get_tree(root, DIR_ALL);
 	list_t none = dir_get_tree(root, DIR_NONE);
 	assert_int_equal(list_size(files), 1);
-	assert_int_equal(list_size(folders), 2);
+	assert_int_equal(list_size(folders), 3);
 	assert_int_equal(list_size(links), 1);
 	assert_int_equal(list_size(pipes), 1);
 	assert_int_equal(list_size(sockets), 1);
-	assert_int_equal(list_size(everything), 6);
+	assert_int_equal(list_size(everything), 7);
 	assert_int_equal(list_size(none), 0);
 	assert_string_equal(list_get(files, 0), file);
 	assert_string_equal(list_get(links, 0), link_path);
+	list_t character_devices = dir_get_tree("/dev", DIR_CHAR);
+	assert_non_null(list_contains(character_devices, "/dev/null"));
+	list_deinit(character_devices, free);
 	list_deinit(files, free);
 	list_deinit(folders, free);
 	list_deinit(links, free);
@@ -99,6 +113,7 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	assert_int_equal(rmdir(parent), 0);
 	snprintf(parent, sizeof parent, "%s/a", root);
 	assert_int_equal(rmdir(parent), 0);
+	assert_int_equal(rmdir(empty), 0);
 	assert_int_equal(rmdir(root), 0);
 }
 
