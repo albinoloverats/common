@@ -17,9 +17,9 @@ build/runtime information used by version-formatting tests.
 
 ### Status
 
-[![C/C++ CI](https://github.com/albinoloverats/common/actions/workflows/c-cpp.yml/badge.svg)](https://github.com/albinoloverats/common/actions/workflows/c-cpp.yml)
-[![Gitlab Pipelines](https://gitlab.com/albinoloverats/common/badges/desktop/pipeline.svg)](https://gitlab.com/albinoloverats/common/-/commits/desktop)
-[![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/albinoloverats/common/desktop)](https://bitbucket.org/albinoloverats/common/src/desktop)
+[![C/C++ CI](https://github.com/albinoloverats/common/actions/workflows/coverage.yml/badge.svg)](https://github.com/albinoloverats/common/actions/workflows/coverage.yml)
+[![Gitlab Pipelines](https://gitlab.com/albinoloverats/common/badges/master/pipeline.svg)](https://gitlab.com/albinoloverats/common/-/commits/master)
+[![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/albinoloverats/common/master)](https://bitbucket.org/albinoloverats/common/src/master)
 
 ## Components
 
