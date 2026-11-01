@@ -8,6 +8,11 @@ it in your own code.
 It includes a test suite that hopefully shows how to make use of some of
 the extensions.
 
+Coverage totals may differ between CI providers even for the same
+commit; some tests depend on the runner environment, including which
+device types are present under `/dev` and the length of generated
+build/runtime information used by version-formatting tests.
+
 ## CCcypt
 
 Common cryptographic functions, typically parsing of string values to
