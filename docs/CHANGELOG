@@ -1,0 +1,65 @@
+Changelog
+=========
+
+Changes are grouped by commit date; common does not currently have
+versioned releases.
+
+
+common - 2026-11
+----------------
+
+* Add CMocka unit tests for common modules and coverage reporting across
+  CI providers
+* Document public APIs, structures, and unit tests
+* Harden directory traversal and recursive directory creation
+* Avoid closing cipher handles when unsupported modes fail to open
+* Document runner-dependent coverage differences
+
+
+common - 2026-10
+----------------
+
+* Add source-aligned CMocka tests for configuration, CLI, directories,
+  ECC, errors, memory, lists, maps, TLV, crypto, and version helpers
+
+
+common - 2024-11
+----------------
+
+* Add allocate-or-die memory helpers, formatted string duplication, and
+  libgcrypt alternatives
+* Simplify directory-tree scanning
+* Normalize LIST, MAP, and TLV types and structure suffixes
+
+
+common - 2023-12
+----------------
+
+* Add list operations and map/TLV iteration helpers
+* Remove nested functions for portability
+
+
+common - 2023-05 to 2023-07
+---------------------------
+
+* Improve configuration-file list parsing, default values, and help
+  output
+* Consolidate Makefiles and improve clang portability
+
+
+common - 2022-11 to 2022-12
+---------------------------
+
+* Add the MAP implementation and support replacing values for existing
+  keys
+* Improve command-line parsing for optional booleans, extra arguments,
+  and list values
+
+
+common - 2022-02 to 2022-09
+---------------------------
+
+* Import the shared common code and add filesystem, list, and TLV tests
+* Add directory-tree helpers, configurable entry-type filters, and
+  decimal configuration values
+* Improve allocation-failure handling and update tests
