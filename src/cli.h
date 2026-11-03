@@ -66,7 +66,8 @@
 /*!
  * \brief Initialisation status of CLI
  *
- * Indicates the stage of output of the progress bars.
+ * Controls the progress-display thread: CLI_INIT waits without drawing,
+ * CLI_RUN updates progress, and CLI_DONE draws completion before return.
  */
 typedef enum
 {
@@ -86,19 +87,17 @@ cli_status_e;
  */
 typedef struct
 {
-	uint64_t offset;  /*!< Progress */
-	uint64_t size;    /*!< Maximum */
-	char    *display; /*!< Extra text to display within the progress bar */
+	uint64_t offset;  /*!< Completed bytes or items */
+	uint64_t size;    /*!< Total bytes or items */
+	char    *display; /*!< Optional label for the current item */
 }
 cli_progress_s;
 
 /*!
  * \brief Progress bar structure
  *
- * Pointers for progress status and level of completion. It allows for
- * current item progress and overall progress. The status is largely
- * used to ensure that the progress bar shows as 100% when complete
- * instead of showing (maybe only) 99%.
+ * Pointers to the status and progress values read by cli_display().
+ * current tracks the active item and total tracks overall progress.
  */
 typedef struct
 {
@@ -113,8 +112,8 @@ cli_s;
 /*!
  * \brief Bytes per second structure
  *
- * A count of how many bytes have been processed and at what time. Is
- * used to calculate transfer speed.
+ * A cumulative byte count sampled at a time measured in microseconds.
+ * Used to calculate transfer speed.
  */
 typedef struct
 {
@@ -139,8 +138,9 @@ extern void cli_display(cli_s *c) __attribute__((nonnull(1)));
  * \param[in]  c  The bytes per second history
  * \return        The number of bytes per second
  *
- * Calculate the speed of a transfer given a list of cli_bps_s readings.
- * Currently this is required to be 128.
+ * Calculate average bytes per second from exactly BPS readings. Each
+ * reading's bytes field is cumulative and time is measured in
+ * microseconds.
  */
 extern double cli_calc_bps(cli_bps_s *c) __attribute__((nonnull(1)));
 

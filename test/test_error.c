@@ -1,5 +1,8 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies error initialization and die() exit-status behavior.
+ */
 static void test_error_exit_paths(void **state)
 {
 	(void)state;

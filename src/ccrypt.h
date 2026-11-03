@@ -39,39 +39,36 @@ extern void init_crypto(void);
  * \brief         Get list of usable ciphers
  * \return        A list of char* cipher names
  *
- * Get a list of strings which lists the names of usable cipher
- * algorithms. NB: The list is allocated statically and SHOULD NOT be
- * free’d (or otherwise altered).
+ * Return a process-lifetime list of names for cipher algorithms
+ * supported by the active libgcrypt. Do not free or modify the list.
  */
 extern list_t list_of_ciphers(void) __attribute__((pure));
 
 /*!
  * \brief         Get list of usable hashes
- * \return        An array of char* of hash names
+ * \return        List of hash names
  *
- * Get an array of strings which lists the names of usable hash
- * algorithms. NB: The array is allocated statically and SHOULD NOT be
- * free’d (or otherwise altered).
+ * Return a process-lifetime list of names for hash algorithms supported
+ * by the active libgcrypt. Do not free or modify the list.
  */
 extern list_t list_of_hashes(void) __attribute__((pure));
 
 /*!
  * \brief         Get list of available cipher modes
- * \return        An array of char* of mode names
+ * \return        List of mode names
  *
- * Get an array of strings which lists the names of available cipher
- * modes. NB: The array is allocated statically and SHOULD NOT be
- * free’d (or otherwise altered).
+ * Return a process-lifetime list of cipher modes that can be opened
+ * with AES or ChaCha20 in the active libgcrypt. Do not free or modify
+ * the list.
  */
 extern list_t list_of_modes(void) __attribute__((pure));
 
 /*!
  * \brief         Get list of available MAC algorithms
- * \return        An array of char* of MAC names
+ * \return        List of MAC names
  *
- * Get an array of strings which lists the names of available MAC
- * algorithms. NB: The array is allocated statically and SHOULD NOT be
- * free’d (or otherwise altered).
+ * Return a process-lifetime list of MAC algorithms supported by the
+ * active libgcrypt. Do not free or modify the list.
  */
 extern list_t list_of_macs(void) __attribute__((pure));
 
@@ -80,7 +77,8 @@ extern list_t list_of_macs(void) __attribute__((pure));
  * \param[in]  n  Cipher name
  * \return        The ID used by libgcrypt
  *
- * Get the ID used internally by libgcrypt for the given cipher name.
+ * Return the matching ID, case-insensitively, or GCRY_CIPHER_NONE if
+ * the name is not recognized or supported.
  */
 extern enum gcry_cipher_algos cipher_id_from_name(const char * const restrict n) __attribute__((pure, nonnull(1)));
 
@@ -89,7 +87,8 @@ extern enum gcry_cipher_algos cipher_id_from_name(const char * const restrict n)
  * \param[in]  n  Hash name
  * \return        The ID used by libgcrypt
  *
- * Get the ID used internally by libgcrypt for the given hash name.
+ * Return the matching ID, case-insensitively, or GCRY_MD_NONE if the
+ * name is not recognized or supported.
  */
 extern enum gcry_md_algos hash_id_from_name(const char * const restrict n) __attribute__((pure, nonnull(1)));
 
@@ -98,7 +97,8 @@ extern enum gcry_md_algos hash_id_from_name(const char * const restrict n) __att
  * \param[in]  n  Mode name
  * \return        The ID used by libgcrypt
  *
- * Get the ID used internally by libgcrypt for the given mode name.
+ * Return the matching ID, case-insensitively, or
+ * GCRY_CIPHER_MODE_NONE if the name is not recognized.
  */
 extern enum gcry_cipher_modes mode_id_from_name(const char * const restrict n) __attribute__((pure, nonnull(1)));
 
@@ -107,7 +107,8 @@ extern enum gcry_cipher_modes mode_id_from_name(const char * const restrict n) _
  * \param[in]  n  MAC name
  * \return        The ID used by libgcrypt
  *
- * Get the ID used internally by libgcrypt for the given MAC.
+ * Return the matching ID, case-insensitively, or GCRY_MAC_NONE if the
+ * name is not recognized or supported.
  */
 extern enum gcry_mac_algos mac_id_from_name(const char * const restrict n) __attribute__((pure, nonnull(1)));
 
@@ -116,8 +117,8 @@ extern enum gcry_mac_algos mac_id_from_name(const char * const restrict n) __att
  * \param[in]  c  The libgcrypt cipher enum
  * \return        A string representation of the cipher
  *
- * "Correct" the name that libgcrypt gives us; this ensures
- * compatibility with the Android version.
+ * Return the normalized libgcrypt name used by this project, or NULL
+ * for an unsupported or duplicate alias.
  */
 extern const char *cipher_name_from_id(enum gcry_cipher_algos c) __attribute__((pure));
 
@@ -126,8 +127,8 @@ extern const char *cipher_name_from_id(enum gcry_cipher_algos c) __attribute__((
  * \param[in]  h  The libgcrypt hash enum
  * \return        A string representation of the hash
  *
- * "Correct" the name that libgcrypt gives us; this ensures
- * compatibility with the Android version.
+ * Return the normalized libgcrypt name used by this project, or NULL
+ * for an unsupported or duplicate alias.
  */
 extern const char *hash_name_from_id(enum gcry_md_algos h) __attribute__((pure));
 
@@ -136,9 +137,8 @@ extern const char *hash_name_from_id(enum gcry_md_algos h) __attribute__((pure))
  * \param[in]  m  The libgcrypt mode enum
  * \return        A string representation of the mode
  *
- * As this isn’t provided by libgcrypt, in the same way that it is for
- * algorithms, and the fact we’re artificially limiting the choices,
- * here’s a function to get the name from the enum.
+ * Return this project's supported name for the mode ID, or NULL if the
+ * mode is not in its supported mode table.
  */
 extern const char *mode_name_from_id(enum gcry_cipher_modes m) __attribute__((pure));
 
@@ -147,31 +147,20 @@ extern const char *mode_name_from_id(enum gcry_cipher_modes m) __attribute__((pu
  * \param[in]  m  The libgcrypt MAC enum
  * \return        A string representation of the MAC
  *
- * "Correct" the name that libgcrypt gives us; this ensures
- * compatibility with the Android version.
+ * Return libgcrypt's name for the MAC ID.
  */
 extern const char *mac_name_from_id(enum gcry_mac_algos m) __attribute__((pure));
 
 /*!
- * \brief         Get cipher mode name, given its ID
- * \param[in]  m  The libgcrypt mode enum
- * \return        A string representation of the mode
- *
- * As this isn’t provided by libgcrypt, in the same way that it is for
- * algorithms, and the fact we’re artificially limiting the choices,
- * here’s a function to get the name from the enum.
- */
-extern const char *mode_name_from_id(enum gcry_cipher_modes m) __attribute__((pure));
-
-/*!
- * \brief         Verify whether a give cipher and mode are suitable
+ * \brief         Check whether a cipher and mode are considered compatible
  * \param[in]  c  The cipher to check
  * \param[in]  m  The cipher mode
  * \return        True if the mode is suitable for the cipher, false
  *                otherwise
  *
- * Check if the given cipher mode is usable for the given cipher. For
- * instance stream ciphers require a stream capable mode.
+ * Apply the project's compatibility rules for stream, AEAD, and
+ * block-cipher modes. This is a compatibility check, not a guarantee
+ * that a later libgcrypt operation will succeed.
  */
 extern bool mode_valid_for_cipher(enum gcry_cipher_algos c, enum gcry_cipher_modes m);
 

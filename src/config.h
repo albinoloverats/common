@@ -48,29 +48,38 @@
 #define CONFIG_ARG_LIST     0x40000000 // 0100
 #define CONFIG_ARG_PAIR     0xa0000000 // 0010
 
+/*!
+ * \brief Encoded type and modifiers for a parsed command-line/config value
+ *
+ * The low bits select the value type; the flag bits describe required
+ * arguments, comma-separated lists, or paired values. CONFIG_ARG_OPT_*
+ * and CONFIG_ARG_REQ_* aliases distinguish whether a value is optional
+ * or mandatory.
+ */
 typedef enum
 {
-	CONFIG_ARG_BOOLEAN = 1,
-	CONFIG_ARG_INTEGER = 2,
-	CONFIG_ARG_DECIMAL = 4,
-	CONFIG_ARG_STRING  = 8,
-	// these are for semantic clarity
+	CONFIG_ARG_BOOLEAN = 1, /*!< Boolean payload */
+	CONFIG_ARG_INTEGER = 2, /*!< Signed integer payload */
+	CONFIG_ARG_DECIMAL = 4, /*!< Long double payload */
+	CONFIG_ARG_STRING  = 8, /*!< String payload */
+	/* Optional-value aliases for readability in option declarations. */
 	CONFIG_ARG_OPT_BOOLEAN      = CONFIG_ARG_BOOLEAN,
 	CONFIG_ARG_OPT_INTEGER      = CONFIG_ARG_INTEGER,
 	CONFIG_ARG_OPT_DECIMAL      = CONFIG_ARG_DECIMAL,
 	CONFIG_ARG_OPT_STRING       = CONFIG_ARG_STRING,
 
+	/* Required single values. */
 	CONFIG_ARG_REQ_BOOLEAN      = (CONFIG_ARG_OPT_BOOLEAN | CONFIG_ARG_REQUIRED),
 	CONFIG_ARG_REQ_INTEGER      = (CONFIG_ARG_OPT_INTEGER | CONFIG_ARG_REQUIRED),
 	CONFIG_ARG_REQ_DECIMAL      = (CONFIG_ARG_OPT_DECIMAL | CONFIG_ARG_REQUIRED),
 	CONFIG_ARG_REQ_STRING       = (CONFIG_ARG_OPT_STRING  | CONFIG_ARG_REQUIRED),
 
-	CONFIG_ARG_PAIR_BOOLEAN     = (CONFIG_ARG_REQ_BOOLEAN | CONFIG_ARG_PAIR), // pairs of options are currently required
+	CONFIG_ARG_PAIR_BOOLEAN     = (CONFIG_ARG_REQ_BOOLEAN | CONFIG_ARG_PAIR), /*!< Required pair of booleans */
 	CONFIG_ARG_PAIR_INTEGER     = (CONFIG_ARG_REQ_INTEGER | CONFIG_ARG_PAIR),
 	CONFIG_ARG_PAIR_DECIMAL     = (CONFIG_ARG_REQ_DECIMAL | CONFIG_ARG_PAIR),
 	CONFIG_ARG_PAIR_STRING      = (CONFIG_ARG_REQ_STRING  | CONFIG_ARG_PAIR),
 
-	CONFIG_ARG_LIST_BOOLEAN     = (CONFIG_ARG_REQ_BOOLEAN | CONFIG_ARG_LIST), // list options are currently required
+	CONFIG_ARG_LIST_BOOLEAN     = (CONFIG_ARG_REQ_BOOLEAN | CONFIG_ARG_LIST), /*!< Required list of booleans */
 	CONFIG_ARG_LIST_INTEGER     = (CONFIG_ARG_REQ_INTEGER | CONFIG_ARG_LIST),
 	CONFIG_ARG_LIST_DECIMAL     = (CONFIG_ARG_REQ_DECIMAL | CONFIG_ARG_LIST),
 	CONFIG_ARG_LIST_STRING      = (CONFIG_ARG_REQ_STRING  | CONFIG_ARG_LIST),
@@ -79,71 +88,97 @@ typedef enum
 }
 config_arg_e;
 
+/*!
+ * \brief Storage for one parsed configuration value
+ *
+ * Read the member selected by the corresponding config_arg_e type.
+ */
 typedef union
 {
-	bool boolean;
-	int64_t integer;
+	bool boolean;       /*!< Boolean value */
+	int64_t integer;    /*!< Signed integer value */
 	//__float128 decimal;
-	long double decimal;
-	char *string;
-	pair_u pair;
-	list_t *list;
+	long double decimal; /*!< Decimal value */
+	char *string;        /*!< Allocated string value */
+	pair_u pair;          /*!< Two values of the configured pair type */
+	list_t *list;         /*!< List handle for a list-valued option */
 }
 config_arg_u;
 
+/*!
+ * \brief Parsed configuration value and its declared type
+ */
 typedef struct
 {
-	config_arg_e type;
-	config_arg_u value;
+	config_arg_e type;  /*!< Declared value type and modifiers */
+	config_arg_u value; /*!< Parsed value in the member selected by type */
 }
 config_arg_s;
 
 /*!
  * \brief  A named command line parameter.
  *
- * A named command line parameter; for instance --help
+ * A named command-line option, with its accepted spelling, help text,
+ * expected value type, current value, and parsing state.
  */
 typedef struct
 {
-	char short_option;           /*!< The command line short option */
-	char *long_option;           /*!< The command line long option */
-	char *option_type;           /*!< What the expected parameter should be */
-	char *description;           /*!< A description of the argument */
-	config_arg_s response;       /*!< The expected repsonse type and value */
-	bool required:1;             /*!< Whether this option is required */
-	bool advanced:1;             /*!< Whether this option is considered advanced */
-	bool hidden:1;               /*!< Whether this option should be hidden */
-	bool seen:1;                 /*!< Whether the argument was detected */
+	char short_option;           /*!< Short option character, without '-' */
+	char *long_option;           /*!< Long option name, without '--' */
+	char *option_type;           /*!< Display label for the expected value */
+	char *description;           /*!< Help text for this option */
+	config_arg_s response;       /*!< Value type and parsed value */
+	bool required:1;             /*!< Whether this option must be supplied */
+	bool advanced:1;             /*!< Whether this option is marked advanced in usage */
+	bool hidden:1;               /*!< Whether this option is omitted from usage */
+	bool seen:1;                 /*!< Whether a value/occurrence was parsed */
 }
 config_named_s;
 
 /*!
  * \brief  An unnamed command line parameter.
  *
- * An unnamed command line parameter; for instance when passing a file
- * name to a program: vim config.c
+ * A positional command-line argument, with its expected value type
+ * and parsing state.
  */
 typedef struct
 {
 	char *description;           /*!< A description of the argument */
-	config_arg_s response;       /*!< The expected repsonse type and value */
-	bool required:1;             /*!< Whether this option is required */
-	bool seen:1;                 /*!< Whether this argument was detected */
+	config_arg_s response;       /*!< Value type and parsed value */
+	bool required:1;             /*!< Whether this positional argument is required */
+	bool seen:1;                 /*!< Whether a value was parsed */
 }
 config_unnamed_s;
 
+/*!
+ * \brief Application metadata used by configuration and help output
+ *
+ * The pointed-to strings are borrowed by the configuration module and
+ * must remain valid while it uses them.
+ */
 typedef struct
 {
-	char *name;
-	char *version;
-	char *url;
-	char *config;
+	char *name;    /*!< Program name */
+	char *version; /*!< Program version */
+	char *url;     /*!< Project or download URL */
+	char *config;  /*!< Configuration filename, or NULL to disable config-file use */
 }
 config_about_s;
 
 
+/*!
+ * \brief         Set application metadata for configuration handling
+ * \param[in]  about  Application metadata; strings are borrowed, not copied
+ *
+ * Must be called before config_parse_aux() or update_config().
+ */
 extern void config_init(config_about_s about);
 
+/*!
+ * \brief         Print usage and exit successfully
+ * \param[in]  args   List of config_named_s options
+ * \param[in]  extra  Optional list of config_unnamed_s positional arguments
+ */
 extern void config_show_usage(list_t args, list_t extra);
 
 #define CONFIG_PARSE_COUNT(...) CONFIG_PARSE_COUNT2(__VA_ARGS__, 6, 5, 4, 3, 2, 1)
@@ -158,26 +193,27 @@ extern void config_show_usage(list_t args, list_t extra);
 
 /*!
  * \brief             Configuration reading/parsing
- * \param[in]      c  Number of command line arguments
- * \param[in]      v  Command line arguments
- * \param[in/out]  a  Expected command line arguments, config options, and their resulting values
- * \param[in/out]  x  Any arguments without flags (file names, etc)
- * \param[in]      t  Any additional text to display as notes
- * \param[in]      w  Whether to warn about unknown arguments
- * \return            The total number of arguments seen (includes named and unnamed)
+ * \param[in]      argc   Number of entries in argv
+ * \param[in]      argv   Command-line arguments, including the program name at index 0
+ * \param[in/out]  args   List of config_named_s options to parse
+ * \param[in/out]  extra  Optional list of config_unnamed_s positional arguments
+ * \param[in]      notes  Optional list of additional usage notes
+ * \param[in]      warn   Whether to print usage/exit for unknown or missing arguments
+ * \return                Number of named and positional arguments marked seen, or -1 if config_init was not called
  *
- * Provide simple command line argument parsing, and pass back whatever
- * options where set. Removes a lot of the cruft from the legacy common
- * code that used to exist here.
+ * Parse the configured rc file (when enabled) and then command-line
+ * arguments, updating each option's response and seen fields. When
+ * warn is true, usage handling exits the process for unknown arguments
+ * or missing required options.
  */
 extern int config_parse_aux(int c, char **v, list_t a, list_t x, list_t t, bool w);
 
 /*!
  * \brief         Update configuration file
- * \param[in]  o  Option to update
- * \param[out] v  New value
+ * \param[in]  o  Long option name as stored in the config file
+ * \param[in]  v  Text value to write
  *
- * Set or update the given configuration option with the given value.
+ * Set or append the named option in the configured user's config file.
  */
 extern void update_config(const char * const restrict o, const char * const restrict v) __attribute__((nonnull(1, 2)));
 
@@ -203,8 +239,21 @@ extern int config_named_compare(const void *a, const void *b);
  */
 extern int config_unnamed_compare(const void *a, const void *b);
 
+/*!
+ * \brief         Free a named option
+ * \param[in]  f  config_named_s pointer
+ *
+ * Frees the option object and the response storage handled for simple
+ * string and list option types.
+ */
 extern void config_named_free(void *f);
 
+/*!
+ * \brief         Free a positional argument
+ * \param[in]  f  config_unnamed_s pointer
+ *
+ * Frees the argument object and its parsed string response, when present.
+ */
 extern void config_unnamed_free(void *f);
 
 #endif /* ! _COMMON_CONFIG_H_ */

@@ -26,6 +26,12 @@
 	 * Taken, once upon a time, from:
 	 * https://github.com/lattera/glibc/blob/master/string/strchrnul.c
 	 */
+	/*!
+	 * \brief         Find a character or the terminating NUL byte
+	 * \param[in]  string  NUL-terminated string
+	 * \param[in]  c       Character to find
+	 * \return             Pointer to the first match or string's NUL terminator
+	 */
 	extern char *strchrnul(const char *string, int c);
 #endif
 
@@ -33,6 +39,12 @@
 	/*
 	 * Borrowed from:
 	 * https://github.com/lattera/glibc/blob/master/string/strverscmp.c
+	 */
+	/*!
+	 * \brief         Compare version-like strings, interpreting digit runs numerically
+	 * \param[in]  s1  First string
+	 * \param[in]  s2  Second string
+	 * \return         Negative, zero, or positive according to ordering
 	 */
 	extern int strverscmp(const char *s1, const char *s2);
 #endif
@@ -118,18 +130,53 @@
 #define link(old, new) CopyFile(old, new, FALSE)
 #define tmpfile temp_file
 
+/*!
+ * \brief         Read one line from a stream, allocating or resizing the buffer
+ * \param[in,out] lineptr  Address of the caller's line buffer pointer
+ * \param[out]    n        Receives the number of bytes read
+ * \param[in]     stream   Input stream
+ * \return                  Number of bytes read, or -1 at end of file
+ */
 extern ssize_t getline(char **lineptr, size_t *n, FILE *stream) __attribute__((nonnull(3)));
 
+/*!
+ * \brief         Duplicate at most l bytes from a string
+ * \param[in]  s  Source string
+ * \param[in]  l  Maximum bytes to copy
+ * \return        Newly allocated NUL-terminated string
+ */
 extern char *strndup(const char *s, size_t l) __attribute__((nonnull(1)));
 
+/*!
+ * \brief         Scan a directory and return selected entries
+ * \param[in]  path  Directory path
+ * \param[out] res   Receives an allocated array of allocated dirent entries
+ * \param[in]  sel   Optional selection predicate
+ * \param[in]  cmp   Optional sorting comparator
+ * \return           Number of entries, or -1 on failure; caller frees
+ *                   each returned entry and the array
+ */
 extern int scandir(const char *path, struct dirent ***res, int (*sel)(const struct dirent *), int (*cmp)(const struct dirent **, const struct dirent **)) __attribute__((nonnull(1, 2)));
 
+/*!
+ * \brief         Compare directory entries by locale collation of their names
+ * \param[in]  a  First dirent pointer
+ * \param[in]  b  Second dirent pointer
+ * \return        Result from strcoll on the entry names
+ */
 extern int alphasort(const struct dirent **a, const struct dirent **b);
 
+/*! Open a temporary file in the platform's temporary directory. */
 extern FILE *temp_file(void);
 
+/*! Return a static string describing the Windows version. */
 extern char *windows_version(void);
 
+/*!
+ * \brief         Print a signal description to stderr
+ * \param[in]  sig  Signal number
+ * \param[in]  s    Optional message prefix
+ */
 extern void psignal(int sig, const char *s);
 
 #endif /* _WIN32 */

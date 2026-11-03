@@ -1,5 +1,8 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies ECC round-trip encoding and correction of one damaged byte.
+ */
 static void test_ecc_round_trip_and_single_byte_correction(void **state)
 {
 	(void)state;
@@ -25,6 +28,9 @@ static void test_ecc_round_trip_and_single_byte_correction(void **state)
 }
 
 
+/*!
+ * \brief Verifies ECC recovers a codeword with two damaged bytes.
+ */
 static void test_ecc_corrects_two_bytes(void **state)
 {
 	(void)state;
@@ -45,6 +51,9 @@ static void test_ecc_corrects_two_bytes(void **state)
 }
 
 
+/*!
+ * \brief Verifies three-byte correction and reporting beyond correction capacity.
+ */
 static void test_ecc_corrects_three_bytes_and_reports_uncorrectable_data(void **state)
 {
 	(void)state;
@@ -65,6 +74,7 @@ static void test_ecc_corrects_three_bytes_and_reports_uncorrectable_data(void **
 	assert_int_equal(errors, 3);
 	assert_memory_equal(decoded, message, sizeof message);
 
+	/* Four corrupt bytes exceed the decoder's correction capacity. */
 	memcpy(damaged, encoded, sizeof damaged);
 	damaged[1] ^= 0x35;
 	damaged[67] ^= 0xa2;

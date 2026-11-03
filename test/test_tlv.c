@@ -1,5 +1,8 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies TLV insertion, lookup, iteration, length, and export.
+ */
 static void test_tlv_add_lookup_and_export(void **state)
 {
 	(void)state;
@@ -31,6 +34,7 @@ static void test_tlv_add_lookup_and_export(void **state)
 		2, 0, 1, 0x33
 	};
 	assert_memory_equal(tlv_export(tlv), expected, sizeof expected);
+	/* Export can also encode 16-bit lengths without network-byte-order conversion. */
 	const uint8_t little_endian[] =
 	{
 		7, 2, 0, 0x11, 0x22,
@@ -41,6 +45,9 @@ static void test_tlv_add_lookup_and_export(void **state)
 }
 
 
+/*!
+ * \brief Verifies removing a tag and iterating over the remaining entries.
+ */
 static void test_tlv_remove_and_iteration(void **state)
 {
 	(void)state;
@@ -70,6 +77,9 @@ static void test_tlv_remove_and_iteration(void **state)
 	tlv_deinit(tlv);
 }
 
+/*!
+ * \brief Verifies NULL/empty TLV behavior and exact tag-and-length removal.
+ */
 static void test_tlv_empty_null_and_exact_removal(void **state)
 {
 	(void)state;

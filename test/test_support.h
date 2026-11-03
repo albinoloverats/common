@@ -33,16 +33,26 @@
 #include "tlv.h"
 #include "version.h"
 
-extern size_t visited_items;
+extern size_t visited_items; /*!< Shared accumulator used by iteration tests */
+
+/*! Compare pointers to int values. */
 extern int compare_integer(const void *, const void *);
+/*! Compare two string pointers with strcmp(). */
 extern int compare_string(const void *, const void *);
+/*! Add the pointed-to int value to visited_items. */
 extern void count_list_item(const void *);
+/*! Add the TLV tag and length to visited_items. */
 extern void count_tlv_item(uint8_t, uint16_t, const void *);
+/*! Increment visited_items for a map callback. */
 extern void count_map_item(const void *, const void *);
+/*! Allocate and return a copy of an integer value. */
 extern void *copy_integer(const void *);
+/*! Create and append a configured named-option test fixture. */
 extern config_named_s *add_config_option(list_t, char, char *, config_arg_e, config_arg_u);
+/*! Free a test pair of strings and its containing allocation. */
 extern void free_pair_string(void *);
 
+/*! Append a test group's registered cases to an aggregate test array. */
 #define REGISTER_TESTS(name, tests) \
     void register_##name##_tests(struct CMUnitTest *all_tests, size_t *count) \
     { \

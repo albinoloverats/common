@@ -41,16 +41,18 @@ typedef void * map_t; /*!< The user visible MAP type */
 
 /*!
  * \brief         Create a new map
- * \param[in]  c  Function to compare keys during insertion
- * \param[in]  f  Whether to call free() when replacing/removing entries
- * \param[in]  s  Whether the keys are sorted
- * \param[in]  o  Whether to overwrite existing entries when adding
+ * \param[in]  c  Optional key comparator, also used to order entries
+ * \param[in]  f  Whether the map owns and frees keys and values on destruction
+ * \param[in]  s  Whether entries are kept sorted by key
+ * \param[in]  o  Whether adding an existing key replaces its value
  * \return        A new map
  *
  * Create a new map instance; all further operations are then performed
  * against this handle. Returns NULL on error.
  *
- * Note: if o==true and f==false you may leak memory!
+ * When o is true, replacing an entry does not free the old value unless f
+ * is true. When f is true, the map takes ownership of inserted keys and
+ * values.
  */
 #define map_default() map_init(NULL, true, false, false)
 
@@ -60,10 +62,10 @@ extern map_t map_init(int c(const void *, const void *), bool f, bool s, bool o)
  * \brief         Destroy a map
  * \param[in]  h  A pointer to a map to destroy
  *
- * Destroy a previously created map when it is no longer needed. Free
- * the memory and sets h to NULL so all subsequent calls to MAP
- * functions will not result in undefined behaviour. If called with f as
- * false then keys and values items will not be freed.
+ * Destroy a previously created map and its internal storage. This
+ * function receives the handle by value and cannot clear the caller's
+ * variable. If map_init was called with f false, key and value objects
+ * are not freed.
  */
 extern void map_deinit(map_t h);
 
@@ -81,7 +83,7 @@ extern size_t map_size(map_t h) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the map
  * \param[in]  k  The key of the entry to add
  * \param[in]  v  The value of the entry to add
- * \reutrn        Whether the entry was added
+ * \return        Whether the entry was added or replaced
  *
  * Add a new entry to the map. If the map is sorted then the entry will
  * be inserted based on the results of the compare function, otherwise
@@ -93,7 +95,7 @@ extern bool map_add(map_t h, const void *k, const void *v) __attribute__((nonnul
 
 /*!
  * \brief         Get a value from the map
- * \param[in]  h  A pointer to the map
+ * \param[in]  h  Map handle
  * \param[in]  k  The key of the value to get
  * \return        The value for the given key
  *
@@ -103,67 +105,65 @@ extern const void *map_get(map_t h, const void *k) __attribute__((nonnull(1, 2))
 
 /*!
  * \brief         Check if the map contains the key
- * \param[in]  h  A pointer to the map
+ * \param[in]  h  Map handle
  * \param[in]  k  The key to check for
  * \return        True if the map contains a value for the given key,
  *                false otherwise
  *
- * Check whether the map contains the key. If a comparator was set
- * during initialisation then that is used instead of just comparing the
- * pointer.
+ * Return whether map_get() returns a non-NULL value for k. Consequently,
+ * a key mapped to NULL is indistinguishable from an absent key through
+ * this function.
  */
 extern bool map_contains(map_t h, const void *k) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Remove a key/value from the map
- * \param[in]  h  A pointer to the map
+ * \param[in]  h  Map handle
  * \param[in]  k  The key of the entry to remove
  * \return        The value that was removed, or NULL
  *
- * Remove the given key/value from the map. The value is returned to
- * allow the user to free it if necessary. If the ey was not found in
- * the map then the function returns NULL. If a comparator was set
- * during initialisation then that is used instead of just comparing the
- * pointer.
+ * Remove the given key/value from the map. Returns NULL if the key was
+ * not found. The key is freed when the map owns entries; the returned
+ * value is not freed and is transferred to the caller. Key comparison
+ * follows the comparator configured for the map.
  */
 extern const void *map_remove(map_t h, const void *k) __attribute__((nonnull(1, 2)));
 
 /*!
  * \brief         Set the map up for iterating
- * \param[in]  h  A pointer to the map
+ * \param[in]  h  Map handle
  * \return        An iterator for the map
  *
- * Set the map up to be iterated over. The iterator should be freed
- * after use.
+ * Create an iterator over map entries. Free the iterator with free()
+ * after use; entries returned by it are borrowed from the map.
  */
 extern iter_t map_iterator(map_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Get the next entryin the map
- * \param[in]  h  A pointer to the iterator
+ * \param[in]  h  Map iterator
  * \return        The next entry in the map
  *
- * Allow iterating through the map, this returns pair of pointers for
- * the next key/value entry.
+ * Return the next key/value pair, or NULL when iteration is exhausted.
+ * The pair is owned by the map and must not be modified or freed.
  */
 extern const pair_object_s *map_get_next(iter_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Indicates if there is another item in the map
- * \param[in]  h  A pointer to the iterator
+ * \param[in]  h  Map iterator
  * \return        Returns true if there is another entry
  *
- * Allow iterating through the map, this returns whether there is
- * another entry.
+ * Return whether the iterator has another entry.
  */
 extern bool map_has_next(iter_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Call the given function for each item in the map
- * \param[in]  h  A pointer to the map
+ * \param[in]  h  Map handle
  * \param[in]  f  The function to call
  *
- * Iterate through the map, calling the given function for each item.
+ * Call f once for each key/value pair in the map.
  */
 extern void map_for_each(map_t h, void f(const void *, const void *)) __attribute__((nonnull(1, 2)));
 
@@ -172,7 +172,9 @@ extern void map_for_each(map_t h, void f(const void *, const void *)) __attribut
  * \param[in]  h  A pointer to the map
  * \param[in]  c  The comparator to add
  *
- * Add a comparator to the map so that items can be compared.
+ * Set the comparator used to compare map-entry keys. This does not
+ * reorder entries already present; configure the comparator in map_init
+ * when sorted insertion or comparator-based lookup is required.
  */
 extern void map_add_comparator(map_t h, int c(const void *, const void *)) __attribute__((nonnull(1, 2)));
 

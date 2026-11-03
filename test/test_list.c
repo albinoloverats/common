@@ -5,6 +5,9 @@ static void *same_list_item(const void *item)
 	return (void *)item;
 }
 
+/*!
+ * \brief Verifies sorted insertion and rejection of comparator-equal items.
+ */
 static void test_list_sorted_add_and_unique_items(void **state)
 {
 	(void)state;
@@ -27,6 +30,9 @@ static void test_list_sorted_add_and_unique_items(void **state)
 }
 
 
+/*!
+ * \brief Verifies the built-in integer and decimal comparators sort correctly.
+ */
 static void test_builtin_list_comparators(void **state)
 {
 	(void)state;
@@ -50,6 +56,9 @@ static void test_builtin_list_comparators(void **state)
 }
 
 
+/*!
+ * \brief Verifies list copying, sorting, removal, and iteration.
+ */
 static void test_list_copy_sort_and_remove_item(void **state)
 {
 	(void)state;
@@ -82,6 +91,9 @@ static void test_list_copy_sort_and_remove_item(void **state)
 }
 
 
+/*!
+ * \brief Verifies indexed insertion, removal, and iterator traversal.
+ */
 static void test_list_insert_remove_and_iteration(void **state)
 {
 	(void)state;
@@ -109,6 +121,9 @@ static void test_list_insert_remove_and_iteration(void **state)
 }
 
 
+/*!
+ * \brief Verifies appending and removal after deleting the list tail.
+ */
 static void test_list_append_after_removing_tail(void **state)
 {
 	(void)state;
@@ -125,6 +140,9 @@ static void test_list_append_after_removing_tail(void **state)
 	list_deinit(list);
 }
 
+/*!
+ * \brief Verifies empty and NULL list behavior plus bulk operations.
+ */
 static void test_list_empty_and_bulk_operations(void **state)
 {
 	(void)state;

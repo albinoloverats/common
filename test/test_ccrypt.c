@@ -7,6 +7,9 @@ static void assert_sorted_names(list_t names)
 		assert_true(strcmp(list_get(names, i - 1), list_get(names, i)) < 0);
 }
 
+/*!
+ * \brief Verifies crypto name mappings, supported modes, and cached name lists.
+ */
 static void test_crypto_name_mappings_and_modes(void **state)
 {
 	(void)state;

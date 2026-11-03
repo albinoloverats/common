@@ -1,5 +1,8 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies formatted output, hexadecimal dumps, and throughput calculation.
+ */
 static void test_cli_output_and_speed_calculation(void **state)
 {
 	(void)state;
@@ -47,6 +50,9 @@ static void test_cli_output_and_speed_calculation(void **state)
 }
 
 
+/*!
+ * \brief Verifies stdout/stderr helpers and ANSI escape removal.
+ */
 static void test_cli_stream_helpers_and_ansi_stripping(void **state)
 {
 	(void)state;
@@ -54,6 +60,7 @@ static void test_cli_stream_helpers_and_ansi_stripping(void **state)
 	assert_non_null(output);
 	int saved = dup(STDOUT_FILENO);
 	assert_true(saved >= 0);
+	/* Redirect the real standard stream to verify both output and ANSI stripping. */
 	fflush(stdout);
 	assert_int_equal(dup2(fileno(output), STDOUT_FILENO), STDOUT_FILENO);
 	int written = cli_printf("\x1b[31mred\x1b[0m\n");
@@ -89,6 +96,9 @@ static void test_cli_stream_helpers_and_ansi_stripping(void **state)
 	fclose(output);
 }
 
+/*!
+ * \brief Verifies hexadecimal output wrappers write to the matching standard stream.
+ */
 static void test_cli_hex_stdout_and_stderr_wrappers(void **state)
 {
 	(void)state;

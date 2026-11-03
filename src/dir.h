@@ -26,11 +26,9 @@
  * \author  albinoloverats ~ Software Development
  * \date    2009-2025
  * \brief   Directory parsing functions
- * \note    These functions all return newly allocated strings
  *
- * Collection of functions to parse directory hierarchies and extract the
- * names of each leaf along the tree, from the root all the way to the file
- * name and password
+ * String-returning path helpers allocate their results. Directory-tree
+ * enumeration returns a list of allocated path strings.
  */
 
 #include <inttypes.h>
@@ -46,8 +44,8 @@
 	#define DIR_SEPARATOR_CHAR '\\'
 #endif
 
-#define path_equals(X, Y)       (X && Y && !strcmp(X, Y))
-#define path_starts_with(X, Y)  (X && Y && !strncmp(X, Y, strlen(X)))
+#define path_equals(X, Y)       (X && Y && !strcmp(X, Y)) /*!< True when both non-NULL paths are identical */
+#define path_starts_with(X, Y)  (X && Y && !strncmp(X, Y, strlen(X))) /*!< True when Y begins with non-NULL prefix X */
 
 #define DIR_GET_NAME_ARGS_COUNT(...) DIR_GET_NAME_ARGS_COUNT2(__VA_ARGS__, 2, 1)
 #define DIR_GET_NAME_ARGS_COUNT2(_1, _2, _, ...) _
@@ -77,69 +75,76 @@
 	free(eps)
 
 
+/*!
+ * \brief Bit flags selecting filesystem entry types
+ */
 typedef enum
 {
-	DIR_NONE    = 0x0000,
+	DIR_NONE    = 0x0000, /*!< Select no entry types */
 
-	DIR_FOLDER  = 0x0001,
-	DIR_FILE    = 0x0002,
-	DIR_LINK    = 0x0004,
-	DIR_BLOCK   = 0x0008,
-	DIR_CHAR    = 0x0010,
-	DIR_SOCKET  = 0x0020,
-	DIR_PIPE    = 0x0040,
+	DIR_FOLDER  = 0x0001, /*!< Directories */
+	DIR_FILE    = 0x0002, /*!< Regular files */
+	DIR_LINK    = 0x0004, /*!< Symbolic links */
+	DIR_BLOCK   = 0x0008, /*!< Block devices */
+	DIR_CHAR    = 0x0010, /*!< Character devices */
+	DIR_SOCKET  = 0x0020, /*!< Sockets */
+	DIR_PIPE    = 0x0040, /*!< FIFOs */
 
-	DIR_ALL     = 0x00FF
+	DIR_ALL     = 0x00FF  /*!< All supported entry types */
 }
 dir_type_e;
 
 /*!
  * \brief         Extract the name part of the /path/file:password
- * \param[in]  p  Path: /path/file.extension
- * \param[in]  e  Extension to ommit
+ * \param[in]  path  Path containing the entry name
+ * \param[in]  sep   Delimiter whose suffix should be omitted; '\0' keeps the full basename
  * \return        Newly allocated string: name
  *
- * Working backwards, cut off the password and leading directories
+ * Return the basename, stopping at the last occurrence of sep in the
+ * input path when sep is nonzero.
  */
-extern char *dir_get_name_aux(const char * const p, const char e) __attribute__((nonnull(1)));
+extern char *dir_get_name_aux(const char * const path, const char sep) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Determine how deep down the hierarchy path goes
- * \param[in]  p  Path: /path/file:password
- * \return        Number of subdirectories passed through
+ * \param[in]  path  Path to count separators in
+ * \return        Number of directory separator characters in path
  *
- * Count the number of parent directories the given path includes
+ * Count directory separators, including a leading separator and any
+ * separator before a filename.
  */
-extern uint16_t dir_get_deep(const char * const p) __attribute__((nonnull(1)));
+extern uint16_t dir_get_deep(const char * const path) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Extract the numbered part of the /path/file:password
- * \param[in]  p  Path: /path/file:password
- * \param[in]  x  Element from path to extract
- * \return        Newly allocated string: directory name
+ * \param[in]  path   Path to split
+ * \param[in]  index  Zero for the root separator, then one-based path components
+ * \return            Newly allocated path component
  *
- * Work down the given path and return a copy of the directory name at the
- * given index in the hierarchy
+ * Return the indexed component of the path. Index zero returns the root
+ * separator; subsequent indexes return components from left to right.
  */
-extern char *dir_get_part(const char * const p, const uint16_t x) __attribute__((nonnull(1)));
+extern char *dir_get_part(const char * const path, const uint16_t index) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Extract the password part of the /path/file:password
- * \param[in]  p  Path: /path/file:password
- * \return        Newly allocated string: password
+ * \param[in]  path  Path that may include a colon-delimited password
+ * \return            Newly allocated password suffix, or an empty string
  *
- * Find and return a copy of the password part of the path
+ * Return the text following the final colon, or an empty string if no
+ * colon is present.
  */
-extern char *dir_get_pass(const char * const restrict p) __attribute__((nonnull(1)));
+extern char *dir_get_pass(const char * const restrict path) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Extract only the path part of the /path/file:password
- * \param[in]  p  Path: /path/file:password
- * \return        Newly allocated string: path
+ * \param[in]  path  Path whose final component should be removed
+ * \return            Newly allocated parent path
  *
- * Take the given path, copy it, and cut off the file name and password
+ * Return the parent directory path, the root separator for a root-level
+ * absolute path, or an empty string when the input has no separator.
  */
-extern char *dir_get_path(const char * const restrict p) __attribute__((nonnull(1)));
+extern char *dir_get_path(const char * const restrict path) __attribute__((nonnull(1)));
 
 
 /*!
@@ -147,18 +152,22 @@ extern char *dir_get_path(const char * const restrict p) __attribute__((nonnull(
  * \param[in]  p  Directory path to create
  * \param[in]  m  New directories mode
  *
- * Creates a new directory, recursively, for the given path.
+ * Attempts to create the requested directory and any missing parents.
+ * This function does not report creation errors.
  */
 extern void dir_mk_recursive(const char *p, mode_t m) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Get all entries in a directory tree
- * \param[in]  p  Directory path to scan
- * \param[in]  m  The type of files to find
+ * \param[in]  path  Directory tree to scan
+ * \param[in]  types Bitmask of entry types to include
+ * \return           List of newly allocated path strings; caller frees
+ *                   the strings and destroys the list
  *
- * Return all found files (of a paticular type) in a given directory
- * tree.
+ * Recursively scan the tree and return paths whose entry types match
+ * types. Directories are traversed regardless of whether DIR_FOLDER is
+ * selected.
  */
-extern list_t dir_get_tree(const char *p, dir_type_e m) __attribute__((nonnull(1)));
+extern list_t dir_get_tree(const char *path, dir_type_e types) __attribute__((nonnull(1)));
 
 #endif /* _DIR_H_ */

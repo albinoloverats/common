@@ -35,43 +35,68 @@
 
 #include "non-gnu.h"
 
+/*!
+ * \brief Pair of boolean values
+ */
 typedef struct
 {
-	bool b1;
-	bool b2;
+	bool b1; /*!< First value */
+	bool b2; /*!< Second value */
 }
 pair_boolean_s;
 
+/*!
+ * \brief Pair of signed 64-bit integer values
+ */
 typedef struct
 {
-	int64_t i1;
-	int64_t i2;
+	int64_t i1; /*!< First value */
+	int64_t i2; /*!< Second value */
 }
 pair_integer_s;
 
+/*!
+ * \brief Pair of long double values
+ */
 typedef struct
 {
 	//__float128 d1;
 	//__float128 d2;
-	long double d1;
-	long double d2;
+	long double d1; /*!< First value */
+	long double d2; /*!< Second value */
 }
 pair_decimal_s;
 
+/*!
+ * \brief Pair of string pointers
+ *
+ * Ownership of the pointed-to strings is determined by the API storing
+ * or returning this pair.
+ */
 typedef struct
 {
-	char *s1;
-	char *s2;
+	char *s1; /*!< First string */
+	char *s2; /*!< Second string */
 }
 pair_string_s;
 
+/*!
+ * \brief Pair of generic object pointers
+ *
+ * The pair does not manage the pointed-to objects' lifetime.
+ */
 typedef struct
 {
-	void *p1;
-	void *p2;
+	void *p1; /*!< First object pointer */
+	void *p2; /*!< Second object pointer */
 }
 pair_object_s;
 
+/*!
+ * \brief Union of the supported pair representations
+ *
+ * Select the member matching the pair's value type.
+ */
 typedef union
 {
 	pair_boolean_s boolean;

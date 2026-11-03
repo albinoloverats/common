@@ -117,24 +117,24 @@
 
 #define PERCENT 100.0f /*!< Floating point 100% */
 
-#define THOUSAND                              1000LLU /*!< Integer value for 1 thousand */
-#define MILLION                            1000000LLU /*!< Integer value for 1 million (ideal for timing related things) */
-#define THOUSAND_MILLION                1000000000LLU /*!< Integer value for 1,000 million */
-#define BILLION                      1000000000000LLU /*!< Integer value for 1 billion (ideal for timing in nanoseconds) */
-#define THOUSAND_BILLION          1000000000000000LLU
-#define TRILLION               1000000000000000000LLU
+#define THOUSAND                              1000LLU /*!< 10^3 */
+#define MILLION                            1000000LLU /*!< 10^6 */
+#define THOUSAND_MILLION                1000000000LLU /*!< 10^9 */
+#define BILLION                      1000000000000LLU /*!< 10^12 */
+#define THOUSAND_BILLION          1000000000000000LLU /*!< 10^15 */
+#define TRILLION               1000000000000000000LLU /*!< 10^18 */
 //#define THOUSAND_TRILLION   1000000000000000000000LLU // Can't go above 18446744073709551615
 //#define QUADRILLION      1000000000000000000000000LLU
 
-#define  KILOBYTE                             1024LLU /*!< Bytes in a kilobyte */
-#define  MEGABYTE                          1048576LLU /*!< Bytes in a megabyte */
-#define  GIGABYTE                       1073741824LLU /*!< Bytes in a gigabyte */
-#define  TERABYTE                    1099511627776LLU /*!< Bytes in a terabyte */
-#define  PETABYTE                 1125899906842624LLU
-#define   EXABYTE              1152921504606846976LLU
+#define  KILOBYTE                             1024LLU /*!< Bytes in 2^10 */
+#define  MEGABYTE                          1048576LLU /*!< Bytes in 2^20 */
+#define  GIGABYTE                       1073741824LLU /*!< Bytes in 2^30 */
+#define  TERABYTE                    1099511627776LLU /*!< Bytes in 2^40 */
+#define  PETABYTE                 1125899906842624LLU /*!< Bytes in 2^50 */
+#define   EXABYTE              1152921504606846976LLU /*!< Bytes in 2^60 */
 //#define ZETTABYTE           1180591620717411303424LLU
 //#define YOTTABYTE        1208925819614629174706176LLU
 
-typedef unsigned char byte_t; /*!< A byte is just 8 bits, no signedness or an other fancy stuff ;-) */
+typedef unsigned char byte_t; /*!< Unsigned byte-sized storage type */
 
 #endif /* _COMMON_H_ */

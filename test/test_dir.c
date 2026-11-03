@@ -1,5 +1,8 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies basename, password, parent, depth, and component helpers.
+ */
 static void test_directory_path_helpers(void **state)
 {
 	(void)state;
@@ -43,6 +46,9 @@ static void test_directory_path_helpers(void **state)
 }
 
 
+/*!
+ * \brief Verifies recursive directory creation and entry-type tree filtering.
+ */
 static void test_directory_tree_and_recursive_mkdir(void **state)
 {
 	(void)state;
@@ -77,6 +83,7 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	assert_int_equal(bind(socket_fd, (struct sockaddr *)&address, sizeof address), 0);
 	assert_int_equal(close(socket_fd), 0);
 
+	/* Traversal always descends into directories, but returns only selected types. */
 	list_t files = dir_get_tree(root, DIR_FILE);
 	list_t folders = dir_get_tree(root, DIR_FOLDER);
 	list_t links = dir_get_tree(root, DIR_LINK);

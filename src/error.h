@@ -37,19 +37,36 @@
 
 #define BACKTRACE_BUFFER_LIMIT 1024 /*!< Maximum number of elements in the backtrace buffer */
 
+/*!
+ * \brief Install handlers for fatal signals
+ *
+ * Installs the application's fatal-signal handler once.
+ */
 extern void error_init(void);
 
 /*!
  * \brief         Display fatal error to user and quit application
  * \param[in]  s  String format, followed by optional additional variables
  *
- * Display the given error message and bail out - mostly for “out of memory”
- * errors which cannot be recovered from.
+ * Print the formatted message and terminate the process using the errno
+ * value saved on entry as the exit status (or success when errno is zero).
  */
 extern void die(const char * const restrict s, ...) __attribute__((noreturn, nonnull(1), format(printf, 1, 2)));
 
 #ifdef BUILD_GUI
+/*!
+ * \brief         Initialize GUI error reporting
+ * \param[in]  w  Error dialog window
+ * \param[in]  m  Label used to display the error message
+ */
 extern void error_gui_init(GtkWidget *w, GtkWidget *m) __attribute__((nonnull(1), nonnull(2)));
+
+/*!
+ * \brief         Hide the configured error dialog
+ * \param[in]  w  Signal source (unused)
+ * \param[in]  d  Signal data (unused)
+ * \return        TRUE, indicating the close event was handled
+ */
 G_MODULE_EXPORT gboolean error_gui_close(void *, void *);
 #endif
 

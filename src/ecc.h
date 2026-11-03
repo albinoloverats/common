@@ -35,11 +35,30 @@
  * 249 data bytes and 6 redundancy bytes.
  */
 
-#define ECC_CAPACITY     255
-#define ECC_PAYLOAD      249
-#define ECC_OFFSET      (ECC_CAPACITY - ECC_PAYLOAD)
+#define ECC_CAPACITY     255 /*!< Encoded Reed-Solomon codeword length, in bytes */
+#define ECC_PAYLOAD      249 /*!< Message payload length, in bytes */
+#define ECC_OFFSET      (ECC_CAPACITY - ECC_PAYLOAD) /*!< Redundancy bytes in each codeword */
 
+/*!
+ * \brief         Encode one payload into a Reed-Solomon codeword
+ * \param[in]  m  Input payload of ECC_PAYLOAD bytes
+ * \param[out] c  Output codeword buffer of ECC_CAPACITY bytes
+ *
+ * Adds ECC_OFFSET redundancy bytes to the payload.
+ */
 extern void ecc_encode(uint8_t m[ECC_PAYLOAD], uint8_t c[ECC_CAPACITY]);
+
+/*!
+ * \brief         Decode and attempt to correct one Reed-Solomon codeword
+ * \param[in,out] code    Codeword buffer; the decoder reverses it in place
+ * \param[out]    mesg    Output buffer of ECC_CAPACITY bytes; the first
+ *                        ECC_PAYLOAD bytes contain the recovered message
+ * \param[out]    errcode 0 for no detected errors, 1-3 for corrected
+ *                        errors, or 4 when correction is unsuccessful
+ *
+ * When correction is unsuccessful, mesg still contains the best-effort
+ * message extracted before error correction.
+ */
 extern void ecc_decode(uint8_t code[ECC_CAPACITY], uint8_t mesg[ECC_CAPACITY], int *errcode);
 
 #endif /* _ECC_H_ */

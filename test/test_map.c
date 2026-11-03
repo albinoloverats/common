@@ -1,5 +1,8 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies map insertion, lookup, duplicate rejection, and removal.
+ */
 static void test_map_add_lookup_remove(void **state)
 {
 	(void)state;
@@ -23,6 +26,9 @@ static void test_map_add_lookup_remove(void **state)
 }
 
 
+/*!
+ * \brief Verifies adding an existing key replaces its value when enabled.
+ */
 static void test_map_overwrite_existing_value(void **state)
 {
 	(void)state;
@@ -36,6 +42,9 @@ static void test_map_overwrite_existing_value(void **state)
 }
 
 
+/*!
+ * \brief Verifies owned key/value replacement, iteration, and removal.
+ */
 static void test_map_iteration_and_owned_overwrite(void **state)
 {
 	(void)state;

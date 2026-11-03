@@ -35,9 +35,9 @@
 
 #include "common.h"
 
-typedef void * list_t; /*!< The user visible LIST type */
+typedef void * list_t; /*!< Opaque handle for a list */
 
-typedef void * iter_t;
+typedef void * iter_t; /*!< Opaque handle for a list or map iterator */
 
 #if 0
 #define LIST_INIT_COUNT(...) LIST_INIT_COUNT2(__VA_ARGS__, 3, 2, 1) /*!< Function overloading argument count (part 1) */
@@ -117,10 +117,9 @@ extern list_t list_init(int c(const void *, const void *), bool d, bool s) __att
  * \param[in]  h  A pointer to a linked list to destroy
  * \param[in]  f  A function to free data items within the list
  *
- * Destroy a previously created linked list when it is no longer needed.
- * Free the memory and sets h to NULL so all subsequent calls to LIST
- * functions will not result in undefined behaviour. If called with a
- * NULL function f then data items will not be freed.
+ * Destroy a previously created list and its internal nodes. The handle
+ * is passed by value, so the caller's variable is not cleared. If f is
+ * NULL, the pointed-to data items are not freed.
  */
 extern void list_deinit_aux(list_t h, void f(void *));
 
@@ -130,8 +129,9 @@ extern void list_deinit_aux(list_t h, void f(void *));
  * \param[in]  c  A function to copy the item data
  * \return        A new list
  *
- * Create a new list that is a copy of an existing list. Creating a
- * copy of each item too, hence the function c.
+ * Create a new list with the same comparator, duplicate policy, and
+ * ordering policy as the source. c is called for each item to produce
+ * the copied item; the caller owns the returned list and copied items.
  */
 extern list_t list_copy(list_t h, void *c(const void *)) __attribute__((nonnull(1, 2)));
 
@@ -140,8 +140,7 @@ extern list_t list_copy(list_t h, void *c(const void *)) __attribute__((nonnull(
  * \param[in]  h  A pointer to the list
  * \return        The number of items in the list
  *
- * Get the number of item in the list. This is a constant time lookup as
- * the number of items is kept as metadata within the list_t.
+ * Return the number of items in the list in constant time.
  */
 extern size_t list_size(list_t h) __attribute__((nonnull(1)));
 
@@ -151,11 +150,11 @@ extern size_t list_size(list_t h) __attribute__((nonnull(1)));
  * \brief         Add an item to the end of the list
  * \param[in]  h  A pointer to the list
  * \param[in]  d  The item to add to the list
- * \reutrn        Whether the item was added
+ * \return        Whether the item was added
  *
- * Add a new item to the end of the list. If the list is sorted then
- * this just calls list_add(). If duplicates are not allowed, this will
- * return false if the item already exists and was not re-added.
+ * Append an item, unless the list is sorted, in which case it is
+ * inserted according to the comparator. Returns false for a duplicate
+ * when duplicates are disabled. The list stores the pointer, not a copy.
  */
 extern bool list_append(list_t h, const void *d) __attribute__((nonnull(1, 2)));
 
@@ -164,12 +163,11 @@ extern bool list_append(list_t h, const void *d) __attribute__((nonnull(1, 2)));
  * \param[in]  h  A pointer to the list
  * \param[in]  i  The index where to insert the item
  * \param[in]  d  The item to be inserted
- * \reutrn        Whether the item was added
+ * \return        Whether the item was added
  *
- * Insert an item into the middle of the list, at the given index. If
- * this list is sorted then this just call list_add(). If duplicates are
- * not allowed, this will return false if the item already exists and
- * was not re-added.
+ * Insert before index i, or append when i is at or beyond the list
+ * length. Sorted lists ignore i and insert by comparator. Returns false
+ * for a duplicate when duplicates are disabled.
  */
 extern bool list_insert(list_t h, size_t i, const void *d) __attribute__((nonnull(1, 3)));
 
@@ -177,12 +175,11 @@ extern bool list_insert(list_t h, size_t i, const void *d) __attribute__((nonnul
  * \brief         Add an item to the sorted list
  * \param[in]  h  A pointer to the list
  * \param[in]  d  The item to add to the list
- * \reutrn        Whether the item was added
+ * \return        Whether the item was added
  *
- * Add a new item to the list in sorted order. If the list is not sorted
- * then this just calls list_append(). If duplicates are not allowed,
- * this will return false if the item already exists and was not
- * re-added.
+ * Insert by comparator when sorted; otherwise append. Returns false for
+ * a duplicate when duplicates are disabled. The list stores the pointer,
+ * not a copy.
  */
 extern bool list_add(list_t h, const void *d) __attribute__((nonnull(1, 2)));
 
@@ -191,10 +188,12 @@ extern bool list_add(list_t h, const void *d) __attribute__((nonnull(1, 2)));
  * \param[in]  h  A pointer to the list
  * \param[in]  o  The other list to add from
  * \param[in]  c  Function to copy item data
- * \return        The number of items copied
+ * \return        Number of items added, or -1 if either list handle is NULL
  *
- * Copy all items from one list to another, existing list. Creating a
- * copy of the data using c.
+ * Call c for each source item and append the returned pointer to the
+ * destination. The return value counts successful additions; rejected
+ * duplicates are not counted. The caller manages ownership of copied
+ * items that were not added.
  */
 extern int list_add_all(list_t h, list_t o, void *c(const void *)) __attribute__((nonnull(1, 2, 3)));
 
@@ -218,11 +217,9 @@ extern const void *list_contains(list_t h, const void *d) __attribute__((nonnull
  * \param[in]  d  The item to remove
  * \return        The item that was removed, or NULL
  *
- * Remove the given item from the list. The item is returned to allow
- * the user to free it if necessary. If the item is not in the list then
- * the function returns NULL. If a comparator was set during
- * initialisation then that is used instead of just comparing the
- * pointer.
+ * Remove every matching item (pointer equality or comparator equality)
+ * and return the last removed data pointer, or NULL if none matched.
+ * Removed data is not freed.
  */
 extern const void *list_remove_item(list_t h, const void *d) __attribute__((nonnull(1, 2)));
 
@@ -230,7 +227,7 @@ extern const void *list_remove_item(list_t h, const void *d) __attribute__((nonn
  * \brief         Remove an item from within the list
  * \param[in]  h  A pointer to the list
  * \param[in]  i  The index of the item to remove
- * \return        The item that was removed
+ * \return        The removed item, or NULL if i is out of range
  *
  * Remove the item at the given index from the list. The item is
  * returned to allow the user to free it if necessary.
@@ -243,7 +240,9 @@ extern const void *list_remove_index(list_t h, size_t i) __attribute__((nonnull(
  * \param[in]  i  The index of the item to get
  * \return        The item at the give index
  *
- * Retrieve the item at the given index within the list.
+ * Return the item at index i, or NULL if i is out of range. The item
+ * remains owned by the caller/list according to its existing ownership
+ * convention and is not copied.
  */
 extern const void *list_get(list_t h, size_t i) __attribute__((nonnull(1)));
 
@@ -252,8 +251,8 @@ extern const void *list_get(list_t h, size_t i) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the list
  * \return        An iterator for the list
  *
- * Set the list up to be iterated over. The iterator should be freed
- * after use.
+ * Create an iterator over the current list nodes. Free the iterator
+ * with free() after use; returned item pointers are not copied.
  */
 extern iter_t list_iterator(list_t h) __attribute__((nonnull(1)));
 
@@ -262,7 +261,7 @@ extern iter_t list_iterator(list_t h) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the iterator
  * \return        The next item in the list
  *
- * Allow iterating through the list, this returns the next item.
+ * Return the next item and advance the iterator, or NULL when exhausted.
  */
 extern const void *list_get_next(iter_t h) __attribute__((nonnull(1)));
 
@@ -271,8 +270,7 @@ extern const void *list_get_next(iter_t h) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the iterator
  * \return        Returns true if there is another item
  *
- * Allow iterating through the list, this returns whether there is
- * another item.
+ * Return whether the iterator has another item.
  */
 extern bool list_has_next(iter_t h) __attribute__((nonnull(1)));
 
@@ -289,10 +287,8 @@ extern void list_for_each(list_t h, void f(const void *)) __attribute__((nonnull
  * \brief         Sort the given list
  * \param[in]  h  A pointer to the list
  *
- * The list will be sorted, using the comparison function given during
- * list_init() or list_add_comparator(). If there isn't one, nothing
- * will happen. After this call the list will continue to be sorted and
- * items will be inserted where appilcable
+ * Sort the list using its comparator and keep it sorted for subsequent
+ * insertions. If no comparator is configured, the list is unchanged.
  */
 extern void list_sort(list_t h) __attribute__((nonnull(1)));
 
@@ -303,12 +299,26 @@ extern void list_sort(list_t h) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the list
  * \param[in]  c  The comparator to add
  *
- * Add a comparator to the list so that items can be compared.
+ * Set the comparator used for equality checks and sorting. This does
+ * not immediately reorder items or enable sorted insertion on a list
+ * that was initialized as unsorted.
  */
 extern void list_add_comparator(list_t h, int c(const void *, const void *)) __attribute__((nonnull(1, 2)));
 
+/*!
+ * \brief         Compare two signed 64-bit integers
+ * \param[in]  a  Pointer to the first int64_t value
+ * \param[in]  b  Pointer to the second int64_t value
+ * \return        Negative, zero, or positive according to their ordering
+ */
 extern int list_compare_integer(const void *a, const void *b);
 
+/*!
+ * \brief         Compare two long double values
+ * \param[in]  a  Pointer to the first long double value
+ * \param[in]  b  Pointer to the second long double value
+ * \return        Negative, zero, or positive according to their ordering
+ */
 extern int list_compare_decimal(const void *a, const void *b);
 
 #endif

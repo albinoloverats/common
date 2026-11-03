@@ -1,5 +1,8 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies build metadata and asynchronous update-version reporting.
+ */
 static void test_version_build_information(void **state)
 {
 	(void)state;
@@ -19,6 +22,7 @@ static void test_version_build_information(void **state)
 	snprintf(url, sizeof url, "file://%s", path);
 	version_new_available = false;
 	version_is_checking = false;
+	/* The local file URL keeps the asynchronous update check independent of the network. */
 	version_check_for_update("1.0", url, NULL);
 	version_check_for_update("ignored", url, NULL);
 	for (int i = 0; i < 500 && version_is_checking; i++)

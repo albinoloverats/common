@@ -88,6 +88,9 @@ int __wrap_vasprintf(char **strp, const char *format, va_list args)
 	return __real_vasprintf(strp, format, args);
 }
 
+/*!
+ * \brief Verifies allocation, duplication, formatting, and resize helpers.
+ */
 static void test_memory_helpers(void **state)
 {
 	(void)state;
@@ -121,9 +124,13 @@ static void test_memory_helpers(void **state)
 	free(resized);
 }
 
+/*!
+ * \brief Verifies allocation wrappers exit with ENOMEM when allocation fails.
+ */
 static void test_memory_wrappers_exit_on_allocation_failure(void **state)
 {
 	(void)state;
+	/* Each failure runs in a child because the wrappers terminate through die(). */
 	for (allocator_failure_e failure = FAIL_MALLOC; failure <= FAIL_VASPRINTF_FOD; failure++)
 	{
 		pid_t child = fork();

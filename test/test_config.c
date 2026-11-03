@@ -1,8 +1,12 @@
 #include "test_support.h"
 
+/*!
+ * \brief Verifies parsing fails when configuration has not been initialized.
+ */
 static void test_config_requires_initialization(void **state)
 {
 	(void)state;
+	/* Run the expected parser error in a child so it cannot terminate the suite. */
 	pid_t child = fork();
 	assert_true(child >= 0);
 	if (!child)
@@ -20,6 +24,9 @@ static void test_config_requires_initialization(void **state)
 }
 
 
+/*!
+ * \brief Verifies option comparison and metadata cleanup helpers.
+ */
 static void test_config_metadata_helpers(void **state)
 {
 	(void)state;
@@ -45,6 +52,9 @@ static void test_config_metadata_helpers(void **state)
 }
 
 
+/*!
+ * \brief Verifies parsing scalar, list, optional, and positional CLI values.
+ */
 static void test_config_command_line_values(void **state)
 {
 	(void)state;
@@ -84,6 +94,7 @@ static void test_config_command_line_values(void **state)
 	assert_true(list_append(extra, &extra_integer));
 	assert_true(list_append(extra, &extra_decimal));
 	assert_true(list_append(extra, &positional));
+	/* Repeatable options append to their lists; an optional value may use its default. */
 	char *argv[] =
 	{
 		"common-test", "--enabled", "--count=2K", "-r1.5", "--name=alice",
@@ -128,9 +139,13 @@ static void test_config_command_line_values(void **state)
 }
 
 
+/*!
+ * \brief Verifies help, version, licence, and required-option exit paths.
+ */
 static void test_config_display_actions_exit_cleanly(void **state)
 {
 	(void)state;
+	/* Help/version/licence and missing-required-option paths intentionally exit. */
 	const char *actions[] = { "--help", "--version", "--licence" };
 	for (size_t i = 0; i < sizeof actions / sizeof actions[0]; i++)
 	{
@@ -199,9 +214,13 @@ static void test_config_display_actions_exit_cleanly(void **state)
 }
 
 
+/*!
+ * \brief Verifies configuration-file parsing and persistent value updates.
+ */
 static void test_config_file_values_and_update(void **state)
 {
 	(void)state;
+	/* A private working directory keeps config parsing and updates isolated. */
 	char root[] = "/tmp/common-config-XXXXXX";
 	assert_non_null(mkdtemp(root));
 	char cwd[PATH_MAX];
@@ -263,9 +282,13 @@ static void test_config_file_values_and_update(void **state)
 }
 
 
+/*!
+ * \brief Verifies configuration-file parsing of scalar, pair, and list types.
+ */
 static void test_config_file_pairs_and_list_types(void **state)
 {
 	(void)state;
+	/* Exercise list values supplied as comma-separated entries and one-entry scalars. */
 	char root[] = "/tmp/common-config-types-XXXXXX";
 	assert_non_null(mkdtemp(root));
 	char cwd[PATH_MAX];

@@ -36,13 +36,13 @@
 
 #include "list.h"
 
-typedef void * tlv_t; /*<! Handle type for TLV functions */
+typedef void * tlv_t; /*!< Opaque handle for a TLV collection */
 
 /*!
  * \brief  A TLV structure
  *
- * The standard tag/length/value triple. Used to add a new TLV to the
- * array.
+ * A tag/length/value entry. The TLV collection makes a copy of the value
+ * when an entry is appended.
  */
 typedef struct
 {
@@ -63,12 +63,11 @@ extern tlv_t tlv_init(void) __attribute__((malloc));
 
 /*!
  * \brief         Destroy a TLV array
- * \param[in]  h  A pointer to a TLV array to destroy
- * \param[in]  f  Whether to free the values within the TLV
+ * \param[in]  h  TLV collection handle
  *
- * Destroy a previously created TLV array when it is no longer needed.
- * Free the memory and sets h to NULL so all subsequent calls to TLV
- * functions will not result in undefined behaviour.
+ * Destroy a previously created collection and free its entries,
+ * copied values, and any cached export buffer. The handle is passed by
+ * value and the caller's variable is not cleared.
  */
 extern void tlv_deinit(tlv_t h);
 
@@ -76,12 +75,11 @@ extern void tlv_deinit(tlv_t h);
  * \brief         Append a new TLV triple to the array
  * \param[in]  h  A pointer to the TLV
  * \param[in]  t  The TLV triple to add
- * \reutrn        True if the value was added
+ * \return        True if the entry was added
  *
- * Add a new TLV triple to the end of an existing TLV array. It takes a
- * copy of t (including the value pointer) so remember to free that
- * yourself. Duplicate tags are ignored. Will return true if the item
- * was added, false if it was a duplicate and ignored.
+ * Add an entry unless its tag already exists. The entry's value bytes
+ * are copied into collection-owned storage; the caller retains ownership
+ * of t.value.
  */
 extern bool tlv_append(tlv_t h, tlv_entry_s t) __attribute__((nonnull(1)));
 
@@ -90,7 +88,9 @@ extern bool tlv_append(tlv_t h, tlv_entry_s t) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the TLV
  * \param[in]  t  The TLV triple to remove
  *
- * Remove the given TLV triple from the TLV array.
+ * Remove the entry with t.tag and return it, or NULL if absent. The
+ * returned entry and its value are no longer owned by the collection
+ * and must be freed by the caller.
  */
 extern const tlv_entry_s *tlv_remove(tlv_t h, tlv_entry_s t) __attribute__((nonnull(1)));
 
@@ -99,7 +99,8 @@ extern const tlv_entry_s *tlv_remove(tlv_t h, tlv_entry_s t) __attribute__((nonn
  * \param[in]  h  A pointer to the TLV
  * \param[in]  t  The tag to remove
  *
- * Remove the given tag from the TLV array.
+ * Remove the entry with tag t and return it, or NULL if absent. The
+ * returned entry and its value must be freed by the caller.
  */
 extern const tlv_entry_s * tlv_remove_tag(tlv_t h, uint8_t t) __attribute__((nonnull(1)));
 
@@ -109,8 +110,8 @@ extern const tlv_entry_s * tlv_remove_tag(tlv_t h, uint8_t t) __attribute__((non
  * \param[in]  t  The tag value to look for
  * \return        The individual TLV structure
  *
- * Return the TLV structure for the given tag value. NB Do not free the
- * returned TLV pointer: bad things will happen.
+ * Return the collection-owned entry for tag t, or NULL if absent. Do
+ * not modify or free the returned entry or its value.
  */
 extern const tlv_entry_s *tlv_get(tlv_t h, uint8_t t) __attribute__((nonnull(1)));
 
@@ -138,15 +139,16 @@ extern bool tlv_has_tag(tlv_t h, uint8_t t) __attribute__((nonnull(1)));
  * \param[in]  d  The default to use if the tag doesn't exist
  * \return        The value of the tag
  *
- * Get the value for the given tag. If there are duplicates in the array
- * this will return the value of the first.
+ * Return the collection-owned value for tag t, or d if the tag is
+ * absent. The returned pointer is borrowed and must not be modified or
+ * freed. Tags are unique, so there is at most one matching entry.
  */
 extern byte_t *tlv_value_of_aux(tlv_t h, uint8_t t, uint8_t *d) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Get length for tag
  * \param[in]  h  The TLV array to check
- * \param[in]  t  The tag length to get
+ * \param[in]  t  The tag whose value length is requested
  * \return        The length for the given tag
  *
  * Retrieve the length for the TLV entry with the given tag value.
@@ -163,12 +165,13 @@ extern uint16_t tlv_length_of(tlv_t ptr, uint8_t t) __attribute__((nonnull(1)));
 /*!
  * \brief         Export the TLV array
  * \param[in]  h  The TLV array to export
- * \param[in]  e  (Optional) Endianness of length value
+ * \param[in]  e  Whether to encode lengths in network byte order
  * \return        The TLV array as a byte array
  *
- * Export the TLV array as an unsigned byte array. The optional boolean
- * (defaults to true) specifies wherther to use network byte order for
- * the length value.
+ * Serialize entries as tag, 16-bit length, and value bytes. The
+ * returned buffer is owned by the collection and remains valid only
+ * until the next export or collection destruction. The one-argument
+ * macro selects network byte order for lengths.
  */
 extern byte_t *tlv_export_aux(tlv_t h, bool e) __attribute__((nonnull(1)));
 
@@ -196,27 +199,26 @@ extern size_t tlv_length(tlv_t h) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the TLV
  * \return        An iterator for the TLV
  *
- * Set the TLV up to be iterated over. The iterator should be freed
- * after use.
+ * Create an iterator over collection entries. Free the iterator with
+ * free() after use; entries returned are borrowed from the collection.
  */
 extern iter_t tlv_iterator(tlv_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Get the next item in the TLV
- * \param[in]  h  A pointer to the iterator
+ * \param[in]  h  TLV iterator
  * \return        The next item in the TLV
  *
- * Allow iterating through the TLV, this returns the next item.
+ * Return the next entry and advance the iterator, or NULL when exhausted.
  */
 extern const tlv_entry_s *tlv_get_next(iter_t h) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Indicates if there is another item in the TLV
- * \param[in]  h  A pointer to the iterator
+ * \param[in]  h  TLV iterator
  * \return        Returns true if there is another item
  *
- * Allow iterating through the TLV, this returns whether there is
- * another item.
+ * Return whether the iterator has another entry.
  */
 extern bool tlv_has_next(iter_t h) __attribute__((nonnull(1)));
 
@@ -225,7 +227,8 @@ extern bool tlv_has_next(iter_t h) __attribute__((nonnull(1)));
  * \param[in]  h  A pointer to the TLV
  * \param[in]  f  The function to call
  *
- * Iterate through the TLV, calling the given function for each item.
+ * Call f once for each entry, passing its tag, length, and borrowed
+ * value pointer.
  */
 extern void tlv_for_each(tlv_t h, void f(uint8_t, uint16_t, const void *)) __attribute__((nonnull(1, 2)));
 
