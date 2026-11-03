@@ -4,16 +4,18 @@ variables:
   CC: gcc
 
 stages:
-  - test
+  - build
   - deploy
 
-coverage:
-  stage: test
+build:
+  stage: build
   before_script:
     - apt-get update && apt-get install -y git gcovr=7.2+really-1.1 libgcrypt20-dev libcurl4-gnutls-dev libcmocka-dev
     - git config --global --add safe.directory "$CI_PROJECT_DIR"
   script:
-    - make coverage-report
+    - make
+    - make test
+  coverage: '/lines: ([0-9]+\.[0-9]+)%/'
   artifacts:
     paths:
       - coverage/
@@ -26,7 +28,7 @@ coverage:
 pages:
   stage: deploy
   needs:
-    - job: coverage
+    - job: build
       artifacts: true
   script:
     - mkdir -p public

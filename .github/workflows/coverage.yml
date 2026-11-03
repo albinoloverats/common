@@ -6,32 +6,37 @@ on:
   pull_request:
     branches: [ master ]
 
+env:
+  CC: gcc
+
 permissions:
   contents: read
 
 jobs:
-  coverage:
+  build:
     runs-on: ubuntu-latest
     container:
       image: gcc:16@sha256:07280eb2e744f1b7a2d8d4a3894c089ea07266c109758afc388a634bd098e4eb
     steps:
       - uses: actions/checkout@v4
-      - name: Mark checkout as safe for container Git
+      - name: mark-checkout-safe-for-container
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-      - name: Install dependencies
+      - name: dependencies
         run: apt-get update && apt-get install -y build-essential git gcovr=7.2+really-1.1 libgcrypt20-dev libcurl4-gnutls-dev libcmocka-dev
-      - name: Run tests and generate coverage
-        run: make coverage-report
-      - name: Upload coverage report
+      - name: build
+        run: make
+      - name: unit-tests-and-coverage
+        run: make test
+      - name: coverage-report
         uses: actions/upload-artifact@v4
         with:
-          name: common-coverage-report
+          name: c-coverage-report
           path: coverage/
           if-no-files-found: error
 
   publish-pages:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    needs: coverage
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -41,17 +46,17 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download coverage report
+      - name: download-coverage
         uses: actions/download-artifact@v4
         with:
-          name: common-coverage-report
+          name: c-coverage-report
           path: coverage
-      - name: Configure GitHub Pages
+      - name: configure-pages
         uses: actions/configure-pages@v5
-      - name: Upload Pages artifact
+      - name: upload-pages-artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: coverage
-      - name: Deploy to GitHub Pages
+      - name: deploy-pages
         id: deployment
         uses: actions/deploy-pages@v4

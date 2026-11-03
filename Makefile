@@ -1,4 +1,4 @@
-.PHONY: clean distclean test coverage coverage-report
+.PHONY: clean distclean test
 
 APP       = test-app
 UNIT_TEST = test-unit
@@ -17,7 +17,7 @@ UNIT_LIBS = ${TEST_LIBS} $(shell pkg-config --libs libgcrypt libcurl) -lpthread 
 ifneq ($(shell uname -s),Darwin)
 ALLOCATOR_WRAP = -Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc -Wl,--wrap=strdup -Wl,--wrap=strndup -Wl,--wrap=vasprintf
 endif
-GCOV = $(shell gcc -print-prog-name=gcov)
+GCOV = $(shell ${CC} -print-prog-name=gcov)
 COVERAGE = coverage
 
 default: gcc
@@ -37,16 +37,15 @@ clang:
 	-@echo -e "built ‘`echo -e ${SRC} | sed 's/ /’\n      ‘/g'`’ → ‘${APP}-clang’"
 
 test:
-	 @gcc $(CFLAGS) $(CPPFLAGS) $(shell pkg-config --cflags cmocka libgcrypt libcurl) ${UNIT_SRC} ${UNIT_LIBS} ${ALLOCATOR_WRAP} -o ${UNIT_TEST}
-	 @./${UNIT_TEST}
-
-coverage:
 	 @rm -f test-unit-*.gcda test-unit-*.gcno *.gcov
-	 @gcc $(CFLAGS) $(CPPFLAGS) $(shell pkg-config --cflags cmocka libgcrypt libcurl) --coverage ${UNIT_SRC} ${UNIT_LIBS} ${ALLOCATOR_WRAP} -o ${UNIT_TEST}
+	 @rm -fvr ${COVERAGE}
+	 @${CC} $(CFLAGS) $(CPPFLAGS) $(shell pkg-config --cflags cmocka libgcrypt libcurl) --coverage ${UNIT_SRC} ${UNIT_LIBS} ${ALLOCATOR_WRAP} -o ${UNIT_TEST}
+ifneq ($(strip ${CMOCKA_XML_DIR}),)
+	 @mkdir -p "${CMOCKA_XML_DIR}"
+	 @CMOCKA_MESSAGE_OUTPUT=XML CMOCKA_XML_FILE="$(abspath ${CMOCKA_XML_DIR})/common.xml" ./${UNIT_TEST}
+else
 	 @./${UNIT_TEST}
-	 @gcov -r -b -c test-unit-error.gcno test-unit-mem.gcno test-unit-list.gcno test-unit-tlv.gcno test-unit-map.gcno test-unit-ecc.gcno test-unit-dir.gcno test-unit-cli.gcno test-unit-config.gcno test-unit-ccrypt.gcno test-unit-version.gcno
-
-coverage-report: coverage
+endif
 	 @mkdir -p ${COVERAGE}
 	 @gcovr --root . --gcov-executable "${GCOV}" --filter 'src/' --xml-pretty --output ${COVERAGE}/coverage.xml --html-details ${COVERAGE}/index.html --print-summary
 
