@@ -153,7 +153,7 @@ extern char *dir_get_path(const char * const restrict path) __attribute__((nonnu
  * \param[in]  m  New directories mode
  *
  * Attempts to create the requested directory and any missing parents.
- * This function does not report creation errors.
+ * An empty path is ignored. This function does not report creation errors.
  */
 extern void dir_mk_recursive(const char *p, mode_t m) __attribute__((nonnull(1)));
 

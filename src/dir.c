@@ -106,7 +106,12 @@ extern void dir_mk_recursive(const char *path, mode_t mode)
 #endif
 	char *opath = m_strdup(path);
 	size_t len = strlen(opath);
-	if (opath[len - 1] == '/')
+	if (!len)
+	{
+		free(opath);
+		return;
+	}
+	if (len > 1 && opath[len - 1] == '/')
 		opath[len - 1] = '\0';
 	for (char *p = opath; *p; p++)
 		if (*p == '/')
@@ -133,7 +138,11 @@ static void get_tree(list_t l, const char *path, dir_type_e type)
 	 * answer, so we've gotta stat
 	 */
 	struct stat s;
-	lstat(file, &s);
+	if (lstat(file, &s))
+	{
+		free(file);
+		continue;
+	}
 	switch (s.st_mode & S_IFMT)
 	{
 		case S_IFDIR:

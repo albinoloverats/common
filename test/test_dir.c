@@ -65,6 +65,7 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	char nested_slash[sizeof nested + 1];
 	snprintf(nested_slash, sizeof nested_slash, "%s/", nested);
 	dir_mk_recursive(nested_slash, 0700);
+	dir_mk_recursive("", 0700);
 	snprintf(file, sizeof file, "%s/a/b/item", root);
 	FILE *stream = fopen(file, "w");
 	assert_non_null(stream);

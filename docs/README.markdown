@@ -15,6 +15,10 @@ commit; some tests depend on the runner environment, including which
 device types are present under `/dev` and the length of generated
 build/runtime information used by version-formatting tests.
 
+### TODO
+
+* Add a quick-start for build dependencies, tests, and coverage reporting
+
 ### Status
 
 [![C/C++ CI](https://github.com/albinoloverats/common/actions/workflows/coverage.yml/badge.svg)](https://github.com/albinoloverats/common/actions/workflows/coverage.yml)
@@ -24,7 +28,7 @@ build/runtime information used by version-formatting tests.
 
 ## Components
 
-### CCcypt
+### CCrypt
 
 Common cryptographic functions, typically parsing of string values to
 enum constants.

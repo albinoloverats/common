@@ -14,7 +14,9 @@ CPPFLAGS += -Isrc -D__DEBUG__ -DMALLOC_CHECK_=1 -D_GNU_SOURCE -D_FILE_OFFSET_BIT
 LIBS      = -lpthread -lcurl
 TEST_LIBS = $(shell pkg-config --libs cmocka)
 UNIT_LIBS = ${TEST_LIBS} $(shell pkg-config --libs libgcrypt libcurl) -lpthread -lm
+ifneq ($(shell uname -s),Darwin)
 ALLOCATOR_WRAP = -Wl,--wrap=malloc -Wl,--wrap=calloc -Wl,--wrap=realloc -Wl,--wrap=strdup -Wl,--wrap=strndup -Wl,--wrap=vasprintf
+endif
 GCOV = $(shell gcc -print-prog-name=gcov)
 COVERAGE = coverage
 

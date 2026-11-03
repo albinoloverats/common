@@ -1,5 +1,6 @@
 #include "test_support.h"
 
+#ifndef __APPLE__
 typedef enum
 {
 	FAIL_NONE,
@@ -87,6 +88,7 @@ int __wrap_vasprintf(char **strp, const char *format, va_list args)
 	}
 	return __real_vasprintf(strp, format, args);
 }
+#endif
 
 /*!
  * \brief Verifies allocation, duplication, formatting, and resize helpers.
@@ -124,6 +126,7 @@ static void test_memory_helpers(void **state)
 	free(resized);
 }
 
+#ifndef __APPLE__
 /*!
  * \brief Verifies allocation wrappers exit with ENOMEM when allocation fails.
  */
@@ -185,11 +188,14 @@ static void test_memory_wrappers_exit_on_allocation_failure(void **state)
 		assert_int_equal(WEXITSTATUS(status), ENOMEM);
 	}
 }
+#endif
 
 static const struct CMUnitTest tests[] =
 {
 	cmocka_unit_test(test_memory_helpers),
+#ifndef __APPLE__
 	cmocka_unit_test(test_memory_wrappers_exit_on_allocation_failure)
+#endif
 };
 
 REGISTER_TESTS(mem, tests)

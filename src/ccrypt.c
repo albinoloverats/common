@@ -187,6 +187,8 @@ extern list_t list_of_modes(void)
 				list_add(l, MODES[i].name);
 			else if ((e = gcry_cipher_open(&c, GCRY_CIPHER_CHACHA20, MODES[i].id, 0)) == GPG_ERR_NO_ERROR)
 				list_add(l, MODES[i].name);
+			else
+				continue;
 			gcry_cipher_close(c);
 		}
 	}
