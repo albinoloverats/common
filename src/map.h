@@ -1,6 +1,6 @@
 /*
  * Common code for dealing with maps.
- * Copyright © 2022-2024, albinoloverats ~ Software Development
+ * Copyright © 2022-2026, albinoloverats ~ Software Development
  * email: webmaster@albinoloverats.net
  *
  * This program is free software: you can redistribute it and/or modify
