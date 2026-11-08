@@ -24,7 +24,7 @@
 /*!
  * \file    list.h
  * \author  albinoloverats ~ Software Development
- * \date    2021-2025
+ * \date    2021-2026
  * \brief   Common linked list code shared between projects
  *
  * Common linked list implementation.

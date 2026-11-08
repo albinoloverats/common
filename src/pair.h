@@ -24,7 +24,7 @@
 /*!
  * \file    pair.h
  * \author  albinoloverats ~ Software Development
- * \date    2022-2025
+ * \date    2022-2026
  * \brief   Common pair-o-values code shared between projects
  *
  * Common pairs structures.

@@ -24,7 +24,7 @@
 /*!
  * \file    tlv.h
  * \author  albinoloverats ~ Software Development
- * \date    2009-2025
+ * \date    2009-2026
  * \brief   Common TLV code shared between projects
  *
  * Common tag/length/value code, for creating, importing and exporting

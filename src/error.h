@@ -24,7 +24,7 @@
 /*!
  * \file    error.h
  * \author  albinoloverats ~ Software Development
- * \date    2009-2025
+ * \date    2009-2026
  * \brief   Common error handling code shared between projects
  *
  * Common error handling code, currently only fatal end of execution,

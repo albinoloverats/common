@@ -23,7 +23,7 @@
 /*!
  * \file    common.h
  * \author  albinoloverats ~ Software Development
- * \date    2009-2025
+ * \date    2009-2026
  * \brief   Mostly common macros, useful when dealing with different OS’s
  *
  * Various macros which help with the transition from one OS to another.

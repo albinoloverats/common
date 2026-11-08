@@ -24,7 +24,7 @@
 /*!
  * \file    dir.h
  * \author  albinoloverats ~ Software Development
- * \date    2009-2025
+ * \date    2009-2026
  * \brief   Directory parsing functions
  *
  * String-returning path helpers allocate their results. Directory-tree

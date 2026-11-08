@@ -24,7 +24,7 @@
 /*!
  * \file    cli.h
  * \author  albinoloverats ~ Software Development
- * \date    2014-2025
+ * \date    2014-2026
  * \brief   Common console output functions
  *
  * Various functions to help with console output.

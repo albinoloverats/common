@@ -24,7 +24,7 @@
 /*!
  * \file    map.h
  * \author  albinoloverats ~ Software Development
- * \date    2022-2024
+ * \date    2022-2026
  * \brief   Common map code shared between projects
  *
  * Common map implementation.
