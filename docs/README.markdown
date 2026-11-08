@@ -21,10 +21,10 @@ build/runtime information used by version-formatting tests.
 
 ### Status
 
-[![C/C++ CI](https://github.com/albinoloverats/common/actions/workflows/coverage.yml/badge.svg)](https://github.com/albinoloverats/common/actions/workflows/coverage.yml)
-[![Gitlab Pipelines](https://gitlab.com/albinoloverats/common/badges/master/pipeline.svg)](https://gitlab.com/albinoloverats/common/-/commits/master)
-[![Gitlab Coverage Report](https://gitlab.com/albinoloverats/common/badges/master/coverage.svg)](https://gitlab.com/albinoloverats/common/-/commits/master)
-[![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/albinoloverats/common/master)](https://bitbucket.org/albinoloverats/common/src/master)
+[![Github Pipeline](https://github.com/albinoloverats/common/actions/workflows/coverage.yml/badge.svg)](https://github.com/albinoloverats/common/actions/workflows/coverage.yml)
+[![Gitlab Pipeline](https://gitlab.com/albinoloverats/common/badges/master/pipeline.svg)](https://gitlab.com/albinoloverats/common/-/commits/master)
+[![Gitlab Coverage](https://gitlab.com/albinoloverats/common/badges/master/coverage.svg)](https://gitlab.com/albinoloverats/common/-/commits/master)
+[![Bitbucket Pipeline](https://img.shields.io/bitbucket/pipelines/albinoloverats/common/master)](https://bitbucket.org/albinoloverats/common/src/master)
 
 ## Components
 
