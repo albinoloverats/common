@@ -19,8 +19,8 @@
  */
 
 #include <stdlib.h>
-
 #include <stdbool.h>
+#include <inttypes.h>
 
 #include "common.h"
 #include "mem.h"
