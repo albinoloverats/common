@@ -1,0 +1,4 @@
+#: ./src/mem.c:39
+#| Out of memory @ %s:%d:%s [%zu]
+msgid "Out of memory @ %s:%d:%s [%zu]"
+msgstr ""

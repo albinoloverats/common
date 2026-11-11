@@ -1,0 +1,24 @@
+#: ./src/config.c:139
+#| Call config_init()
+msgid "Call config_init()"
+msgstr ""
+
+#: ./src/config.c:624
+#| Usage
+msgid "Usage"
+msgstr ""
+
+#: ./src/config.c:908
+#| Options
+msgid "Options"
+msgstr ""
+
+#: ./src/config.c:931
+#| Advanced Options
+msgid "Advanced Options"
+msgstr ""
+
+#: ./src/config.c:949
+#| Notes
+msgid "Notes"
+msgstr ""

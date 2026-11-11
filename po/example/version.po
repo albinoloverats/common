@@ -1,0 +1,59 @@
+#: ./src/version.c:103
+#| %s version
+msgid "%s version"
+msgstr ""
+
+#: ./src/version.c:113
+#| built on
+msgid "built on"
+msgstr ""
+
+#: ./src/version.c:115
+#| debug
+msgid "debug"
+msgstr ""
+
+#: ./src/version.c:115
+#| yes
+msgid "yes"
+msgstr ""
+
+#: ./src/version.c:117
+#| debug
+msgid "debug"
+msgstr ""
+
+#: ./src/version.c:117
+#| no
+msgid "no"
+msgstr ""
+
+#: ./src/version.c:119
+#| git commit
+msgid "git commit"
+msgstr ""
+
+#: ./src/version.c:120
+#| build os
+msgid "build os"
+msgstr ""
+
+#: ./src/version.c:121
+#| compiler
+msgid "compiler"
+msgstr ""
+
+#: ./src/version.c:124
+#| runtime
+msgid "runtime"
+msgstr ""
+
+#: ./src/version.c:159
+#| built on
+msgid "built on"
+msgstr ""
+
+#: ./src/version.c:170
+#| runtime
+msgid "runtime"
+msgstr ""
