@@ -66,8 +66,16 @@
 	#include "ccrypt.h"
 #endif
 
-#if __has_include("misc.h")
-	#include "misc.h"
+#if defined(__has_include)
+	#if __has_include("cmake_build_flags.h")
+		#include "cmake_build_flags.h"
+		#define USE_CMAKE_CONFIG
+	#elif __has_include("misc.h")
+		#include "misc.h"
+	#else
+		#define ALL_CFLAGS   "(unknown)"
+		#define ALL_CPPFLAGS "(unknown)"
+	#endif
 #else
 	#define ALL_CFLAGS   "(unknown)"
 	#define ALL_CPPFLAGS "(unknown)"
@@ -118,9 +126,18 @@ extern void version_print(char *name, char *version, char *url)
 #endif
 	version_format(indent, _("git commit"), GIT_COMMIT);
 	version_format(indent, _("build os"),   BUILD_OS);
+#ifdef USE_CMAKE_CONFIG
+	version_format(indent, _("compiler"),     CMAKE_BUILD_COMPILER);
+	version_format(indent, _("build type"),   CMAKE_BUILD_TYPE);
+	version_format(indent, _("C standard"),   CMAKE_BUILD_C_STANDARD);
+	version_format(indent, "cflags",          CMAKE_BUILD_C_FLAGS);
+	version_format(indent, "cppflags",        CMAKE_BUILD_DEFINITIONS);
+	version_format(indent, _("linker flags"), CMAKE_BUILD_LINKER_FLAGS);
+#else
 	version_format(indent, _("compiler"),   COMPILER);
 	version_format(indent, "cflags",     ALL_CFLAGS);
 	version_format(indent, "cppflags",   ALL_CPPFLAGS);
+#endif
 	version_format(indent, _("runtime"),    runtime);
 #ifdef USE_GCRYPT
 	char *gcv = m_strdupf("%s (compiled) %s (runtime) %s (required)", GCRYPT_VERSION, gcry_check_version(NULL), NEED_LIBGCRYPT_VERSION);
@@ -154,7 +171,7 @@ extern char *version_build_info(void)
 #endif
 
 #define AA_GW 80
-#define AA_GI 10
+#define AA_GI 12
 
 	version_format_line(&info, AA_GW, AA_GI, _("built on"),   __DATE__ " " __TIME__);
 #ifdef __DEBUG__
@@ -164,9 +181,18 @@ extern char *version_build_info(void)
 #endif
 	version_format_line(&info, AA_GW, AA_GI, _("git commit"), GIT_COMMIT);
 	version_format_line(&info, AA_GW, AA_GI, _("build os"),   BUILD_OS);
+#ifdef USE_CMAKE_CONFIG
+	version_format_line(&info, AA_GW, AA_GI, _("compiler"),     CMAKE_BUILD_COMPILER);
+	version_format_line(&info, AA_GW, AA_GI, _("build type"),   CMAKE_BUILD_TYPE);
+	version_format_line(&info, AA_GW, AA_GI, _("C standard"),   CMAKE_BUILD_C_STANDARD);
+	version_format_line(&info, AA_GW, AA_GI, "cflags",          CMAKE_BUILD_C_FLAGS);
+	version_format_line(&info, AA_GW, AA_GI, "cppflags",        CMAKE_BUILD_DEFINITIONS);
+	version_format_line(&info, AA_GW, AA_GI, _("linker flags"), CMAKE_BUILD_LINKER_FLAGS);
+#else
 	version_format_line(&info, AA_GW, AA_GI, _("compiler"),   COMPILER);
 	version_format_line(&info, AA_GW, AA_GI, "cflags",     ALL_CFLAGS);
 	version_format_line(&info, AA_GW, AA_GI, "cppflags",   ALL_CPPFLAGS);
+#endif
 	version_format_line(&info, AA_GW, AA_GI, _("runtime"),    runtime);
 
 #ifdef USE_GCRYPT
