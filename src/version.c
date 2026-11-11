@@ -119,12 +119,12 @@ extern void version_print(char *name, char *version, char *url)
 	version_format(indent, _("git commit"), GIT_COMMIT);
 	version_format(indent, _("build os"),   BUILD_OS);
 	version_format(indent, _("compiler"),   COMPILER);
-	version_format(indent, _("cflags"),     ALL_CFLAGS);
-	version_format(indent, _("cppflags"),   ALL_CPPFLAGS);
+	version_format(indent, "cflags",     ALL_CFLAGS);
+	version_format(indent, "cppflags",   ALL_CPPFLAGS);
 	version_format(indent, _("runtime"),    runtime);
 #ifdef USE_GCRYPT
 	char *gcv = m_strdupf("%s (compiled) %s (runtime) %s (required)", GCRYPT_VERSION, gcry_check_version(NULL), NEED_LIBGCRYPT_VERSION);
-	version_format(indent, _("libgcrypt"), gcv);
+	version_format(indent, "libgcrypt", gcv);
 	free(gcv);
 #endif
 	free(av);
@@ -135,7 +135,7 @@ extern void version_print(char *name, char *version, char *url)
 	if (version_new_available)
 	{
 		cli_fprintf(stderr, "\n");
-		cli_fprintf(stderr, _(NEW_VERSION_URL), version_available, program_invocation_short_name, strlen(new_version_url) ? new_version_url : url);
+		cli_fprintf(stderr, NEW_VERSION_URL, version_available, program_invocation_short_name, strlen(new_version_url) ? new_version_url : url);
 	}
 	return;
 }
@@ -165,13 +165,13 @@ extern char *version_build_info(void)
 	version_format_line(&info, AA_GW, AA_GI, _("git commit"), GIT_COMMIT);
 	version_format_line(&info, AA_GW, AA_GI, _("build os"),   BUILD_OS);
 	version_format_line(&info, AA_GW, AA_GI, _("compiler"),   COMPILER);
-	version_format_line(&info, AA_GW, AA_GI, _("cflags"),     ALL_CFLAGS);
-	version_format_line(&info, AA_GW, AA_GI, _("cppflags"),   ALL_CPPFLAGS);
+	version_format_line(&info, AA_GW, AA_GI, "cflags",     ALL_CFLAGS);
+	version_format_line(&info, AA_GW, AA_GI, "cppflags",   ALL_CPPFLAGS);
 	version_format_line(&info, AA_GW, AA_GI, _("runtime"),    runtime);
 
 #ifdef USE_GCRYPT
 	char *gcv = m_strdupf("%s (compiled) %s (runtime)", GCRYPT_VERSION, gcry_check_version(NULL));
-	version_format_line(&info, AA_GW, AA_GI, _("libgcrypt"), gcv);
+	version_format_line(&info, AA_GW, AA_GI, "libgcrypt", gcv);
 	free(gcv);
 #endif
 
