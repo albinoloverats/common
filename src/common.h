@@ -41,7 +41,7 @@
 	#define program_invocation_short_name getprogname() /*!< This is the best/closest we have */
 #endif
 
-#if defined __APPLE__ || defined __FreeBSD__ || defined __CYGWIN__
+#if defined __APPLE__ || defined __FreeBSD__ || defined __CYGWIN__ || defined __sun
 	#undef F_RDLCK         /*!< Undefined value as it causes runtime issues */
 	#define F_RDLCK NOTSET /*!< Set value to NOTSET */
 	#undef F_WRLCK         /*!< Undefined value as it causes runtime issues */

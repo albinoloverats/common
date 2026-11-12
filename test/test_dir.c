@@ -121,8 +121,13 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	assert_int_equal(list_size(none), 0);
 	assert_string_equal(list_get(files, 0), file);
 	assert_string_equal(list_get(links, 0), link_path);
+#ifdef __sun
+	list_t character_devices = dir_get_tree("/devices", DIR_CHAR);
+	assert_non_null(list_contains(character_devices, "/devices/pseudo/mm@0:null"));
+#else
 	list_t character_devices = dir_get_tree("/dev", DIR_CHAR);
 	assert_non_null(list_contains(character_devices, "/dev/null"));
+#endif
 	list_deinit(character_devices, free);
 	list_deinit(files, free);
 	list_deinit(folders, free);
