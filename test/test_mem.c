@@ -20,7 +20,7 @@
 
 #include "test_support.h"
 
-#ifndef __APPLE__
+#if !defined __APPLE__ && !defined _WIN32
 typedef enum
 {
 	FAIL_NONE,
@@ -146,7 +146,7 @@ static void test_memory_helpers(void **state)
 	free(resized);
 }
 
-#ifndef __APPLE__
+#if !defined __APPLE__ && !defined _WIN32
 /*!
  * \brief Verifies allocation wrappers exit with ENOMEM when allocation fails.
  */
@@ -213,7 +213,7 @@ static void test_memory_wrappers_exit_on_allocation_failure(void **state)
 static const struct CMUnitTest tests[] =
 {
 	cmocka_unit_test(test_memory_helpers),
-#ifndef __APPLE__
+#if !defined __APPLE__ && !defined _WIN32
 	cmocka_unit_test(test_memory_wrappers_exit_on_allocation_failure)
 #endif
 };

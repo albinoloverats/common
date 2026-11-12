@@ -103,7 +103,7 @@ extern char *mem_nod(const char *, int, const char *, const char *, size_t);
  * \param[in]  template  printf-style format string
  * \return               Number of characters formatted, excluding NUL
  */
-extern int mem_aod(const char *, int, const char *, char **, const char *, ...) __attribute__((nonnull(5), format(printf, 5, 6)));
+extern int mem_aod(const char *, int, const char *, char **, const char *, ...) __attribute__((nonnull(5), format(gnu_printf, 5, 6)));
 
 /*!
  * \brief         Create a newly allocated formatted string
@@ -113,7 +113,7 @@ extern int mem_aod(const char *, int, const char *, char **, const char *, ...) 
  * \param[in]  template  printf-style format string
  * \return               Newly allocated string
  */
-extern char *mem_fod(const char *, int, const char *, const char *, ...) __attribute__((nonnull(4), format(printf, 4, 5)));
+extern char *mem_fod(const char *, int, const char *, const char *, ...) __attribute__((nonnull(4), format(gnu_printf, 4, 5)));
 
 #ifdef USE_GCRYPT
 

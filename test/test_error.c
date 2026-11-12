@@ -26,6 +26,7 @@
 static void test_error_exit_paths(void **state)
 {
 	(void)state;
+#ifndef _WIN32
 	pid_t child = fork();
 	assert_true(child >= 0);
 	if (!child)
@@ -65,6 +66,7 @@ static void test_error_exit_paths(void **state)
 	assert_int_equal(waitpid(child, &status, 0), child);
 	assert_true(WIFEXITED(status));
 	assert_int_equal(WEXITSTATUS(status), EXIT_SUCCESS);
+#endif
 }
 
 static const struct CMUnitTest tests[] =

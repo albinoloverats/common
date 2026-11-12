@@ -49,6 +49,7 @@
 		#include <sys/tty.h>
 	#endif
 #else
+	#include <winsock2.h>
 	#include <windows.h>
 	#include <shellapi.h>
 	#include <Shlobj.h>

@@ -30,10 +30,10 @@
 	#include <execinfo.h>
 #endif
 
-#include <stdint.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 #include "error.h"
 #include "non-gnu.h"

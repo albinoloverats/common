@@ -51,7 +51,7 @@ extern void error_init(void);
  * Print the formatted message and terminate the process using the errno
  * value saved on entry as the exit status (or success when errno is zero).
  */
-extern void die(const char * const restrict s, ...) __attribute__((noreturn, nonnull(1), format(printf, 1, 2)));
+extern void die(const char * const restrict s, ...) __attribute__((noreturn, nonnull(1), format(gnu_printf, 1, 2)));
 
 #ifdef BUILD_GUI
 /*!

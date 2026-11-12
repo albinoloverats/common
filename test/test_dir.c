@@ -91,6 +91,7 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	assert_non_null(stream);
 	assert_true(fputs("data", stream) >= 0);
 	assert_int_equal(fclose(stream), 0);
+#ifndef _WIN32
 	snprintf(link_path, sizeof link_path, "%s/link", root);
 	assert_int_equal(symlink(file, link_path), 0);
 	snprintf(fifo, sizeof fifo, "%s/pipe", root);
@@ -103,7 +104,7 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	memcpy(address.sun_path, socket_path, strlen(socket_path) + 1);
 	assert_int_equal(bind(socket_fd, (struct sockaddr *)&address, sizeof address), 0);
 	assert_int_equal(close(socket_fd), 0);
-
+#endif
 	/* Traversal always descends into directories, but returns only selected types. */
 	list_t files = dir_get_tree(root, DIR_FILE);
 	list_t folders = dir_get_tree(root, DIR_FOLDER);

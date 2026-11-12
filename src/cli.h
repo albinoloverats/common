@@ -153,7 +153,7 @@ extern double cli_calc_bps(cli_bps_s *c) __attribute__((nonnull(1)));
  * string to the stream stdout. It returns the number of characters
  * printed, or a negative value if there was an output error.
  */
-extern int cli_printf(const char * const restrict s, ...) __attribute__((nonnull(1), format(printf, 1, 2)));
+extern int cli_printf(const char * const restrict s, ...) __attribute__((nonnull(1), format(gnu_printf, 1, 2)));
 
 /*!
  * \brief         Formatted output to stderr
@@ -164,7 +164,7 @@ extern int cli_printf(const char * const restrict s, ...) __attribute__((nonnull
  * string to the stream stderr. It returns the number of characters
  * printed, or a negative value if there was an output error.
  */
-extern int cli_eprintf(const char * const restrict s, ...) __attribute__((nonnull(1), format(printf, 1, 2)));
+extern int cli_eprintf(const char * const restrict s, ...) __attribute__((nonnull(1), format(gnu_printf, 1, 2)));
 
 /*!
  * \brief         Formatted output to the given stream
@@ -176,7 +176,7 @@ extern int cli_eprintf(const char * const restrict s, ...) __attribute__((nonnul
  * string to the stream s. It returns the number of characters printed,
  * or a negative value if there was an output error.
  */
-extern int cli_fprintf(FILE *f, const char * const restrict s, ...) __attribute__((nonnull(2), format(printf, 2, 3)));
+extern int cli_fprintf(FILE *f, const char * const restrict s, ...) __attribute__((nonnull(2), format(gnu_printf, 2, 3)));
 
 /*!
  * \brief         Hexadecimal output to stdout
@@ -225,7 +225,7 @@ extern int cli_fprintx(FILE *f, const uint8_t * const restrict x, size_t z) __at
  * There is the possibility of prepending the date and time but systemd
  * does that for us (in our use-case).
  */
-extern int logger(const char * const restrict s, ...) __attribute__((nonnull(1), format(printf, 1, 2)));
+extern int logger(const char * const restrict s, ...) __attribute__((nonnull(1), format(gnu_printf, 1, 2)));
 // TODO Add more log-like functions (hex, to file, etc)
 
 #endif /* _COMMON_CLI_H_ */

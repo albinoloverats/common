@@ -26,6 +26,7 @@
 static void test_config_requires_initialization(void **state)
 {
 	(void)state;
+#ifndef _WIN32
 	/* Run the expected parser error in a child so it cannot terminate the suite. */
 	pid_t child = fork();
 	assert_true(child >= 0);
@@ -41,6 +42,7 @@ static void test_config_requires_initialization(void **state)
 	assert_int_equal(waitpid(child, &status, 0), child);
 	assert_true(WIFEXITED(status));
 	assert_int_equal(WEXITSTATUS(status), EXIT_SUCCESS);
+#endif
 }
 
 
@@ -165,6 +167,7 @@ static void test_config_command_line_values(void **state)
 static void test_config_display_actions_exit_cleanly(void **state)
 {
 	(void)state;
+#ifndef _WIN32
 	/* Help/version/licence and missing-required-option paths intentionally exit. */
 	const char *actions[] = { "--help", "--version", "--licence" };
 	for (size_t i = 0; i < sizeof actions / sizeof actions[0]; i++)
@@ -231,6 +234,7 @@ static void test_config_display_actions_exit_cleanly(void **state)
 	assert_int_equal(waitpid(child, &status, 0), child);
 	assert_true(WIFEXITED(status));
 	assert_int_equal(WEXITSTATUS(status), EXIT_SUCCESS);
+#endif
 }
 
 

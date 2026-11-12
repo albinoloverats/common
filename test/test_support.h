@@ -35,10 +35,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/socket.h>
+#ifndef _WIN32
+	#include <sys/socket.h>
+	#include <sys/un.h>
+	#include <sys/wait.h>
+#endif
 #include <sys/stat.h>
-#include <sys/un.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 #include "ccrypt.h"

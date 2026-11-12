@@ -49,14 +49,32 @@
 	extern int strverscmp(const char *s1, const char *s2);
 #endif
 
+
 #if defined __sun || defined __clang__
 	#define __attribute__(X)
 #endif
 
-#if defined __APPLE__ || defined _WIN32 || defined __clang__ || defined __sun
-	#define __float128  double
-	#define strtof128   strtod
-	#define strfromf128 snprintf
+#if defined __APPLE__ || defined __FreeBSD__ || defined _WIN32 || defined __CYGWIN__ || defined __clang__ || defined __sun
+
+	#ifndef __FreeBSD__
+		#define __float128  double
+		#define strtof128   strtod
+		#define strfromf128 snprintf
+	#endif
+
+	#undef F_RDLCK         /*!< Undefined value as it causes runtime issues */
+	#define F_RDLCK NOTSET /*!< Set value to NOTSET */
+	#undef F_WRLCK         /*!< Undefined value as it causes runtime issues */
+	#define F_WRLCK NOTSET /*!< Set value to NOTSET */
+#endif
+
+
+#if !defined _WIN32 && !defined O_BINARY
+	#define O_BINARY NOTSET /*!< Value is only relevant on MS systems (and is required), pretend it exists elsewhere */
+#endif
+
+#if defined __APPLE__ || defined __FreeBSD__ || defined __sun
+	#define program_invocation_short_name getprogname() /*!< This is the best/closest we have */
 #endif
 
 
@@ -77,8 +95,6 @@
 
 #define srand48 srand  /*!< Quietly alias srand48 to be srand on Windows */
 #define lrand48 rand   /*!< Quietly alias lrand48 to be rand on Windows */
-#define F_RDLCK NOTSET /*!< If value doesn’t exist on Windows, ignore it */
-#define F_WRLCK NOTSET /*!< If value doesn’t exist on Windows, ignore it */
 #define O_FSYNC NOTSET /*!< If value doesn’t exist on Windows, ignore it */
 
 #ifdef S_IRUSR
@@ -129,6 +145,7 @@
 #define lstat(path, st) stat(path, st)
 #define link(old, new) CopyFile(old, new, FALSE)
 #define tmpfile temp_file
+#define pipe(fd) _pipe((fd), 0, O_BINARY)
 
 /*!
  * \brief         Read one line from a stream, allocating or resizing the buffer
@@ -173,11 +190,22 @@ extern FILE *temp_file(void);
 extern char *windows_version(void);
 
 /*!
- * \brief         Print a signal description to stderr
+ * \brief           Print a signal description to stderr
  * \param[in]  sig  Signal number
  * \param[in]  s    Optional message prefix
  */
 extern void psignal(int sig, const char *s);
+
+/*!
+ * \brief         Change or add an environment variable
+ * \param[in]  n  The environment variable name
+ * \param[in]  v  The environment variable value
+ * \param[in]  o  Whether to overwrite an existing value
+ * \return        Zero on success, -1 on failure
+ */
+extern int setenv(const char *n, const char *v, int o);
+
+#define unsetenv(N) _putenv_s(N, "")
 
 #endif /* _WIN32 */
 

@@ -525,6 +525,7 @@ extern void psignal(int sig, const char *s)
 		colon = ": ";
 	switch (sig)
 	{
+#ifndef WIN32
 		case SIGABRT:
 			desc = _("Aborted");
 			break;
@@ -543,12 +544,20 @@ extern void psignal(int sig, const char *s)
 		case SIGTERM:
 			desc = _("Terminated");
 			break;
+#endif
 		default:
 			desc = _("Unknown signal");
 			break;
 	}
 	fprintf(stderr, "%s%s%s\n", s, colon, desc);
 	return;
+}
+
+extern int setenv(const char *name, const char *value, int overwrite)
+{
+	if (!overwrite && getenv(name) != NULL)
+		return 0;
+	return _putenv_s(name, value);
 }
 
 #endif /* _WIN32 */

@@ -33,21 +33,6 @@
 
 #define NOTSET 0 /*!< Value to use when nothing else is available */
 
-#if !defined _WIN32 && !defined O_BINARY
-	#define O_BINARY NOTSET /*!< Value is only relevant on MS systems (and is required), pretend it exists elsewhere */
-#endif
-
-#if defined __APPLE__ || defined __FreeBSD__ || defined __sun
-	#define program_invocation_short_name getprogname() /*!< This is the best/closest we have */
-#endif
-
-#if defined __APPLE__ || defined __FreeBSD__ || defined __CYGWIN__ || defined __sun
-	#undef F_RDLCK         /*!< Undefined value as it causes runtime issues */
-	#define F_RDLCK NOTSET /*!< Set value to NOTSET */
-	#undef F_WRLCK         /*!< Undefined value as it causes runtime issues */
-	#define F_WRLCK NOTSET /*!< Set value to NOTSET */
-#endif
-
 #if !defined __bswap_constant_64 && !defined __sun
 	#define __bswap_constant_64(x) /*!< Define ourselves an 8-byte swap */   \
 		( (((x) & 0xff00000000000000ull) >> 56)                 \
@@ -60,8 +45,8 @@
 		| (((x) & 0x00000000000000ffull) << 56))
 #endif
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN || BYTE_ORDER == LITTLE_ENDIAN || _WIN32
-	#if !defined __APPLE__ && !defined __sun
+#if __BYTE_ORDER == __LITTLE_ENDIAN || BYTE_ORDER == LITTLE_ENDIAN
+	#if !defined __APPLE__ && !defined __sun && !defined _WIN32
 		#define ntohll(x) __bswap_constant_64(x) /*!< Do need to swap bytes from network byte order */
 		#define htonll(x) __bswap_constant_64(x) /*!< Do need to swap bytes to network byte order */
 	#endif
