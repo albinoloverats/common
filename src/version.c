@@ -66,7 +66,7 @@
 	#include "ccrypt.h"
 #endif
 
-#if defined__has_include
+#if defined __has_include
 	#if __has_include("cmake_build_flags.h")
 		#include "cmake_build_flags.h"
 		#define USE_CMAKE_CONFIG
