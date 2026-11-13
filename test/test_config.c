@@ -18,6 +18,10 @@
  *
  */
 
+#if defined _WIN32
+	#include <Shlobj.h>
+#endif
+
 #include "test_support.h"
 
 /*!
@@ -245,8 +249,13 @@ static void test_config_file_values_and_update(void **state)
 {
 	(void)state;
 	/* A private working directory keeps config parsing and updates isolated. */
+#if !defined _WIN32
 	char root[] = "/tmp/common-config-XXXXXX";
 	assert_non_null(mkdtemp(root));
+#else
+	char root[PATH_MAX];
+	SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, root);
+#endif
 	char cwd[PATH_MAX];
 	assert_non_null(getcwd(cwd, sizeof cwd));
 	assert_int_equal(chdir(root), 0);
@@ -302,7 +311,9 @@ static void test_config_file_values_and_update(void **state)
 	list_deinit(args, config_named_free);
 	assert_int_equal(unlink("test.conf"), 0);
 	assert_int_equal(chdir(cwd), 0);
+#if !defined _WIN32
 	assert_int_equal(rmdir(root), 0);
+#endif
 }
 
 
@@ -313,8 +324,13 @@ static void test_config_file_pairs_and_list_types(void **state)
 {
 	(void)state;
 	/* Exercise list values supplied as comma-separated entries and one-entry scalars. */
+#if !defined _WIN32
 	char root[] = "/tmp/common-config-types-XXXXXX";
 	assert_non_null(mkdtemp(root));
+#else
+	char root[PATH_MAX];
+	SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, root);
+#endif
 	char cwd[PATH_MAX];
 	assert_non_null(getcwd(cwd, sizeof cwd));
 	assert_int_equal(chdir(root), 0);
@@ -387,7 +403,9 @@ static void test_config_file_pairs_and_list_types(void **state)
 	list_deinit(args, config_named_free);
 	assert_int_equal(unlink("types.conf"), 0);
 	assert_int_equal(chdir(cwd), 0);
+#if !defined _WIN32
 	assert_int_equal(rmdir(root), 0);
+#endif
 }
 
 static const struct CMUnitTest tests[] =

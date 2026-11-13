@@ -72,9 +72,18 @@ static void test_directory_path_helpers(void **state)
 static void test_directory_tree_and_recursive_mkdir(void **state)
 {
 	(void)state;
+#if !defined _WIN32
 	char root[] = "/tmp/common-unit-XXXXXX";
+#else
+	char root[] = "common-unit-XXXXXX";
+#endif
 	assert_non_null(mkdtemp(root));
 	char nested[256], empty[256], file[256], link_path[256], fifo[256], socket_path[256];
+#if defined _WIN32
+	(void)link_path;
+	(void)fifo;
+	(void)socket_path;
+#endif
 	snprintf(nested, sizeof nested, "%s/a/b", root);
 	dir_mk_recursive(nested, 0700);
 	snprintf(empty, sizeof empty, "%s/empty", root);
@@ -108,39 +117,52 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	/* Traversal always descends into directories, but returns only selected types. */
 	list_t files = dir_get_tree(root, DIR_FILE);
 	list_t folders = dir_get_tree(root, DIR_FOLDER);
+#if !defined _WIN32
 	list_t links = dir_get_tree(root, DIR_LINK);
 	list_t pipes = dir_get_tree(root, DIR_PIPE);
 	list_t sockets = dir_get_tree(root, DIR_SOCKET);
+#endif
 	list_t everything = dir_get_tree(root, DIR_ALL);
 	list_t none = dir_get_tree(root, DIR_NONE);
 	assert_int_equal(list_size(files), 1);
 	assert_int_equal(list_size(folders), 3);
+#if !defined _WIN32
 	assert_int_equal(list_size(links), 1);
 	assert_int_equal(list_size(pipes), 1);
 	assert_int_equal(list_size(sockets), 1);
 	assert_int_equal(list_size(everything), 7);
+#else
+	assert_int_equal(list_size(everything), 4);
+#endif
 	assert_int_equal(list_size(none), 0);
 	assert_string_equal(list_get(files, 0), file);
+#if !defined _WIN32
 	assert_string_equal(list_get(links, 0), link_path);
+#endif
 #if defined __sun
 	list_t character_devices = dir_get_tree("/devices", DIR_CHAR);
 	assert_non_null(list_contains(character_devices, "/devices/pseudo/mm@0:null"));
-#else
+	list_deinit(character_devices, free);
+#elif !defined _WIN32
 	list_t character_devices = dir_get_tree("/dev", DIR_CHAR);
 	assert_non_null(list_contains(character_devices, "/dev/null"));
-#endif
 	list_deinit(character_devices, free);
+#endif
 	list_deinit(files, free);
 	list_deinit(folders, free);
+#if !defined _WIN32
 	list_deinit(links, free);
 	list_deinit(pipes, free);
 	list_deinit(sockets, free);
+#endif
 	list_deinit(everything, free);
 	list_deinit(none, free);
 
+#if !defined _WIN32
 	assert_int_equal(unlink(fifo), 0);
 	assert_int_equal(unlink(socket_path), 0);
 	assert_int_equal(unlink(link_path), 0);
+#endif
 	assert_int_equal(unlink(file), 0);
 	char parent[256];
 	snprintf(parent, sizeof parent, "%s/a/b", root);

@@ -33,13 +33,23 @@ static void test_version_build_information(void **state)
 	assert_non_null(strstr(info, "runtime"));
 	free(info);
 
+#if !defined _WIN32
 	char path[] = "/tmp/common-version-XXXXXX";
+#else
+	char path[] = "common-version-XXXXXX";
+#endif
 	int fd = mkstemp(path);
 	assert_true(fd >= 0);
 	assert_int_equal(write(fd, "2.0\n", 4), 4);
 	assert_int_equal(close(fd), 0);
 	char url[PATH_MAX + 8];
+#if !defined _WIN32
 	snprintf(url, sizeof url, "file://%s", path);
+#else
+	char cwd[PATH_MAX];
+	assert_non_null(getcwd(cwd, sizeof cwd));
+	snprintf(url, sizeof url, "file://%s/%s", cwd, path);
+#endif
 	version_new_available = false;
 	version_is_checking = false;
 	/* The local file URL keeps the asynchronous update check independent of the network. */
