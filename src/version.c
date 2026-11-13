@@ -54,11 +54,10 @@
 	#include <shellapi.h>
 	#include <Shlobj.h>
 	extern char *program_invocation_short_name;
-
-	#include "non-gnu.h"
 #endif
 
 #include "common.h"
+#include "non-gnu.h"
 #include "mem.h"
 #include "version.h"
 #include "error.h"
