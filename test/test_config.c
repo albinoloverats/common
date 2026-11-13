@@ -326,11 +326,10 @@ static void test_config_file_pairs_and_list_types(void **state)
 	/* Exercise list values supplied as comma-separated entries and one-entry scalars. */
 #if !defined _WIN32
 	char root[] = "/tmp/common-config-types-XXXXXX";
-	assert_non_null(mkdtemp(root));
 #else
-	char root[PATH_MAX];
-	SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, root);
+	char root[] = "common-config-types-XXXXXX";
 #endif
+	assert_non_null(mkdtemp(root));
 	char cwd[PATH_MAX];
 	assert_non_null(getcwd(cwd, sizeof cwd));
 	assert_int_equal(chdir(root), 0);
