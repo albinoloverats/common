@@ -80,7 +80,7 @@ extern int mem_aod(const char *file, int line, const char *func, char **ptr, con
 	size_t l = strlen(template);
 	va_list ap;
 	va_start(ap, template);
-#ifndef _WIN32
+#if !defined _WIN32
 	r = vasprintf(ptr, template, ap);
 #else
 	if (!(*ptr))
@@ -103,7 +103,7 @@ extern char *mem_fod(const char *file, int line, const char *func, const char *t
 	va_start(ap, template);
 
 	char *ptr = NULL;
-#ifndef _WIN32
+#if !defined _WIN32
 	r = vasprintf(&ptr, template, ap);
 #else
 	ptr = mem_cod(file, line, func, l, VSN_SIZE);
@@ -116,7 +116,7 @@ extern char *mem_fod(const char *file, int line, const char *func, const char *t
 	return ptr;
 }
 
-#ifdef USE_GCRYPT
+#if defined USE_GCRYPT
 
 #include <gcrypt.h>
 

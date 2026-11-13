@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _NON_GNU_EXT_H_
+#if !defined _NON_GNU_EXT_H_
 #define _NON_GNU_EXT_H_
 
 #if defined __APPLE__ || defined _WIN32
@@ -56,7 +56,7 @@
 
 #if defined __APPLE__ || defined __FreeBSD__ || defined _WIN32 || defined __CYGWIN__ || defined __clang__ || defined __sun
 
-	#ifndef __FreeBSD__
+	#if !defined __FreeBSD__
 		#define __float128  double
 		#define strtof128   strtod
 		#define strfromf128 snprintf
@@ -80,9 +80,9 @@
 
 /* All Windows specific from here down */
 
-#ifdef _WIN32
+#if defined _WIN32
 
-#ifndef WIN32_LEAN_AND_MEAN
+#if !defined WIN32_LEAN_AND_MEAN
 	#define WIN32_LEAN_AND_MEAN
 #endif
 
@@ -92,35 +92,36 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <direct.h>
+#include <io.h>
 
 #define srand48 srand  /*!< Quietly alias srand48 to be srand on Windows */
 #define lrand48 rand   /*!< Quietly alias lrand48 to be rand on Windows */
 #define O_FSYNC NOTSET /*!< If value doesn’t exist on Windows, ignore it */
 
-#ifdef S_IRUSR
+#if defined S_IRUSR
 	#undef S_IRUSR
 	#define S_IRUSR 0
 #endif
-#ifdef S_IWUSR
+#if defined S_IWUSR
 	#undef S_IWUSR
 	#define S_IWUSR 0
 #endif
-#ifdef S_IXUSR
+#if defined S_IXUSR
 	#undef S_IXUSR
 	#define S_IXUSR 0
 #endif
 
-#ifndef SIGQUIT
+#if !defined SIGQUIT
 	#define SIGQUIT SIGBREAK /*!< If value doesn’t exist on Windows, use next closest match */
 #endif
-#ifndef SIGSYS
+#if !defined SIGSYS
 	#define SIGSYS SIGILL    /*!< If value doesn’t exist on Windows, use next closest match */
 #endif
-#ifndef SIGBUS
+#if !defined SIGBUS
 	#define SIGBUS SIGSEGV   /*!< If value doesn’t exist on Windows, use next closest match */
 #endif
 
-#ifndef ECANCELED
+#if !defined ECANCELED
 	#define ECANCELED 125 /*!< Make sure the missing error code exists */
 #endif
 #define __LITTLE_ENDIAN 1234 /*!< Not defined in MinGW, so set here */
@@ -136,7 +137,7 @@
 #define ntohl(x) __bswap_32(x) /*!< Make sure that network-to-host-long exists */
 #define htonl(x) __bswap_32(x) /*!< Make sure that host-to-network-long exists */
 
-#ifndef vsnprintf
+#if !defined vsnprintf
 	#define vsnprintf _vsnprintf
 #endif
 
@@ -146,6 +147,7 @@
 #define link(old, new) CopyFile(old, new, FALSE)
 #define tmpfile temp_file
 #define pipe(fd) _pipe((fd), 0, O_BINARY)
+#define dup2(oldfd, newfd) (_dup2((oldfd), (newfd)) == 0 ? (newfd) : -1)
 
 /*!
  * \brief         Read one line from a stream, allocating or resizing the buffer

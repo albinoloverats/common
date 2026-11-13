@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_PAIR_H_
+#if !defined _COMMON_PAIR_H_
 #define _COMMON_PAIR_H_
 
 /*!

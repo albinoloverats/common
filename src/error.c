@@ -43,7 +43,7 @@
 #define ERROR_CURSOR "\e[?25h\n"
 #define ERROR_CURSOR_LEN 7
 
-#ifdef BUILD_GUI
+#if defined BUILD_GUI
 static void error_gui_alert(const char * const restrict);
 
 static GtkWidget *error_gui_window;
@@ -73,7 +73,7 @@ extern void on_error(int s)
 	strcat(m, "]");
 	psignal(s, m);
 
-#ifdef BUILD_GUI
+#if defined BUILD_GUI
 	error_gui_alert(m);
 #endif
 
@@ -91,7 +91,7 @@ extern void on_error(int s)
 
 	write(STDERR_FILENO, ERROR_DIVIDE, ERROR_DIVIDE_LEN);
 
-#ifndef __APPLE__
+#if !defined __APPLE__
 	signal(s, SIG_DFL);
 	raise(s);
 	__builtin_unreachable();
@@ -123,7 +123,7 @@ extern void die(const char * const restrict s, ...)
 	char *d = NULL;
 	va_list ap;
 	va_start(ap, s);
-#ifndef _WIN32
+#if !defined _WIN32
 	vasprintf(&d, s, ap);
 #else
 	uint8_t l = 0xFF;
@@ -133,7 +133,7 @@ extern void die(const char * const restrict s, ...)
 	fprintf(stderr, "%s", d);
 	va_end(ap);
 	fprintf(stderr, "\n");
-#ifdef BUILD_GUI
+#if defined BUILD_GUI
 	error_gui_alert(d);
 #endif
 	free(d);
@@ -159,7 +159,7 @@ extern void die(const char * const restrict s, ...)
 	exit(ex);
 }
 
-#ifdef BUILD_GUI
+#if defined BUILD_GUI
 extern void error_gui_init(GtkWidget *w, GtkWidget *m)
 {
 	error_init();

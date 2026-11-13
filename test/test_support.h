@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef TEST_SUPPORT_H
+#if !defined TEST_SUPPORT_H
 #define TEST_SUPPORT_H
 
 #include <stdarg.h>
@@ -35,7 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifndef _WIN32
+#if !defined _WIN32
 	#include <sys/socket.h>
 	#include <sys/un.h>
 	#include <sys/wait.h>

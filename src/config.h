@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_CONFIG_H_
+#if !defined _COMMON_CONFIG_H_
 #define _COMMON_CONFIG_H_
 
 #include <inttypes.h>

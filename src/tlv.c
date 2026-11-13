@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#ifndef _WIN32
+#if !defined _WIN32
 	#include <netinet/in.h>
 #endif
 

@@ -36,7 +36,7 @@
 #include <math.h>
 #include <locale.h>
 
-#ifndef _WIN32
+#if !defined _WIN32
 	#include <termios.h>
 	#include <sys/ioctl.h>
 #endif
@@ -58,7 +58,7 @@ static int cli_width = CLI_DEFAULT;
 static int cli_size_width = 0;
 
 static void cli_display_bars(cli_progress_s *, cli_progress_s *, cli_bps_s *);
-#ifndef _WIN32
+#if !defined _WIN32
 static void cli_sigwinch(int);
 #endif
 
@@ -208,12 +208,12 @@ extern double cli_calc_bps(cli_bps_s *bps)
 	return val /= (BPS - 1);
 }
 
-//#ifndef _WIN32
+//#if !defined _WIN32
 extern void cli_display(cli_s *p)
 {
 	CLI_DO_INIT;
 
-#ifndef _WIN32
+#if !defined _WIN32
 	cli_sigwinch(SIGWINCH);
 #endif
 	cli_size_width = 0;
@@ -338,7 +338,7 @@ static void cli_display_bars(cli_progress_s *t, cli_progress_s *c, cli_bps_s *bp
 	return;
 }
 
-#ifndef _WIN32
+#if !defined _WIN32
 static void cli_sigwinch(int s)
 {
 	struct winsize ws;
@@ -360,15 +360,7 @@ static int cli_print(FILE *stream, const char *text)
 {
 	size_t l = strlen(text);
 	char *copy = m_calloc(1, l + 1);
-#ifndef _WIN32
 	bool strip = !((stream == stdout && isatty(STDOUT_FILENO)) || (stream == stderr && isatty(STDERR_FILENO)));
-#else
-	#ifdef __DEBUG__
-	bool strip = cli_inited != 1;
-	#else
-	bool strip = false;
-	#endif
-#endif
 	if (strip)
 	{
 		char *ptr = (char *)text;
@@ -408,7 +400,7 @@ static void cli_init(void)
 	signal(SIGQUIT, on_quit);
 
 	setlocale(LC_NUMERIC, "");
-#ifdef _WIN32
+#if defined _WIN32
 	// Set output mode to handle virtual terminal sequences
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hOut == INVALID_HANDLE_VALUE)

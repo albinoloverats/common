@@ -17,7 +17,7 @@
  *
  */
 
-#ifndef _COMMON_H_
+#if !defined _COMMON_H_
 #define _COMMON_H_
 
 /*!
@@ -57,23 +57,23 @@
 	#error "Unknown endianness!"
 #endif
 
-#ifndef BUILD_OS
+#if !defined BUILD_OS
 	#define BUILD_OS "(unknown)"
 #endif
 
-#if defined(__clang__)
+#if defined __clang__
 	#define COMPILER "clang " __VERSION__
-#elif defined(__GNUC__)
+#elif defined __GNUC__
 	#define COMPILER "gcc " __VERSION__
 #else
-	#ifdef __VERSION__
+	#if defined __VERSION__
 		#define COMPILER "(unknown) " __VERSION__
 	#else
 		#define COMPILER "(unknown) (unknown)"
 	#endif
 #endif
 
-#ifndef GIT_COMMIT
+#if !defined GIT_COMMIT
 	#define GIT_COMMIT "(unknown)"
 #endif
 #define GIT_COMMIT_LENGTH 7

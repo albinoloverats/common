@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_MAP_H_
+#if !defined _COMMON_MAP_H_
 #define _COMMON_MAP_H_
 
 /*!

@@ -26,7 +26,7 @@
 static void test_error_exit_paths(void **state)
 {
 	(void)state;
-#ifndef _WIN32
+#if !defined _WIN32
 	pid_t child = fork();
 	assert_true(child >= 0);
 	if (!child)

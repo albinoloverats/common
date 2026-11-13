@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_LIST_H_
+#if !defined _COMMON_LIST_H_
 #define _COMMON_LIST_H_
 
 /*!

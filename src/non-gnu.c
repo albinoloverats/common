@@ -299,7 +299,7 @@ extern int strverscmp(const char *s1, const char *s2)
 #endif /* __APPLE__ || _WIN32 || __FreeBSD__ || __sun */
 
 
-#ifdef _WIN32
+#if defined _WIN32
 
 #include <errno.h>
 
@@ -525,7 +525,7 @@ extern void psignal(int sig, const char *s)
 		colon = ": ";
 	switch (sig)
 	{
-#ifndef WIN32
+#if !defined WIN32
 		case SIGABRT:
 			desc = _("Aborted");
 			break;

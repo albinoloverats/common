@@ -31,10 +31,10 @@
 
 #include <gcrypt.h>
 
-#ifndef _WIN32
+#if !defined _WIN32
 	#include <sys/utsname.h>
 	#include <sys/ioctl.h>
-	#ifdef __sun
+	#if defined __sun
 		#include <sys/tty.h>
 	#endif
 #endif
@@ -50,7 +50,7 @@
 #include "pair.h"
 #include "list.h"
 
-#ifdef _WIN32
+#if defined _WIN32
 	#include <Shlobj.h>
 	extern char *program_invocation_short_name;
 #endif
@@ -179,8 +179,8 @@ extern int config_parse_aux(int argc, char **argv, list_t args, list_t extra, li
 	if (args && about.config != NULL)
 	{
 		char *rc = NULL;
-#ifndef __DEBUG__
-	#ifndef _WIN32
+#if !defined __DEBUG__
+	#if !defined _WIN32
 		if (about.config[0] == '/' || (about.config[0] == '.' && about.config[1] == '/'))
 			rc = m_strdup(about.config);
 		else
@@ -610,7 +610,7 @@ static void show_version(list_t args, list_t largs, list_t notes, list_t extra)
 
 inline static void print_usage(list_t args, list_t extra)
 {
-#ifndef _WIN32
+#if !defined _WIN32
 	struct winsize ws;
 	ioctl(STDERR_FILENO, TIOCGWINSZ, &ws);
 	int max_width = ws.ws_col - strlen(about.name) - 2;
@@ -703,7 +703,7 @@ static void print_option(int indent, char sopt, char *lopt, char *type, char *de
 	}
 	cli_eprintf("%*s", (int)z, " ");
 
-#ifndef _WIN32
+#if !defined _WIN32
 	struct winsize ws;
 	ioctl(STDERR_FILENO, TIOCGWINSZ, &ws);
 	int max_width = ws.ws_col - 2;
@@ -719,7 +719,7 @@ static void print_option(int indent, char sopt, char *lopt, char *type, char *de
 		;
 	int l = strlen(desc);
 
-#ifdef _WIN32
+#if defined _WIN32
 	char *tmp = m_calloc(l + 1, 1);
 	for (int i = 0, j = 0; i < l; i++, j++)
 		if (!strncmp(desc + i, "‘", strlen("‘")) || !strncmp(desc + i, "’", strlen("‘")))
@@ -773,7 +773,7 @@ static void print_option(int indent, char sopt, char *lopt, char *type, char *de
 		}
 		while (s < l);
 	}
-#ifdef _WIN32
+#if defined _WIN32
 	free(tmp);
 #endif
 	if (def)
@@ -784,7 +784,7 @@ static void print_option(int indent, char sopt, char *lopt, char *type, char *de
 
 static void print_notes(const char *line)
 {
-#ifndef _WIN32
+#if !defined _WIN32
 	cli_eprintf("  • ");
 	struct winsize ws;
 	ioctl(STDERR_FILENO, TIOCGWINSZ, &ws);
@@ -981,7 +981,7 @@ extern void update_config(const char * const restrict o, const char * const rest
 		return;
 	}
 	char *rc = NULL;
-#ifndef _WIN32
+#if !defined _WIN32
 	rc = m_strdupf("%s/%s", getenv("HOME") ? : ".", about.config);
 #else
 	rc = m_calloc(MAX_PATH, sizeof( char ));

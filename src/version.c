@@ -39,13 +39,13 @@
 	#include <libgen.h>
 #endif
 
-#ifndef _WIN32
+#if !defined _WIN32
 	#include <sys/stat.h>
 	#include <sys/wait.h>
 
 	#include <sys/utsname.h>
 	#include <sys/ioctl.h>
-	#ifdef __sun
+	#if defined __sun
 		#include <sys/tty.h>
 	#endif
 #else
@@ -63,11 +63,11 @@
 #include "version.h"
 #include "error.h"
 #include "cli.h"
-#ifdef USE_GCRYPT
+#if defined USE_GCRYPT
 	#include "ccrypt.h"
 #endif
 
-#if defined(__has_include)
+#if defined__has_include
 	#if __has_include("cmake_build_flags.h")
 		#include "cmake_build_flags.h"
 		#define USE_CMAKE_CONFIG
@@ -111,7 +111,7 @@ extern void version_print(char *name, char *version, char *url)
 	int indent = strlen(name) + 8;
 	char *av = m_strdupf(_("%s version"), name);
 	char *runtime = NULL;
-#ifndef _WIN32
+#if !defined _WIN32
 	struct utsname un;
 	uname(&un);
 	runtime = m_strdupf("%s %s %s %s", un.sysname, un.release, un.version, un.machine);
@@ -120,14 +120,14 @@ extern void version_print(char *name, char *version, char *url)
 #endif
 	version_format(indent, av,              version);
 	version_format(indent, _("built on"),   __DATE__ " " __TIME__);
-#ifdef __DEBUG__
+#if defined __DEBUG__
 	version_format(indent, _("debug"), _("yes"));
 #else
 	version_format(indent, _("debug"), _("no"));
 #endif
 	version_format(indent, _("git commit"), GIT_COMMIT);
 	version_format(indent, _("build os"),   BUILD_OS);
-#ifdef USE_CMAKE_CONFIG
+#if defined USE_CMAKE_CONFIG
 	version_format(indent, _("compiler"),     CMAKE_BUILD_COMPILER);
 	version_format(indent, _("build type"),   CMAKE_BUILD_TYPE);
 	version_format(indent, _("C standard"),   CMAKE_BUILD_C_STANDARD);
@@ -140,7 +140,7 @@ extern void version_print(char *name, char *version, char *url)
 	version_format(indent, "cppflags",   ALL_CPPFLAGS);
 #endif
 	version_format(indent, _("runtime"),    runtime);
-#ifdef USE_GCRYPT
+#if defined USE_GCRYPT
 	char *gcv = m_strdupf("%s (compiled) %s (runtime) %s (required)", GCRYPT_VERSION, gcry_check_version(NULL), NEED_LIBGCRYPT_VERSION);
 	version_format(indent, "libgcrypt", gcv);
 	free(gcv);
@@ -163,7 +163,7 @@ extern char *version_build_info(void)
 	char *info = NULL;
 
 	char *runtime = NULL;
-#ifndef _WIN32
+#if !defined _WIN32
 	struct utsname un;
 	uname(&un);
 	runtime = m_strdupf("%s %s %s %s", un.sysname, un.release, un.version, un.machine);
@@ -175,14 +175,14 @@ extern char *version_build_info(void)
 #define AA_GI 12
 
 	version_format_line(&info, AA_GW, AA_GI, _("built on"),   __DATE__ " " __TIME__);
-#ifdef __DEBUG__
+#if defined __DEBUG__
 	version_format_line(&info, AA_GW, AA_GI, _("debug"), _("yes"));
 #else
 	version_format_line(&info, AA_GW, AA_GI, _("debug"), _("no"));
 #endif
 	version_format_line(&info, AA_GW, AA_GI, _("git commit"), GIT_COMMIT);
 	version_format_line(&info, AA_GW, AA_GI, _("build os"),   BUILD_OS);
-#ifdef USE_CMAKE_CONFIG
+#if defined USE_CMAKE_CONFIG
 	version_format_line(&info, AA_GW, AA_GI, _("compiler"),     CMAKE_BUILD_COMPILER);
 	version_format_line(&info, AA_GW, AA_GI, _("build type"),   CMAKE_BUILD_TYPE);
 	version_format_line(&info, AA_GW, AA_GI, _("C standard"),   CMAKE_BUILD_C_STANDARD);
@@ -196,7 +196,7 @@ extern char *version_build_info(void)
 #endif
 	version_format_line(&info, AA_GW, AA_GI, _("runtime"),    runtime);
 
-#ifdef USE_GCRYPT
+#if defined USE_GCRYPT
 	char *gcv = m_strdupf("%s (compiled) %s (runtime)", GCRYPT_VERSION, gcry_check_version(NULL));
 	version_format_line(&info, AA_GW, AA_GI, "libgcrypt", gcv);
 	free(gcv);
@@ -217,7 +217,7 @@ extern void version_check_for_update(char *current_version, char *check_url, cha
 	info->current    = strdup(current_version);
 	info->check_url  = strdup(check_url);
 	info->update_url = download_url ? strdup(download_url) : NULL;
-//#ifndef __DEBUG__
+//#if !defined __DEBUG__
 	pthread_t vt;
 	pthread_attr_t a;
 	pthread_attr_init(&a);
@@ -240,7 +240,7 @@ static void *version_check(void *n)
 	curl_global_init(CURL_GLOBAL_ALL);
 	CURL *ccheck = curl_easy_init();
 	curl_easy_setopt(ccheck, CURLOPT_URL, info->check_url);
-#ifdef WIN32
+#if defined WIN32
 	curl_easy_setopt(ccheck, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 	curl_easy_setopt(ccheck, CURLOPT_NOPROGRESS, 1L);
@@ -259,9 +259,9 @@ static void *version_check(void *n)
 	free(info->current);
 	free(info);
 	version_is_checking = false;
-//#ifndef __DEBUG__
+//#if !defined __DEBUG__
 	pthread_exit(NULL);
-	#ifdef _WIN32
+	#if defined _WIN32
 	return NULL;
 	#endif
 //#else
@@ -282,11 +282,11 @@ static void version_download_latest(char *update_url)
 	snprintf(new_version_url, sizeof new_version_url - 1, update_url, version_available, version_available);
 #pragma GCC diagnostic pop
 	curl_easy_setopt(cupdate, CURLOPT_URL, new_version_url);
-#ifdef WIN32
+#if defined WIN32
 	curl_easy_setopt(cupdate, CURLOPT_SSL_VERIFYPEER, 0L);
 #endif
 	curl_easy_setopt(cupdate, CURLOPT_NOPROGRESS, 1L);
-#ifndef _WIN32
+#if !defined _WIN32
 	m_asprintf(&update, "%s/update-%s-XXXXXX", P_tmpdir ,version_available);
 	int64_t fd = mkstemp(update);
 	fchmod(fd, S_IRUSR | S_IWUSR | S_IXUSR);
@@ -364,7 +364,7 @@ static size_t version_verify(void *p, size_t s, size_t n, void *v)
 static void version_format(int indent, char *id, char *value)
 {
 	cli_fprintf(stderr, ANSI_COLOUR_GREEN "%*s" ANSI_COLOUR_RESET ": " ANSI_COLOUR_MAGENTA, indent, id);
-#ifndef _WIN32
+#if !defined _WIN32
 	struct winsize ws;
 	ioctl(STDERR_FILENO, TIOCGWINSZ, &ws);
 	int max_width = ws.ws_col - 2;

@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_MEMORY_H_
+#if !defined _COMMON_MEMORY_H_
 #define _COMMON_MEMORY_H_
 
 #include "common.h"
@@ -115,7 +115,7 @@ extern int mem_aod(const char *, int, const char *, char **, const char *, ...) 
  */
 extern char *mem_fod(const char *, int, const char *, const char *, ...) __attribute__((nonnull(4), format(gnu_printf, 4, 5)));
 
-#ifdef USE_GCRYPT
+#if defined USE_GCRYPT
 
 /*! Allocate secure memory; terminate through die() if allocation fails. */
 #define m_gcry_malloc_secure(S)     mem_sec_mod(__FILE__, __LINE__, __func__, S)

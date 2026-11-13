@@ -228,7 +228,7 @@ extern list_t list_of_macs(void)
 
 extern enum gcry_cipher_algos cipher_id_from_name(const char * const restrict n)
 {
-#ifdef __APPLE__
+#if defined __APPLE__
 	if (!n)
 		return GCRY_CIPHER_NONE;
 #endif
@@ -257,7 +257,7 @@ extern enum gcry_cipher_algos cipher_id_from_name(const char * const restrict n)
 
 extern enum gcry_md_algos hash_id_from_name(const char * const restrict n)
 {
-#ifdef __APPLE__
+#if defined __APPLE__
 	if (!n)
 		return GCRY_MD_NONE;
 #endif
@@ -286,7 +286,7 @@ extern enum gcry_md_algos hash_id_from_name(const char * const restrict n)
 
 extern enum gcry_cipher_modes mode_id_from_name(const char * const restrict n)
 {
-#ifdef __APPLE__
+#if defined __APPLE__
 	if (!n)
 		return GCRY_CIPHER_MODE_NONE;
 #endif
@@ -298,7 +298,7 @@ extern enum gcry_cipher_modes mode_id_from_name(const char * const restrict n)
 
 extern enum gcry_mac_algos mac_id_from_name(const char * const restrict n)
 {
-#ifdef __APPLE__
+#if defined __APPLE__
 	if (!n)
 		return GCRY_MAC_NONE;
 #endif

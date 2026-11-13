@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_CLI_H_
+#if !defined _COMMON_CLI_H_
 #define _COMMON_CLI_H_
 
 /*!

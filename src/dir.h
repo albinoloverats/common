@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _DIR_H_
+#if !defined _DIR_H_
 #define _DIR_H_
 
 /*!
@@ -36,7 +36,7 @@
 #include "common.h"
 #include "list.h"
 
-#ifndef _WIN32
+#if !defined _WIN32
 	#define DIR_SEPARATOR "/"
 	#define DIR_SEPARATOR_CHAR '/'
 #else
@@ -59,9 +59,9 @@
 	int n = 0;                                                              \
 	if ((n = scandir(path, &eps, NULL, alphasort)))                         \
 	{                                                                       \
-		for (int dxxi = 0; dxxi < n; ++dxxi)                               \
+		for (int dxxi = 0; dxxi < n; ++dxxi)                            \
 		{                                                               \
-			char *nm = eps[dxxi]->d_name;                            \
+			char *nm = eps[dxxi]->d_name;                           \
 			if (!strcmp(".", nm) || !strcmp("..", nm))              \
 				continue;                                       \
 			char *file = m_strdupf("%s/%s", path, eps[dxxi]->d_name)
@@ -70,8 +70,8 @@
 			free(file);                                             \
 		}                                                               \
 	}                                                                       \
-	for (int dxxi = 0; dxxi < n; ++dxxi)                                             \
-		free(eps[dxxi]);                                                   \
+	for (int dxxi = 0; dxxi < n; ++dxxi)                                    \
+		free(eps[dxxi]);                                                \
 	free(eps)
 
 
@@ -96,55 +96,55 @@ dir_type_e;
 
 /*!
  * \brief         Extract the name part of the /path/file:password
- * \param[in]  path  Path containing the entry name
- * \param[in]  sep   Delimiter whose suffix should be omitted; '\0' keeps the full basename
+ * \param[in]  p  Path containing the entry name
+ * \param[in]  s  Delimiter whose suffix should be omitted; '\0' keeps the full basename
  * \return        Newly allocated string: name
  *
  * Return the basename, stopping at the last occurrence of sep in the
  * input path when sep is nonzero.
  */
-extern char *dir_get_name_aux(const char * const path, const char sep) __attribute__((nonnull(1)));
+extern char *dir_get_name_aux(const char * const p, const char s) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Determine how deep down the hierarchy path goes
- * \param[in]  path  Path to count separators in
+ * \param[in]  p  Path to count separators in
  * \return        Number of directory separator characters in path
  *
  * Count directory separators, including a leading separator and any
  * separator before a filename.
  */
-extern uint16_t dir_get_deep(const char * const path) __attribute__((nonnull(1)));
+extern uint16_t dir_get_deep(const char * const p) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Extract the numbered part of the /path/file:password
- * \param[in]  path   Path to split
- * \param[in]  index  Zero for the root separator, then one-based path components
- * \return            Newly allocated path component
+ * \param[in]  p  Path to split
+ * \param[in]  i  Zero for the root separator, then one-based path components
+ * \return        Newly allocated path component
  *
  * Return the indexed component of the path. Index zero returns the root
  * separator; subsequent indexes return components from left to right.
  */
-extern char *dir_get_part(const char * const path, const uint16_t index) __attribute__((nonnull(1)));
+extern char *dir_get_part(const char * const p, const uint16_t i) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Extract the password part of the /path/file:password
- * \param[in]  path  Path that may include a colon-delimited password
- * \return            Newly allocated password suffix, or an empty string
+ * \param[in]  p  Path that may include a colon-delimited password
+ * \return        Newly allocated password suffix, or an empty string
  *
  * Return the text following the final colon, or an empty string if no
  * colon is present.
  */
-extern char *dir_get_pass(const char * const restrict path) __attribute__((nonnull(1)));
+extern char *dir_get_pass(const char * const restrict p) __attribute__((nonnull(1)));
 
 /*!
  * \brief         Extract only the path part of the /path/file:password
- * \param[in]  path  Path whose final component should be removed
- * \return            Newly allocated parent path
+ * \param[in]  p  Path whose final component should be removed
+ * \return        Newly allocated parent path
  *
  * Return the parent directory path, the root separator for a root-level
  * absolute path, or an empty string when the input has no separator.
  */
-extern char *dir_get_path(const char * const restrict path) __attribute__((nonnull(1)));
+extern char *dir_get_path(const char * const restrict p) __attribute__((nonnull(1)));
 
 
 /*!
@@ -159,15 +159,15 @@ extern void dir_mk_recursive(const char *p, mode_t m) __attribute__((nonnull(1))
 
 /*!
  * \brief         Get all entries in a directory tree
- * \param[in]  path  Directory tree to scan
- * \param[in]  types Bitmask of entry types to include
- * \return           List of newly allocated path strings; caller frees
- *                   the strings and destroys the list
+ * \param[in]  p  Directory tree to scan
+ * \param[in]  t  Bitmask of entry types to include
+ * \return        List of newly allocated path strings; caller frees
+ *                the strings and destroys the list
  *
  * Recursively scan the tree and return paths whose entry types match
  * types. Directories are traversed regardless of whether DIR_FOLDER is
  * selected.
  */
-extern list_t dir_get_tree(const char *path, dir_type_e types) __attribute__((nonnull(1)));
+extern list_t dir_get_tree(const char *p, dir_type_e t) __attribute__((nonnull(1)));
 
 #endif /* _DIR_H_ */

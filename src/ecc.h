@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _ECC_H_
+#if !defined _ECC_H_
 #define _ECC_H_
 
 #include <inttypes.h>

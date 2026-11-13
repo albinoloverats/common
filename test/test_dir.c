@@ -91,7 +91,7 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	assert_non_null(stream);
 	assert_true(fputs("data", stream) >= 0);
 	assert_int_equal(fclose(stream), 0);
-#ifndef _WIN32
+#if !defined _WIN32
 	snprintf(link_path, sizeof link_path, "%s/link", root);
 	assert_int_equal(symlink(file, link_path), 0);
 	snprintf(fifo, sizeof fifo, "%s/pipe", root);
@@ -122,7 +122,7 @@ static void test_directory_tree_and_recursive_mkdir(void **state)
 	assert_int_equal(list_size(none), 0);
 	assert_string_equal(list_get(files, 0), file);
 	assert_string_equal(list_get(links, 0), link_path);
-#ifdef __sun
+#if defined __sun
 	list_t character_devices = dir_get_tree("/devices", DIR_CHAR);
 	assert_non_null(list_contains(character_devices, "/devices/pseudo/mm@0:null"));
 #else

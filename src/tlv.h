@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_TLV_H_
+#if !defined _COMMON_TLV_H_
 #define _COMMON_TLV_H_
 
 /*!

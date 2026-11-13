@@ -34,9 +34,23 @@
 #include "dir.h"
 #include "list.h"
 
+static inline char select_separator_char(const char * const path)
+{
+#if !defined _WIN32
+	(void)path;
+#else
+	if (strchr(path, '/'))
+		return '/';
+#endif
+	return DIR_SEPARATOR_CHAR;
+}
+
+#define select_separator(S) (S == DIR_SEPARATOR_CHAR ? DIR_SEPARATOR : "/")
+
 extern char *dir_get_name_aux(const char * const path, const char ext)
 {
-	const char *file = strrchr(path, DIR_SEPARATOR_CHAR);
+	char c = select_separator_char(path);
+	const char *file = strrchr(path, c);
 	if (file)
 		file++;
 	else
@@ -51,7 +65,8 @@ extern uint16_t dir_get_deep(const char * const path)
 {
 	uint16_t d = 0;
 	char *ptr = (char *)path;
-	while ((ptr = strchr(ptr, DIR_SEPARATOR_CHAR)))
+	char c = select_separator_char(path);
+	while ((ptr = strchr(ptr, c)))
 	{
 		d++;
 		ptr++;
@@ -61,12 +76,13 @@ extern uint16_t dir_get_deep(const char * const path)
 
 extern char *dir_get_part(const char * const path, const uint16_t index)
 {
+	char c = select_separator_char(path);
 	if (!index)
-		return m_strdup(DIR_SEPARATOR);
+		return m_strdup(select_separator(c));
 	char *ptr = (char *)path;
 	for (uint16_t i = 0; i < index; i++)
 	{
-		char *separator = strchr(ptr, DIR_SEPARATOR_CHAR);
+		char *separator = strchr(ptr, c);
 		if (!separator)
 		{
 			ptr += strlen(ptr);
@@ -74,7 +90,7 @@ extern char *dir_get_part(const char * const path, const uint16_t index)
 		}
 		ptr = separator + 1;
 	}
-	return m_strndup(ptr, strchrnul(ptr, DIR_SEPARATOR_CHAR) - ptr);
+	return m_strndup(ptr, strchrnul(ptr, c) - ptr);
 }
 
 extern char *dir_get_pass(const char * const restrict path)
@@ -86,14 +102,15 @@ extern char *dir_get_pass(const char * const restrict path)
 
 extern char *dir_get_path(const char * const restrict path)
 {
-	const char *s = strrchr(path, DIR_SEPARATOR_CHAR);
+	char c = select_separator_char(path);
+	const char *s = strrchr(path, c);
 	if (!s)
 		return m_strdup("");
 	char *p = strndup(path, s - path);
 	if (strlen(p))
 		return p;
 	free(p);
-	return m_strdup(DIR_SEPARATOR);
+	return m_strdup(select_separator(c));
 }
 
 /*
@@ -101,7 +118,7 @@ extern char *dir_get_path(const char * const restrict path)
  */
 extern void dir_mk_recursive(const char *path, mode_t mode)
 {
-#ifdef _WIN32
+#if defined _WIN32
 	(void)mode;
 #endif
 	char *opath = m_strdup(path);
@@ -158,7 +175,7 @@ static void get_tree(list_t l, const char *path, dir_type_e type)
 		case S_IFREG:
 			add = type & DIR_FILE;
 			break;
-#ifndef _WIN32
+#if !defined _WIN32
 		case S_IFLNK:
 			add = type & DIR_LINK;
 			break;

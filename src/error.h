@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_ERROR_H_
+#if !defined _COMMON_ERROR_H_
 #define _COMMON_ERROR_H_
 
 /*!
@@ -31,7 +31,7 @@
  * likely due to out of memory or similar.
  */
 
-#ifdef BUILD_GUI
+#if defined BUILD_GUI
 	#include <gtk/gtk.h>
 #endif
 
@@ -53,7 +53,7 @@ extern void error_init(void);
  */
 extern void die(const char * const restrict s, ...) __attribute__((noreturn, nonnull(1), format(gnu_printf, 1, 2)));
 
-#ifdef BUILD_GUI
+#if defined BUILD_GUI
 /*!
  * \brief         Initialize GUI error reporting
  * \param[in]  w  Error dialog window

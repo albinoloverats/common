@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_CRYPT_H_
+#if !defined _COMMON_CRYPT_H_
 #define _COMMON_CRYPT_H_
 
 #include <gcrypt.h>

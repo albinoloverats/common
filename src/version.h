@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef _COMMON_VERSION_H_
+#if !defined _COMMON_VERSION_H_
 #define _COMMON_VERSION_H_
 
 #define NEW_VERSION_AVAILABLE "Version %s is available!"
