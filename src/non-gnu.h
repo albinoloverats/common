@@ -98,19 +98,6 @@
 #define lrand48 rand   /*!< Quietly alias lrand48 to be rand on Windows */
 #define O_FSYNC NOTSET /*!< If value doesn’t exist on Windows, ignore it */
 
-#if defined S_IRUSR
-	#undef S_IRUSR
-	#define S_IRUSR 0
-#endif
-#if defined S_IWUSR
-	#undef S_IWUSR
-	#define S_IWUSR 0
-#endif
-#if defined S_IXUSR
-	#undef S_IXUSR
-	#define S_IXUSR 0
-#endif
-
 #if !defined SIGQUIT
 	#define SIGQUIT SIGBREAK /*!< If value doesn’t exist on Windows, use next closest match */
 #endif

@@ -402,9 +402,7 @@ static void test_config_file_pairs_and_list_types(void **state)
 	list_deinit(args, config_named_free);
 	assert_int_equal(unlink("types.conf"), 0);
 	assert_int_equal(chdir(cwd), 0);
-#if !defined _WIN32
 	assert_int_equal(rmdir(root), 0);
-#endif
 }
 
 static const struct CMUnitTest tests[] =
