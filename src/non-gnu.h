@@ -50,17 +50,13 @@
 #endif
 
 
-#if defined __sun || defined __clang__
-	#define __attribute__(X)
-#endif
-
 #if defined __APPLE__ || defined __FreeBSD__ || defined _WIN32 || defined __CYGWIN__ || defined __clang__ || defined __sun
 
-	#if !defined __FreeBSD__
-		#define __float128  double
-		#define strtof128   strtod
-		#define strfromf128 snprintf
-	#endif
+	#define __attribute__(X)
+
+	#define __float128  double
+	#define strtof128   strtod
+	#define strfromf128 snprintf
 
 	#undef F_RDLCK         /*!< Undefined value as it causes runtime issues */
 	#define F_RDLCK NOTSET /*!< Set value to NOTSET */
