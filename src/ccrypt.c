@@ -389,8 +389,11 @@ extern bool mode_valid_for_cipher(enum gcry_cipher_algos c, enum gcry_cipher_mod
 	switch (c)
 	{
 		case GCRY_CIPHER_ARCFOUR:
+			__attribute__((fallthrough)); /* allow fall-through */
 		case GCRY_CIPHER_SALSA20:
+			__attribute__((fallthrough)); /* allow fall-through */
 		case GCRY_CIPHER_SALSA20R12:
+			__attribute__((fallthrough)); /* allow fall-through */
 		case GCRY_CIPHER_CHACHA20:
 			return m == GCRY_CIPHER_MODE_STREAM;
 		default:
@@ -399,7 +402,9 @@ extern bool mode_valid_for_cipher(enum gcry_cipher_algos c, enum gcry_cipher_mod
 	switch (m)
 	{
 		case GCRY_CIPHER_MODE_CCM:
+			__attribute__((fallthrough)); /* allow fall-through */
 		case GCRY_CIPHER_MODE_GCM:
+			__attribute__((fallthrough)); /* allow fall-through */
 		case GCRY_CIPHER_MODE_OCB:
 		case 13: // GCRY_CIPHER_MODE_XTS: C'mon Slackware :-/
 			return !(gcry_cipher_get_algo_blklen(c) % 16);
@@ -411,8 +416,11 @@ extern bool mode_valid_for_cipher(enum gcry_cipher_algos c, enum gcry_cipher_mod
 			switch (c)
 			{
 				case GCRY_CIPHER_ARCFOUR:
+				__attribute__((fallthrough)); /* allow fall-through */
 				case GCRY_CIPHER_SALSA20:
+					__attribute__((fallthrough)); /* allow fall-through */
 				case GCRY_CIPHER_SALSA20R12:
+					__attribute__((fallthrough)); /* allow fall-through */
 				case GCRY_CIPHER_CHACHA20:
 					return true;
 				default:
@@ -429,7 +437,9 @@ extern bool mode_valid_for_cipher(enum gcry_cipher_algos c, enum gcry_cipher_mod
 			switch (c)
 			{
 				case GCRY_CIPHER_AES128:
+					__attribute__((fallthrough)); /* allow fall-through */
 				case GCRY_CIPHER_AES192:
+					__attribute__((fallthrough)); /* allow fall-through */
 				case GCRY_CIPHER_AES256:
 					return true;
 				default:

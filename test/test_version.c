@@ -42,10 +42,11 @@ static void test_version_build_information(void **state)
 	assert_true(fd >= 0);
 	assert_int_equal(write(fd, "2.0\n", 4), 4);
 	assert_int_equal(close(fd), 0);
-	char url[PATH_MAX + 8];
 #if !defined _WIN32
+	char url[PATH_MAX + 8];
 	snprintf(url, sizeof url, "file://%s", path);
 #else
+	char url[2 * PATH_MAX + 8];
 	char cwd[PATH_MAX];
 	assert_non_null(getcwd(cwd, sizeof cwd));
 	snprintf(url, sizeof url, "file://%s/%s", cwd, path);

@@ -83,8 +83,10 @@ extern char *strchrnul(const char *s, int c_in)
 	   The 0-bits provide holes for carries to fall into.  */
 	switch (sizeof longword)
 	{
-		case 4: magic_bits = 0x7efefeffLLU; break;
-		case 8: magic_bits = ((0x7efefefeLLU << 16) << 16) | 0xfefefeffLLU; break;
+		case 4: magic_bits = 0x7efefeffLLU;
+			break;
+		case 8: magic_bits = ((0x7efefefeLLU << 16) << 16) | 0xfefefeffLLU;
+			break;
 		default:
 			die(_("unsupported size of unsigned long @ %s:%d:%s [%zu])"), __FILE__, __LINE__, __func__, sizeof longword);
 	}
@@ -283,14 +285,11 @@ extern int strverscmp(const char *s1, const char *s2)
 	{
 		case CMP:
 			return diff;
-
 		case LEN:
 			while (isdigit (*p1++))
 				if (!isdigit (*p2++))
 					return 1;
-
 			return isdigit (*p2) ? -1 : diff;
-
 		default:
 			return state;
 	}
