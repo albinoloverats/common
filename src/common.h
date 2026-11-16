@@ -78,6 +78,16 @@
 #endif
 #define GIT_COMMIT_LENGTH 7
 
+
+#if defined(__GNUC__)
+	#define FORMAT_ATTRIBUTE(X, Y) __attribute__((format(gnu_printf, X, Y)))
+#elif defined(__clang__)
+	#define FORMAT_ATTRIBUTE(X, Y) __attribute__((format(printf, X, Y)))
+#else
+	#define FORMAT_ATTRIBUTE(X, Y)
+#endif
+
+
 //#if !defined _WIN32 && !defined __CYGWIN__ && !defined __APPLE__
 //    #define _(s) gettext(s) /*!< Allow use of _() to refer to gettext() */
 //#else
