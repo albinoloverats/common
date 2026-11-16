@@ -79,10 +79,10 @@
 #define GIT_COMMIT_LENGTH 7
 
 
-#if defined(__GNUC__)
-	#define FORMAT_ATTRIBUTE(X, Y) __attribute__((format(gnu_printf, X, Y)))
-#elif defined(__clang__)
+#if defined(__clang__)
 	#define FORMAT_ATTRIBUTE(X, Y) __attribute__((format(printf, X, Y)))
+#elif defined(__GNUC__)
+	#define FORMAT_ATTRIBUTE(X, Y) __attribute__((format(gnu_printf, X, Y)))
 #else
 	#define FORMAT_ATTRIBUTE(X, Y)
 #endif
