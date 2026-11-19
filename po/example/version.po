@@ -1,59 +1,59 @@
-#: ./src/version.c:103
+#: src/version.c:111
 #| %s version
 msgid "%s version"
 msgstr ""
 
-#: ./src/version.c:113
+#: src/version.c:121
 #| built on
 msgid "built on"
 msgstr ""
 
-#: ./src/version.c:115
+#: src/version.c:123
 #| debug
 msgid "debug"
 msgstr ""
 
-#: ./src/version.c:115
+#: src/version.c:123
 #| yes
 msgid "yes"
 msgstr ""
 
-#: ./src/version.c:117
-#| debug
-msgid "debug"
-msgstr ""
-
-#: ./src/version.c:117
+#: src/version.c:125
 #| no
 msgid "no"
 msgstr ""
 
-#: ./src/version.c:119
+#: src/version.c:127
 #| git commit
 msgid "git commit"
 msgstr ""
 
-#: ./src/version.c:120
+#: src/version.c:128
 #| build os
 msgid "build os"
 msgstr ""
 
-#: ./src/version.c:121
+#: src/version.c:130
 #| compiler
 msgid "compiler"
 msgstr ""
 
-#: ./src/version.c:124
-#| runtime
-msgid "runtime"
+#: src/version.c:131
+#| build type
+msgid "build type"
 msgstr ""
 
-#: ./src/version.c:159
-#| built on
-msgid "built on"
+#: src/version.c:132
+#| C standard
+msgid "C standard"
 msgstr ""
 
-#: ./src/version.c:170
+#: src/version.c:135
+#| linker flags
+msgid "linker flags"
+msgstr ""
+
+#: src/version.c:141
 #| runtime
 msgid "runtime"
 msgstr ""

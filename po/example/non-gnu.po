@@ -1,39 +1,39 @@
-#: ./src/non-gnu.c:89
+#: src/non-gnu.c:91
 #| unsupported size of unsigned long @ %s:%d:%s [%zu]
 msgid "unsupported size of unsigned long @ %s:%d:%s [%zu]"
 msgstr ""
 
-#: ./src/non-gnu.c:529
+#: src/non-gnu.c:529
 #| Aborted
 msgid "Aborted"
 msgstr ""
 
-#: ./src/non-gnu.c:532
+#: src/non-gnu.c:532
 #| Floating point exception
 msgid "Floating point exception"
 msgstr ""
 
-#: ./src/non-gnu.c:535
+#: src/non-gnu.c:535
 #| Illegal instruction
 msgid "Illegal instruction"
 msgstr ""
 
-#: ./src/non-gnu.c:538
+#: src/non-gnu.c:538
 #| Interrupt
 msgid "Interrupt"
 msgstr ""
 
-#: ./src/non-gnu.c:541
+#: src/non-gnu.c:541
 #| Segmentation fault
 msgid "Segmentation fault"
 msgstr ""
 
-#: ./src/non-gnu.c:544
+#: src/non-gnu.c:544
 #| Terminated
 msgid "Terminated"
 msgstr ""
 
-#: ./src/non-gnu.c:547
+#: src/non-gnu.c:548
 #| Unknown signal
 msgid "Unknown signal"
 msgstr ""
